@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MSU-UTC Connect</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase CDN Script (Loads cloud database connectivity) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen relative">
+
+    <!-- ================= AUTH OVERLAY (LOG IN / CREATE ACCOUNT) ================= -->
+    <div id="authOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-gray-100 overflow-hidden">
+            <div class="bg-[#800020] p-6 text-white text-center">
+                <h2 class="text-2xl font-bold tracking-tight">MSU-UTC Connect</h2>
+                <p class="text-xs text-gray-200 mt-1">Exclusive Alumni Social Platform</p>
+            </div>
+            
+            <div class="p-6 space-y-4">
+                <div class="flex border-b border-gray-200 text-sm font-semibold text-center">
+                    <button id="tabRegister" class="flex-1 pb-3 border-b-2 border-[#800020] text-[#800020]" onclick="switchAuthTab('register')">Create Account</button>
+                    <button id="tabLogin" class="flex-1 pb-3 text-gray-400 hover:text-gray-600" onclick="switchAuthTab('login')">Sign In</button>
+                </div>
+
+                <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-3 pt-2">
+                    <div id="nameField">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
+                        <input id="authName" type="text" placeholder="Alex Santos" class="w-full p-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Student Email Address</label>
+                        <input id="authEmail" type="email" required placeholder="yourname@msu-utc.edu" class="w-full p-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Password</label>
+                        <input id="authPassword" type="password" required placeholder="••••••••" class="w-full p-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
+                    </div>
+                    <button type="submit" id="authBtn" class="w-full bg-[#800020] text-white p-2.5 rounded-lg text-sm font-bold shadow-md hover:bg-red-900 transition-colors mt-2">Get Connected</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= EDIT PROFILE MODAL ================= -->
+    <div id="profileModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-xl max-w-sm w-full p-5 shadow-xl border border-gray-100 space-y-4">
+            <h3 class="text-sm font-bold text-[#800020] uppercase tracking-wider border-b pb-2">Personalize Your Profile</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Status Message</label>
+                    <input id="inputStatus" type="text" placeholder="What's on your mind?" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Course & Year</label>
+                    <input id="inputCourse" type="text" placeholder="BS Computer Science - CS '06" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Profile Picture URL</label>
+                    <input id="inputAvatar" type="text" placeholder="Paste an image web link..." class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                </div>
+            </div>
+            <div class="flex space-x-2 justify-end text-xs font-semibold">
+                <button onclick="toggleProfileModal(false)" class="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200">Cancel</button>
+                <button onclick="saveProfileChanges()" class="px-3 py-1.5 rounded-lg bg-[#800020] text-white hover:bg-red-900 shadow-sm">Save Profile</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= INVITE CLASSMATE MODAL ================= -->
+    <div id="inviteModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-xl max-w-sm w-full p-5 shadow-xl border border-gray-100 space-y-4">
+            <h3 class="text-sm font-bold text-[#800020] uppercase tracking-wider border-b pb-2">Invite an Alumnus/a</h3>
+            <p class="text-xs text-gray-500">Send an invite email or copy a shareable join link.</p>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Alumni Email</label>
+                    <input id="inviteEmail" type="email" placeholder="friend@example.com" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                </div>
+                <button type="button" onclick="copyInviteLink()" class="w-full bg-[#800020] text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-sm hover:bg-red-900 transition-colors">Copy Share Link</button>
+                <p id="inviteMessage" class="text-xs text-green-600 hidden"></p>
+            </div>
+            <div class="flex space-x-2 justify-end text-xs font-semibold">
+                <button type="button" onclick="showInviteModal(false)" class="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200">Cancel</button>
+                <button type="button" onclick="sendInvite()" class="px-3 py-1.5 rounded-lg bg-[#800020] text-white hover:bg-red-900 shadow-sm">Send Invite</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================= MAIN PLATFORM LAYOUT ================= -->
+    <header class="bg-[#800020] text-white p-4 pt-6 max-w-6xl mx-auto md:rounded-b-xl shadow-md">
+        <div class="flex justify-between items-center mb-1">
+            <h1 class="text-xl md:text-2xl font-bold tracking-tight">MSU-UTC Connect</h1>
+            <div class="flex items-center space-x-3">
+                <div id="userBadge" class="w-8 h-8 rounded-full bg-red-900 border border-white/50 flex items-center justify-center text-xs font-bold hidden">AS</div>
+                <button onclick="logout()" class="text-xs bg-white/10 hover:bg-white/20 border border-white/20 px-2.5 py-1 rounded-md transition-all">Logout</button>
+            </div>
+        </div>
+        <p class="text-[11px] md:text-xs text-gray-300">An exclusive alumni social platform</p>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- LEFT COLUMN: Profiles & Friends Network -->
+        <div class="space-y-6">
+            <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm flex flex-col items-center text-center md:text-left md:flex-row md:items-center md:space-x-4 relative group">
+                <img id="displayAvatar" class="w-16 h-16 rounded-full object-cover border-2 border-[#800020]" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop" alt="Profile pic">
+                <div class="mt-2 md:mt-0 flex-1">
+                    <h2 id="profileName" class="font-bold text-gray-800 text-lg">Alumni Member</h2>
+                    <p id="displayCourse" class="text-xs text-gray-500 font-medium">Classmate</p>
+                    <p id="displayStatus" class="text-xs text-gray-600 italic mt-1 bg-amber-50/50 px-2 py-1 rounded">"Connected to the cloud!"</p>
+                </div>
+                <button onclick="toggleProfileModal(true)" class="mt-3 md:mt-0 text-[10px] font-bold bg-amber-50 text-[#800020] border border-amber-200 px-2 py-1 rounded-md hover:bg-amber-100 transition-colors">Personalize</button>
+            </section>
+
+            <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
+                <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider mb-4 flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <span>Classmates Circle</span>
+                        <span class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full">Active Network</span>
+                    </div>
+                    <button type="button" onclick="showInviteModal(true)" class="text-[10px] font-semibold bg-[#800020] text-white px-2 py-1 rounded-md hover:bg-red-900 transition-colors">Invite</button>
+                </h3>
+                <div class="flex space-x-4 overflow-x-auto pb-2 md:grid md:grid-cols-3 md:gap-4 md:space-x-0 md:overflow-visible">
+                    <button type="button" onclick="viewClassmate('Dave', 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&auto=format&fit=crop', 'BS Computer Science - Class of 2006')" class="flex flex-col items-center text-center flex-shrink-0 cursor-pointer transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/40 rounded-lg p-1">
+                        <img class="w-12 h-12 rounded-full object-cover ring-2 ring-gray-100" src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&auto=format&fit=crop" alt="Dave">
+                        <span class="text-[11px] font-medium text-gray-700 mt-1">Dave</span>
+                    </button>
+                    <button type="button" onclick="viewClassmate('Sarah', 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop', 'MBA Alumni - Class of 2008')" class="flex flex-col items-center text-center flex-shrink-0 cursor-pointer transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/40 rounded-lg p-1">
+                        <img class="w-12 h-12 rounded-full object-cover ring-2 ring-gray-100" src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop" alt="Sarah">
+                        <span class="text-[11px] font-medium text-gray-700 mt-1">Sarah</span>
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <!-- CENTER COLUMN: Live Interactive Testimonials Feed Stream -->
+        <div class="space-y-6 md:col-span-2 lg:col-span-1">
+            <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-3">
+                <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Leave a Testimonial</h3>
+                <div class="space-y-2">
+                    <textarea id="testimonialInput" placeholder="Say something awesome about your classmate..." rows="3" class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020] resize-none"></textarea>
+                    <div class="flex justify-end">
+                        <button id="testimonialSubmitBtn" class="bg-[#800020] text-white px-4 py-1.5 rounded-lg text-xs font-semibold shadow-sm hover:bg-red-900 transition-colors">Post Message</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-4">
+                <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider border-b pb-2">Recent Testimonials</h3>
+                <div id="testimonialList" class="space-y-3">
+                    <!-- JavaScript hooks push real database posts dynamically right here -->
+                </div>
+            </section>
+        </div>
+
+        <!-- RIGHT COLUMN: Events Board -->
+        <div class="space-y-6 md:col-span-3 lg:col-span-1">
+            <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-3">
+                <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Upcoming Classmate Events</h3>
+                <div class="border-l-2 border-[#800020] pl-3 py-1 text-xs">
+                    <h4 class="font-bold text-gray-800">End of Term Party</h4>
+                    <p class="text-gray-500 text-[11px]">June 5 - 7:30 pm</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- ================= JAVASCRIPT & CLOUD INFRASTRUCTURE ================= -->
+    <script>
+        const SUPABASE_URL = "https://ouwuhzttjnvdivsfbefe.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_IFeDdN_0oFEy5SR-qUwY3w_6PDUeFyi";
+
+        const SUPABASE_LIB = window.supabase;
+        const supabaseClient = SUPABASE_LIB.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                persistSession: true,
+                autoRefreshToken: true
+            }
+        });
+
+        let currentMode = 'register';
+        let currentUser = null;
+
+        const authOverlay = document.getElementById('authOverlay');
+        const authForm = document.getElementById('authForm');
+        const profileNameEl = document.getElementById('profileName');
+        const userBadge = document.getElementById('userBadge');
+
+        window.addEventListener('DOMContentLoaded', initApp);
+
+        async function initApp() {
+            authForm.addEventListener('submit', handleAuthSubmit);
+            const testimonialSubmitBtn = document.getElementById('testimonialSubmitBtn');
+            if (testimonialSubmitBtn) {
+                testimonialSubmitBtn.addEventListener('click', submitTestimonial);
+            }
+            await restoreSession();
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                if (session?.user) {
+                    const user = session.user;
+                    handleExistingSession(user);
+                } else {
+                    clearAuthState();
+                }
+            });
+        }
+
+        async function restoreSession() {
+            const { data, error } = await supabaseClient.auth.getSession();
+            if (error) {
+                console.error("Session restore failed:", error.message);
+                clearAuthState();
+                return;
+            }
+
+            if (data?.session?.user) {
+                handleExistingSession(data.session.user);
+            } else {
+                clearAuthState();
+            }
+        }
+
+        function handleExistingSession(user) {
+            const name = user.user_metadata?.full_name || user.email || "Alumni Member";
+            currentUser = name;
+            loginSuccess(name);
+        }
+
+        function clearAuthState() {
+            currentUser = null;
+            profileNameEl.innerText = "Alumni Member";
+            userBadge.classList.add('hidden');
+            authOverlay.classList.remove('hidden');
+            switchAuthTab('login');
+        }
+
+        window.switchAuthTab = function(mode) {
+            currentMode = mode;
+            const tabReg = document.getElementById('tabRegister');
+            const tabLog = document.getElementById('tabLogin');
+            const nameField = document.getElementById('nameField');
+            const authBtn = document.getElementById('authBtn');
+
+            if (mode === 'login') {
+                tabLog.className = "flex-1 pb-3 border-b-2 border-[#800020] text-[#800020]";
+                tabReg.className = "flex-1 pb-3 text-gray-400 hover:text-gray-600";
+                nameField.classList.add('hidden');
+                authBtn.innerText = "Sign In";
+            } else {
+                tabReg.className = "flex-1 pb-3 border-b-2 border-[#800020] text-[#800020]";
+                tabLog.className = "flex-1 pb-3 text-gray-400 hover:text-gray-600";
+                nameField.classList.remove('hidden');
+                authBtn.innerText = "Get Connected";
+            }
+        }
+
+        window.handleAuthSubmit = async function(event) {
+            event.preventDefault();
+            const nameInput = document.getElementById('authName').value.trim();
+            const emailInput = document.getElementById('authEmail').value.trim();
+            const passwordInput = document.getElementById('authPassword').value;
+
+            if (!emailInput.endsWith('.edu')) {
+                alert("Access Denied! You must use a valid student (.edu) email address.");
+                return;
+            }
+
+            if (currentMode === 'register') {
+                if (!nameInput) {
+                    alert("Please enter your full name.");
+                    return;
+                }
+
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email: emailInput,
+                    password: passwordInput,
+                    options: { data: { full_name: nameInput } }
+                });
+
+                if (error) {
+                    alert("Registration Error: " + error.message);
+                    return;
+                }
+
+                alert("Account created! Check your email address for verification and then sign in.");
+                switchAuthTab('login');
+                return;
+            }
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({
+                email: emailInput,
+                password: passwordInput
+            });
+
+            if (error) {
+                alert("Login Error: " + error.message);
+                return;
+            }
+
+            const name = data.user.user_metadata.full_name || data.user.email || "Alumni Member";
+            handleExistingSession(data.user);
+        }
+
+        function loginSuccess(name, hideOverlay = true) {
+            profileNameEl.innerText = name;
+            const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
+            userBadge.innerText = initials;
+            userBadge.classList.remove('hidden');
+
+            if (hideOverlay) {
+                authOverlay.classList.add('hidden');
+            }
+
+            fetchTestimonials();
+        }
+
+        async function fetchTestimonials() {
+            const { data: testimonials, error } = await supabaseClient
+                .from('testimonials')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error("Could not fetch database records:", error);
+                return;
+            }
+
+            const listContainer = document.getElementById('testimonialList');
+            listContainer.innerHTML = '';
+
+            if (!testimonials || testimonials.length === 0) {
+                listContainer.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-2">No testimonials written yet. Be the first!</p>`;
+                return;
+            }
+
+            testimonials.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-gray-50 p-3 rounded-lg text-xs space-y-1 transform transition-all duration-200 hover:scale-[1.01]";
+                card.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-[#800020]">${item.author_name}</span>
+                        <span class="text-[10px] text-gray-400">${new Date(item.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <p class="text-gray-600 mt-0.5">${item.message_content}</p>
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+
+        async function submitTestimonial() {
+            const inputField = document.getElementById('testimonialInput');
+            const text = inputField.value.trim();
+
+            if (!text) return;
+            if (!currentUser) {
+                alert("Please sign in before posting a testimonial.");
+                authOverlay.classList.remove('hidden');
+                return;
+            }
+
+            const { error } = await supabaseClient
+                .from('testimonials')
+                .insert([{ author_name: currentUser, message_content: text }]);
+
+            if (error) {
+                alert("Write transmission error failed: " + error.message);
+                return;
+            }
+
+            inputField.value = "";
+            fetchTestimonials();
+        }
+
+        window.toggleProfileModal = function(show) {
+            const modal = document.getElementById('profileModal');
+            if (show) {
+                modal.classList.remove('hidden');
+                document.getElementById('inputStatus').value = document.getElementById('displayStatus').innerText.replace(/"/g, "");
+                document.getElementById('inputCourse').value = document.getElementById('displayCourse').innerText;
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        window.saveProfileChanges = function() {
+            const newStatus = document.getElementById('inputStatus').value.trim();
+            const newCourse = document.getElementById('inputCourse').value.trim();
+            const newAvatar = document.getElementById('inputAvatar').value.trim();
+
+            if (newStatus) document.getElementById('displayStatus').innerText = `"${newStatus}"`;
+            if (newCourse) document.getElementById('displayCourse').innerText = newCourse;
+            if (newAvatar) document.getElementById('displayAvatar').src = newAvatar;
+
+            toggleProfileModal(false);
+        }
+
+        window.showInviteModal = function(show) {
+            const modal = document.getElementById('inviteModal');
+            const message = document.getElementById('inviteMessage');
+            if (show) {
+                modal.classList.remove('hidden');
+                document.getElementById('inviteEmail').value = '';
+                message.classList.add('hidden');
+                message.innerText = '';
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        window.copyInviteLink = async function() {
+            const inviteLink = `${window.location.href}${window.location.href.includes('?') ? '&' : '?'}ref=${encodeURIComponent(currentUser || 'friend')}`;
+            try {
+                await navigator.clipboard.writeText(inviteLink);
+                const message = document.getElementById('inviteMessage');
+                message.innerText = 'Share link copied to clipboard!';
+                message.classList.remove('hidden');
+            } catch (error) {
+                alert('Could not copy link: ' + error.message);
+            }
+        }
+
+        window.sendInvite = async function() {
+            const email = document.getElementById('inviteEmail').value.trim().toLowerCase();
+            const message = document.getElementById('inviteMessage');
+            message.classList.add('hidden');
+            message.innerText = '';
+
+            if (!email) {
+                alert('Please enter a valid email address.');
+                return;
+            }
+
+            if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                alert('Please enter a valid email address.');
+                return;
+            }
+
+            if (!currentUser) {
+                alert('Please sign in to send invites.');
+                authOverlay.classList.remove('hidden');
+                showInviteModal(false);
+                return;
+            }
+
+            const inviteLink = `${window.location.href}${window.location.href.includes('?') ? '&' : '?'}ref=${encodeURIComponent(currentUser)}`;
+            const { data, error } = await supabaseClient
+                .from('invites')
+                .insert([{ email, invited_by: currentUser, invite_link: inviteLink, created_at: new Date().toISOString() }]);
+
+            if (error) {
+                console.warn('Invite save failed:', error.message);
+                message.innerText = 'Invite request recorded. Copy the link to share instead.';
+                message.classList.remove('hidden');
+                return;
+            }
+
+            message.innerText = 'Invite sent successfully!';
+            message.classList.remove('hidden');
+            document.getElementById('inviteEmail').value = '';
+        }
+
+        window.logout = async function() {
+            await supabaseClient.auth.signOut();
+            clearAuthState();
+            authForm.reset();
+        }
+
+        window.viewClassmate = function(name, avatarUrl, course) {
+            document.getElementById('displayAvatar').src = avatarUrl;
+            document.getElementById('profileName').innerText = name;
+            document.getElementById('displayCourse').innerText = course;
+            document.getElementById('displayStatus').innerText = `"Viewing ${name}'s profile"`;
+        }
+    </script>
+</body>
+</html>
