@@ -25,7 +25,7 @@
                     <button id="tabLogin" class="flex-1 pb-3 text-gray-400 hover:text-gray-600" onclick="switchAuthTab('login')">Sign In</button>
                 </div>
 
-                <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-3 pt-2">
+                <form id="authForm" class="space-y-3 pt-2">
                     <div id="nameField">
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
                         <input id="authName" type="text" placeholder="Alex Santos" class="w-full p-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
@@ -54,12 +54,39 @@
                     <input id="inputStatus" type="text" placeholder="What's on your mind?" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Course & Year</label>
-                    <input id="inputCourse" type="text" placeholder="BS Computer Science - CS '06" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                    <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Company / Organization</label>
+                    <input id="inputCompany" type="text" placeholder="UTC Alumni Network" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Role / Title</label>
+                    <input id="inputRole" type="text" placeholder="Alumni Mentor" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Batch Name</label>
+                        <select id="inputBatchName" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                            <option value="">Select batch</option>
+                            <option value="Batch A">Batch A</option>
+                            <option value="Batch B">Batch B</option>
+                            <option value="Batch C">Batch C</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Year</label>
+                        <input id="inputBatchYear" type="text" placeholder="2006" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Skills</label>
+                    <input id="inputSkills" type="text" placeholder="Mentoring, Networking" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Profile Picture URL</label>
                     <input id="inputAvatar" type="text" placeholder="Paste an image web link..." class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Badges</label>
+                    <input id="inputBadges" type="text" placeholder="Mentor, Volunteer" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
                 </div>
             </div>
             <div class="flex space-x-2 justify-end text-xs font-semibold">
@@ -69,10 +96,10 @@
         </div>
     </div>
 
-    <!-- ================= INVITE CLASSMATE MODAL ================= -->
+    <!-- ================= INVITE BATCHMATE MODAL ================= -->
     <div id="inviteModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-xl max-w-sm w-full p-5 shadow-xl border border-gray-100 space-y-4">
-            <h3 class="text-sm font-bold text-[#800020] uppercase tracking-wider border-b pb-2">Invite an Alumnus/a</h3>
+            <h3 class="text-sm font-bold text-[#800020] uppercase tracking-wider border-b pb-2">Invite a Batchmate</h3>
             <p class="text-xs text-gray-500">Send an invite email or copy a shareable join link.</p>
             <div class="space-y-3">
                 <div>
@@ -102,68 +129,170 @@
         <p class="text-[11px] md:text-xs text-gray-300">An exclusive alumni social platform</p>
     </header>
 
-    <main class="max-w-6xl mx-auto p-4 grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        <!-- LEFT COLUMN: Profiles & Friends Network -->
-        <div class="space-y-6">
-            <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm flex flex-col items-center text-center md:text-left md:flex-row md:items-center md:space-x-4 relative group">
-                <img id="displayAvatar" class="w-16 h-16 rounded-full object-cover border-2 border-[#800020]" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop" alt="Profile pic">
-                <div class="mt-2 md:mt-0 flex-1">
-                    <h2 id="profileName" class="font-bold text-gray-800 text-lg">Alumni Member</h2>
-                    <p id="displayCourse" class="text-xs text-gray-500 font-medium">Classmate</p>
-                    <p id="displayStatus" class="text-xs text-gray-600 italic mt-1 bg-amber-50/50 px-2 py-1 rounded">"Connected to the cloud!"</p>
+    <section class="max-w-6xl mx-auto p-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
+            <p class="text-[10px] uppercase tracking-wider text-gray-500">Alumni Members</p>
+            <p id="membersCount" class="mt-4 text-3xl font-bold text-gray-900">0</p>
+        </div>
+        <div class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
+            <p class="text-[10px] uppercase tracking-wider text-gray-500">Testimonials</p>
+            <p id="testimonialsCount" class="mt-4 text-3xl font-bold text-gray-900">0</p>
+        </div>
+        <div class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
+            <p class="text-[10px] uppercase tracking-wider text-gray-500">Pending Invites</p>
+            <p id="pendingInvitesCount" class="mt-4 text-3xl font-bold text-gray-900">0</p>
+        </div>
+        <div class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
+            <p class="text-[10px] uppercase tracking-wider text-gray-500">Active Events</p>
+            <p id="eventsCount" class="mt-4 text-3xl font-bold text-gray-900">0</p>
+        </div>
+    </section>
+
+    <main class="max-w-6xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div class="space-y-6 lg:col-span-1">
+            <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-4">
+                <div class="flex items-start gap-3">
+                    <img id="displayAvatar" class="w-16 h-16 rounded-full object-cover border-2 border-[#800020]" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop" alt="Profile pic">
+                    <div class="flex-1">
+                        <h2 id="profileName" class="font-bold text-gray-800 text-lg">Alumni Member</h2>
+                        <p id="displayRole" class="text-xs text-gray-500 font-semibold uppercase">Batchmate</p>
+                        <p id="displayBatchName" class="text-[11px] text-gray-500 mt-1">Batch A</p>
+                        <p id="displayCompany" class="text-[11px] text-gray-600 mt-1">UTC Alumni Network</p>
+                        <p id="displayYear" class="text-[10px] text-gray-500 mt-1">2006</p>
+                    </div>
                 </div>
-                <button onclick="toggleProfileModal(true)" class="mt-3 md:mt-0 text-[10px] font-bold bg-amber-50 text-[#800020] border border-amber-200 px-2 py-1 rounded-md hover:bg-amber-100 transition-colors">Personalize</button>
+                <div id="displayBadges" class="flex flex-wrap gap-2 text-[10px]"></div>
+                <p id="displayStatus" class="text-xs text-gray-600 italic mt-1 bg-amber-50/50 px-2 py-1 rounded">"Connected to the cloud!"</p>
+                <p id="displaySkills" class="text-[10px] text-gray-500">Skills: Mentoring, Networking</p>
+                <button onclick="toggleProfileModal(true)" class="w-full text-[11px] font-bold bg-[#800020] text-white px-3 py-2 rounded-lg hover:bg-red-900 transition-colors">Personalize Profile</button>
             </section>
 
             <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
-                <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider mb-4 flex items-center justify-between">
-                    <div class="flex items-center space-x-2">
-                        <span>Classmates Circle</span>
-                        <span class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full">Active Network</span>
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-[#800020] uppercase tracking-wider">Batch Directory</span>
+                        <span class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full">Roster</span>
                     </div>
                     <button type="button" onclick="showInviteModal(true)" class="text-[10px] font-semibold bg-[#800020] text-white px-2 py-1 rounded-md hover:bg-red-900 transition-colors">Invite</button>
-                </h3>
-                <div class="flex space-x-4 overflow-x-auto pb-2 md:grid md:grid-cols-3 md:gap-4 md:space-x-0 md:overflow-visible">
-                    <button type="button" onclick="viewClassmate('Dave', 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&auto=format&fit=crop', 'BS Computer Science - Class of 2006')" class="flex flex-col items-center text-center flex-shrink-0 cursor-pointer transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/40 rounded-lg p-1">
-                        <img class="w-12 h-12 rounded-full object-cover ring-2 ring-gray-100" src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&auto=format&fit=crop" alt="Dave">
-                        <span class="text-[11px] font-medium text-gray-700 mt-1">Dave</span>
-                    </button>
-                    <button type="button" onclick="viewClassmate('Sarah', 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop', 'MBA Alumni - Class of 2008')" class="flex flex-col items-center text-center flex-shrink-0 cursor-pointer transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/40 rounded-lg p-1">
-                        <img class="w-12 h-12 rounded-full object-cover ring-2 ring-gray-100" src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop" alt="Sarah">
-                        <span class="text-[11px] font-medium text-gray-700 mt-1">Sarah</span>
-                    </button>
                 </div>
+                <div class="space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                        <input id="batchSearch" type="search" placeholder="Search by name, company, role..." class="flex-1 w-full p-2.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
+                        <select id="batchFilter" class="w-full sm:w-auto p-2.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
+                            <option value="">All Batches</option>
+                            <option value="Batch A">Batch A</option>
+                            <option value="Batch B">Batch B</option>
+                            <option value="Batch C">Batch C</option>
+                        </select>
+                    </div>
+                    <div id="batchDirectoryList" class="grid gap-3"></div>
+                </div>
+            </section>
+
+            <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Your Network</h3>
+                    <span class="text-[10px] text-gray-500">Connected batchmates</span>
+                </div>
+                <div id="networkList" class="space-y-3 text-xs text-gray-700"></div>
+            </section>
+
+            <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Pending Invites</h3>
+                    <span id="pendingInvitesCountInline" class="text-[10px] text-gray-500">0 pending</span>
+                </div>
+                <div id="pendingInvitesList" class="space-y-3 text-xs text-gray-700"></div>
             </section>
         </div>
 
-        <!-- CENTER COLUMN: Live Interactive Testimonials Feed Stream -->
-        <div class="space-y-6 md:col-span-2 lg:col-span-1">
+        <div class="space-y-6 lg:col-span-2">
+            <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
+                <div class="space-y-3">
+                    <p class="text-[10px] uppercase tracking-wider text-gray-500">Welcome to the alumni hub</p>
+                    <h2 class="text-lg font-bold text-gray-900">Find batchmates, share stories, and grow your network.</h2>
+                    <p class="text-[11px] text-gray-600">Browse all alumni profiles, join conversations, RSVP to events, and access moderation tools if you are an organizer.</p>
+                </div>
+            </section>
+
             <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-3">
-                <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Leave a Testimonial</h3>
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Post a Testimonial</h3>
+                    <select id="testimonialCategory" class="text-[10px] border border-gray-200 rounded-lg px-2 py-1 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#800020]/20">
+                        <option value="professional">Professional</option>
+                        <option value="academic">Academic</option>
+                        <option value="social">Social</option>
+                    </select>
+                </div>
                 <div class="space-y-2">
-                    <textarea id="testimonialInput" placeholder="Say something awesome about your classmate..." rows="3" class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020] resize-none"></textarea>
-                    <div class="flex justify-end">
-                        <button id="testimonialSubmitBtn" class="bg-[#800020] text-white px-4 py-1.5 rounded-lg text-xs font-semibold shadow-sm hover:bg-red-900 transition-colors">Post Message</button>
+                    <textarea id="testimonialInput" placeholder="Say something awesome about a batchmate..." rows="3" class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020] resize-none"></textarea>
+                    <div class="flex justify-between items-center">
+                        <button id="testimonialSubmitBtn" class="bg-[#800020] text-white px-4 py-1.5 rounded-lg text-xs font-semibold shadow-sm hover:bg-red-900 transition-colors">Submit Testimonial</button>
+                        <span class="text-[10px] text-gray-500">Moderated before publishing.</span>
                     </div>
                 </div>
             </section>
 
             <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-4">
-                <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider border-b pb-2">Recent Testimonials</h3>
-                <div id="testimonialList" class="space-y-3">
-                    <!-- JavaScript hooks push real database posts dynamically right here -->
+                <div class="flex flex-wrap items-center gap-2 text-[10px] font-semibold text-gray-600">
+                    <span class="px-2 py-1 rounded-full bg-[#800020] text-white">Testimonials Feed</span>
+                    <button type="button" data-testimonial-filter="all" class="testimonial-tab px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">All</button>
+                    <button type="button" data-testimonial-filter="featured" class="testimonial-tab px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">Featured</button>
+                    <button type="button" data-testimonial-filter="professional" class="testimonial-tab px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">Professional</button>
+                    <button type="button" data-testimonial-filter="academic" class="testimonial-tab px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">Academic</button>
+                    <button type="button" data-testimonial-filter="social" class="testimonial-tab px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">Social</button>
                 </div>
+                <div id="testimonialList" class="space-y-3"></div>
             </section>
         </div>
 
-        <!-- RIGHT COLUMN: Events Board -->
-        <div class="space-y-6 md:col-span-3 lg:col-span-1">
+        <div class="space-y-6 lg:col-span-1">
             <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-3">
-                <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Upcoming Classmate Events</h3>
-                <div class="border-l-2 border-[#800020] pl-3 py-1 text-xs">
-                    <h4 class="font-bold text-gray-800">End of Term Party</h4>
-                    <p class="text-gray-500 text-[11px]">June 5 - 7:30 pm</p>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Upcoming Batch Events</h3>
+                        <p class="text-[10px] text-gray-500">See RSVP status and key dates.</p>
+                    </div>
+                    <span id="upcomingEventsCount" class="text-[10px] bg-amber-100 text-amber-800 px-2 py-1 rounded-full">0 Events</span>
+                </div>
+                <div id="eventsBoard" class="space-y-3"></div>
+            </section>
+
+            <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Community Message Board</h3>
+                        <p class="text-[10px] text-gray-500">A simple group chat for alumni coordination.</p>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <textarea id="messageInput" rows="3" placeholder="Share an update or ask the batch..." class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020] resize-none"></textarea>
+                    <div class="flex justify-between items-center">
+                        <button id="messageSendBtn" class="bg-[#800020] text-white px-4 py-1.5 rounded-lg text-xs font-semibold shadow-sm hover:bg-red-900 transition-colors">Send Message</button>
+                        <span class="text-[10px] text-gray-500">Live or asynchronous alumni chat.</span>
+                    </div>
+                </div>
+                <div id="messagesList" class="space-y-3 max-h-72 overflow-y-auto"></div>
+            </section>
+
+            <section id="adminPanel" class="hidden bg-white rounded-xl p-4 border border-red-100 shadow-sm space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xs font-bold text-red-700 uppercase tracking-wider">Admin & Moderation</h3>
+                    <span class="text-[10px] text-red-600">Community control center</span>
+                </div>
+                <div class="grid gap-3">
+                    <div>
+                        <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Pending Testimonials</h4>
+                        <div id="adminTestimonials" class="space-y-3 text-xs text-gray-700"></div>
+                    </div>
+                    <div>
+                        <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Invite Requests</h4>
+                        <div id="adminInvites" class="space-y-3 text-xs text-gray-700"></div>
+                    </div>
+                    <div>
+                        <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Event Management</h4>
+                        <div id="adminEvents" class="space-y-3 text-xs text-gray-700"></div>
+                    </div>
                 </div>
             </section>
         </div>
@@ -182,8 +311,53 @@
             }
         });
 
+        /*
+         Supabase table schema assumptions:
+         - alumni_profiles: id, email, name, avatar, title, company, grad_year, skills, badges, status, summary, updated_at
+         - connections: id, owner_email, batchmate_id, connected_at
+         - events: id, title, date, time, location, description
+         - event_rsvps: id, event_id, user_email, response, updated_at
+         - messages: id, author_name, author_email, content, created_at
+         - invites: id, email, invited_by, invite_link, status, invited_at
+         - testimonials: id, author_name, author_email, message_content, category, likes, approved, featured, created_at
+        */
+
         let currentMode = 'register';
         let currentUser = null;
+        let currentUserEmail = null;
+        let currentUserId = null;
+        let currentUserProfile = {
+            avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop',
+            name: 'Alumni Member',
+            role: 'Batchmate',
+            batchName: 'Batch A',
+            company: 'UTC Alumni Network',
+            gradYear: '2006',
+            skills: 'Mentoring, Networking',
+            badges: ['Mentor', 'Volunteer'],
+            status: 'Connected to the cloud!'
+        };
+
+        let batchmates = [
+            { id: 1, name: 'Dave', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&auto=format&fit=crop', batchName: 'Batch A', title: 'BS Computer Science - Class of 2006', company: 'UTC Tech', summary: 'Software engineering alum with product leadership experience.', role: 'Engineering Manager', gradYear: '2006', skills: 'Product, Cloud', badges: ['Mentor'] },
+            { id: 2, name: 'Sarah', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop', batchName: 'Batch B', title: 'MBA Alumni - Class of 2008', company: 'Connections Inc.', summary: 'Business development expert focusing on alumni partnerships.', role: 'Partnership Director', gradYear: '2008', skills: 'Business Strategy', badges: ['Speaker'] },
+            { id: 3, name: 'Ava', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop', batchName: 'Batch C', title: 'Civil Engineering - Class of 2009', company: 'BridgeWorks', summary: 'Infrastructure alum working on sustainable campus designs.', role: 'Project Lead', gradYear: '2009', skills: 'Sustainability', badges: ['Volunteer'] }
+        ];
+
+        let events = [
+            { id: 1, title: 'End of Term Party', date: 'June 5', time: '7:30 pm', location: 'Alumni Hall', description: 'Celebrate the end of term with your batchmates and mentors.' },
+            { id: 2, title: 'Career Networking Breakfast', date: 'June 12', time: '9:00 am', location: 'Campus Bistro', description: 'Share career moves and meet fellow alumni across batches.' },
+            { id: 3, title: 'Virtual Mentoring Session', date: 'June 20', time: '6:00 pm', location: 'Zoom', description: 'Join an online discussion with alumni mentors and students.' }
+        ];
+
+        let connectedBatchmates = new Set();
+        let rsvpResponses = {};
+        let messages = [];
+        let pendingInvites = [];
+        let allTestimonials = [];
+        let appMetrics = { members: batchmates.length, testimonials: 0, invites: 0, events: events.length };
+        let testimonialFilter = 'all';
+        const adminEmails = ['admin@msu.edu', 'founder@msu.edu'];
 
         const authOverlay = document.getElementById('authOverlay');
         const authForm = document.getElementById('authForm');
@@ -194,48 +368,130 @@
 
         async function initApp() {
             authForm.addEventListener('submit', handleAuthSubmit);
-            const testimonialSubmitBtn = document.getElementById('testimonialSubmitBtn');
-            if (testimonialSubmitBtn) {
-                testimonialSubmitBtn.addEventListener('click', submitTestimonial);
-            }
+            document.getElementById('testimonialSubmitBtn').addEventListener('click', submitTestimonial);
+            document.getElementById('messageSendBtn').addEventListener('click', submitMessage);
+            document.getElementById('batchSearch').addEventListener('input', e => filterBatchDirectory(e.target.value));
+            document.getElementById('batchFilter').addEventListener('change', () => filterBatchDirectory(document.getElementById('batchSearch').value));
+
+            document.querySelectorAll('[data-testimonial-filter]').forEach(button => {
+                button.addEventListener('click', () => {
+                    testimonialFilter = button.dataset.testimonialFilter;
+                    renderTestimonials();
+                    updateTestimonialTabStyles();
+                });
+            });
+
             await restoreSession();
+            await loadAppData();
+            setupRealtimeSubscriptions();
+
             supabaseClient.auth.onAuthStateChange((event, session) => {
                 if (session?.user) {
-                    const user = session.user;
-                    handleExistingSession(user);
+                    handleExistingSession(session.user);
                 } else {
                     clearAuthState();
                 }
             });
         }
 
+        async function loadAppData() {
+            await fetchBatchmates();
+            await fetchConnections();
+            await fetchEvents();
+            await fetchEventResponses();
+            await fetchTestimonials();
+            await fetchMessages();
+            await fetchPendingInvites();
+            await fetchMetrics();
+            renderStats();
+            renderBatchDirectory();
+            renderNetwork();
+            renderEvents();
+            renderMessages();
+            renderPendingInvites();
+            renderAdminPanel();
+            updateTestimonialTabStyles();
+        }
+
         async function restoreSession() {
             const { data, error } = await supabaseClient.auth.getSession();
             if (error) {
-                console.error("Session restore failed:", error.message);
+                console.error('Session restore failed:', error.message);
                 clearAuthState();
                 return;
             }
 
             if (data?.session?.user) {
-                handleExistingSession(data.session.user);
+                await handleExistingSession(data.session.user);
             } else {
                 clearAuthState();
             }
         }
 
-        function handleExistingSession(user) {
-            const name = user.user_metadata?.full_name || user.email || "Alumni Member";
-            currentUser = name;
-            loginSuccess(name);
+        async function handleExistingSession(user) {
+            currentUser = user.user_metadata?.full_name || user.email || 'Alumni Member';
+            currentUserEmail = user.email;
+            currentUserId = user.id;
+            await loginSuccess(currentUser);
         }
 
         function clearAuthState() {
             currentUser = null;
-            profileNameEl.innerText = "Alumni Member";
+            currentUserEmail = null;
+            currentUserId = null;
+            profileNameEl.innerText = 'Alumni Member';
             userBadge.classList.add('hidden');
             authOverlay.classList.remove('hidden');
             switchAuthTab('login');
+            renderStats();
+            renderBatchDirectory();
+            renderNetwork();
+            renderEvents();
+            renderMessages();
+            renderPendingInvites();
+            renderAdminPanel();
+        }
+
+        async function fetchCurrentUserProfile() {
+            if (!currentUserEmail) return;
+            try {
+                const { data, error } = await supabaseClient.from('alumni_profiles').select('*').eq('email', currentUserEmail).single();
+                if (!error && data) {
+                    currentUserProfile = {
+                        avatar: data.avatar || currentUserProfile.avatar,
+                        name: data.name || currentUser,
+                        role: data.title || data.role || currentUserProfile.role,
+                        batchName: data.batch_name || currentUserProfile.batchName,
+                        company: data.company || currentUserProfile.company,
+                        gradYear: data.grad_year || currentUserProfile.gradYear,
+                        skills: data.skills || currentUserProfile.skills,
+                        badges: data.badges ? data.badges.split(',').map(b => b.trim()) : currentUserProfile.badges,
+                        status: data.status || currentUserProfile.status
+                    };
+                    renderCurrentUserProfile();
+                }
+            } catch (err) {
+                console.warn('Could not fetch current user profile:', err.message);
+            }
+        }
+
+        function renderCurrentUserProfile() {
+            document.getElementById('displayAvatar').src = currentUserProfile.avatar;
+            document.getElementById('profileName').innerText = currentUserProfile.name;
+            document.getElementById('displayRole').innerText = currentUserProfile.role;
+            document.getElementById('displayBatchName').innerText = currentUserProfile.batchName || 'Batch A';
+            document.getElementById('displayCompany').innerText = currentUserProfile.company;
+            document.getElementById('displayYear').innerText = currentUserProfile.gradYear;
+            document.getElementById('displayStatus').innerText = `"${currentUserProfile.status}"`;
+            document.getElementById('displaySkills').innerText = `Skills: ${currentUserProfile.skills}`;
+            const badgesEl = document.getElementById('displayBadges');
+            badgesEl.innerHTML = '';
+            currentUserProfile.badges.forEach(badge => {
+                const chip = document.createElement('span');
+                chip.className = 'px-2 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px]';
+                chip.innerText = badge;
+                badgesEl.appendChild(chip);
+            });
         }
 
         window.switchAuthTab = function(mode) {
@@ -246,15 +502,15 @@
             const authBtn = document.getElementById('authBtn');
 
             if (mode === 'login') {
-                tabLog.className = "flex-1 pb-3 border-b-2 border-[#800020] text-[#800020]";
-                tabReg.className = "flex-1 pb-3 text-gray-400 hover:text-gray-600";
+                tabLog.className = 'flex-1 pb-3 border-b-2 border-[#800020] text-[#800020]';
+                tabReg.className = 'flex-1 pb-3 text-gray-400 hover:text-gray-600';
                 nameField.classList.add('hidden');
-                authBtn.innerText = "Sign In";
+                authBtn.innerText = 'Sign In';
             } else {
-                tabReg.className = "flex-1 pb-3 border-b-2 border-[#800020] text-[#800020]";
-                tabLog.className = "flex-1 pb-3 text-gray-400 hover:text-gray-600";
+                tabReg.className = 'flex-1 pb-3 border-b-2 border-[#800020] text-[#800020]';
+                tabLog.className = 'flex-1 pb-3 text-gray-400 hover:text-gray-600';
                 nameField.classList.remove('hidden');
-                authBtn.innerText = "Get Connected";
+                authBtn.innerText = 'Get Connected';
             }
         }
 
@@ -264,14 +520,14 @@
             const emailInput = document.getElementById('authEmail').value.trim();
             const passwordInput = document.getElementById('authPassword').value;
 
-            if (!emailInput.endsWith('.edu')) {
-                alert("Access Denied! You must use a valid student (.edu) email address.");
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) {
+                alert('Please enter a valid email address.');
                 return;
             }
 
             if (currentMode === 'register') {
                 if (!nameInput) {
-                    alert("Please enter your full name.");
+                    alert('Please enter your full name.');
                     return;
                 }
 
@@ -282,11 +538,11 @@
                 });
 
                 if (error) {
-                    alert("Registration Error: " + error.message);
+                    alert('Registration Error: ' + error.message);
                     return;
                 }
 
-                alert("Account created! Check your email address for verification and then sign in.");
+                alert('Account created! Check your email address for verification and then sign in.');
                 switchAuthTab('login');
                 return;
             }
@@ -297,17 +553,17 @@
             });
 
             if (error) {
-                alert("Login Error: " + error.message);
+                alert('Login Error: ' + error.message);
                 return;
             }
 
-            const name = data.user.user_metadata.full_name || data.user.email || "Alumni Member";
-            handleExistingSession(data.user);
+            await handleExistingSession(data.user);
         }
 
-        function loginSuccess(name, hideOverlay = true) {
+        async function loginSuccess(name, hideOverlay = true) {
             profileNameEl.innerText = name;
-            const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
+            currentUserProfile.name = name;
+            const initials = name.split(' ').map(part => part[0]).join('').toUpperCase();
             userBadge.innerText = initials;
             userBadge.classList.remove('hidden');
 
@@ -315,85 +571,702 @@
                 authOverlay.classList.add('hidden');
             }
 
-            fetchTestimonials();
+            await fetchCurrentUserProfile();
+            await fetchConnections();
+            await fetchEventResponses();
+            await fetchPendingInvites();
+            await fetchMetrics();
+            renderStats();
+            renderAdminPanel();
+        }
+
+        async function fetchMetrics() {
+            try {
+                const { count: membersCount, error: membersError } = await supabaseClient.from('alumni_profiles').select('id', { count: 'exact', head: true });
+                if (!membersError) appMetrics.members = membersCount || appMetrics.members;
+            } catch (err) {
+                console.warn('Metrics members failed', err.message);
+            }
+
+            try {
+                const { count: testCount, error: tError } = await supabaseClient.from('testimonials').select('id', { count: 'exact', head: true });
+                if (!tError) appMetrics.testimonials = testCount || appMetrics.testimonials;
+            } catch (err) {
+                console.warn('Metrics testimonials failed', err.message);
+            }
+
+            try {
+                const { count: inviteCount, error: iError } = await supabaseClient.from('invites').select('id', { count: 'exact', head: true });
+                if (!iError) appMetrics.invites = inviteCount || appMetrics.invites;
+            } catch (err) {
+                console.warn('Metrics invites failed', err.message);
+            }
+
+            try {
+                const { count: eventCount, error: eError } = await supabaseClient.from('events').select('id', { count: 'exact', head: true });
+                if (!eError) appMetrics.events = eventCount || appMetrics.events;
+            } catch (err) {
+                console.warn('Metrics events failed', err.message);
+            }
+
+            renderStats();
+        }
+
+        function renderStats() {
+            document.getElementById('membersCount').innerText = appMetrics.members;
+            document.getElementById('testimonialsCount').innerText = appMetrics.testimonials;
+            document.getElementById('pendingInvitesCount').innerText = appMetrics.invites;
+            document.getElementById('eventsCount').innerText = appMetrics.events;
+            document.getElementById('pendingInvitesCountInline').innerText = `${pendingInvites.length} pending`;
+        }
+
+        async function fetchBatchmates() {
+            try {
+                const { data, error } = await supabaseClient.from('alumni_profiles').select('id, email, name, avatar, title, company, summary, role, grad_year, batch_name, skills, badges');
+                if (!error && data && data.length) {
+                    batchmates = data.map(item => ({
+                        id: item.id,
+                        name: item.name,
+                        avatar: item.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop',
+                        batchName: item.batch_name || 'Batch A',
+                        title: item.title || item.role || 'Batchmate',
+                        company: item.company || 'UTC Alumni',
+                        summary: item.summary || '',
+                        role: item.role || item.title || 'Alumni',
+                        gradYear: item.grad_year || '2006',
+                        skills: item.skills || '',
+                        badges: item.badges ? item.badges.split(',').map(b => b.trim()) : []
+                    }));
+                }
+            } catch (err) {
+                console.warn('Could not fetch batchmates from Supabase:', err.message);
+            }
+            renderBatchDirectory();
+        }
+
+        async function fetchConnections() {
+            connectedBatchmates = new Set();
+            if (!currentUserEmail) {
+                renderNetwork();
+                return;
+            }
+            try {
+                const { data, error } = await supabaseClient.from('connections').select('batchmate_id').eq('owner_email', currentUserEmail);
+                if (!error && data) {
+                    data.forEach(item => connectedBatchmates.add(item.batchmate_id));
+                }
+            } catch (err) {
+                console.warn('Could not fetch connections:', err.message);
+            }
+            renderNetwork();
+            renderBatchDirectory();
+        }
+
+        async function toggleConnection(id) {
+            if (!currentUserEmail) {
+                authOverlay.classList.remove('hidden');
+                return;
+            }
+
+            const alreadyConnected = connectedBatchmates.has(id);
+            if (alreadyConnected) {
+                try {
+                    const { error } = await supabaseClient.from('connections').delete().eq('owner_email', currentUserEmail).eq('batchmate_id', id);
+                    if (error) throw error;
+                    connectedBatchmates.delete(id);
+                } catch (err) {
+                    console.warn('Could not remove connection:', err.message);
+                }
+            } else {
+                try {
+                    const { error } = await supabaseClient.from('connections').insert([{ owner_email: currentUserEmail, batchmate_id: id, connected_at: new Date().toISOString() }]);
+                    if (error) throw error;
+                    connectedBatchmates.add(id);
+                } catch (err) {
+                    console.warn('Could not save connection:', err.message);
+                }
+            }
+
+            renderBatchDirectory();
+            renderNetwork();
+        }
+
+        async function fetchEvents() {
+            try {
+                const { data, error } = await supabaseClient.from('events').select('id, title, date, time, location, description').order('date', { ascending: true });
+                if (!error && data && data.length) {
+                    events = data.map(event => ({
+                        id: event.id,
+                        title: event.title,
+                        date: event.date,
+                        time: event.time,
+                        location: event.location,
+                        description: event.description
+                    }));
+                }
+            } catch (err) {
+                console.warn('Could not fetch events:', err.message);
+            }
+            renderEvents();
+        }
+
+        async function fetchEventResponses() {
+            rsvpResponses = {};
+            if (!currentUserEmail) return;
+            try {
+                const { data, error } = await supabaseClient.from('event_rsvps').select('event_id, response').eq('user_email', currentUserEmail);
+                if (!error && data) {
+                    data.forEach(item => { rsvpResponses[item.event_id] = item.response; });
+                }
+            } catch (err) {
+                console.warn('Could not fetch RSVP responses:', err.message);
+            }
+            renderEvents();
+        }
+
+        async function rsvpEvent(eventId, response) {
+            if (!currentUserEmail) {
+                authOverlay.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const { error } = await supabaseClient.from('event_rsvps').upsert({
+                    event_id: eventId,
+                    user_email: currentUserEmail,
+                    response,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: ['event_id', 'user_email'] });
+                if (error) throw error;
+                rsvpResponses[eventId] = response;
+            } catch (err) {
+                console.warn('Could not save RSVP:', err.message);
+            }
+            renderEvents();
+        }
+
+        async function fetchMessages() {
+            try {
+                const { data, error } = await supabaseClient.from('messages').select('id, author_name, author_email, content, created_at').order('created_at', { ascending: false }).limit(20);
+                if (!error && data) {
+                    messages = data;
+                }
+            } catch (err) {
+                console.warn('Could not fetch messages:', err.message);
+            }
+            renderMessages();
+        }
+
+        function renderMessages() {
+            const list = document.getElementById('messagesList');
+            list.innerHTML = '';
+            if (!messages.length) {
+                list.innerHTML = '<p class="text-[11px] text-gray-400 italic">No messages yet. Start the conversation!</p>';
+                return;
+            }
+            messages.slice(0, 20).forEach(message => {
+                const item = document.createElement('div');
+                item.className = 'bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs';
+                item.innerHTML = `
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                        <span class="font-semibold text-gray-700">${message.author_name}</span>
+                        <span class="text-[10px] text-gray-400">${new Date(message.created_at).toLocaleString()}</span>
+                    </div>
+                    <p class="text-gray-600">${message.content}</p>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        async function submitMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            if (!text) return;
+            if (!currentUserEmail) {
+                alert('Please sign in to send a message.');
+                authOverlay.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const { error } = await supabaseClient.from('messages').insert([{ author_name: currentUser, author_email: currentUserEmail, content: text, created_at: new Date().toISOString() }]);
+                if (error) throw error;
+                input.value = '';
+                await fetchMessages();
+            } catch (err) {
+                console.warn('Could not send message:', err.message);
+            }
+        }
+
+        function setupRealtimeSubscriptions() {
+            try {
+                supabaseClient.channel('messages-room')
+                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+                        messages.unshift(payload.new);
+                        if (messages.length > 20) messages.pop();
+                        renderMessages();
+                    })
+                    .subscribe();
+            } catch (err) {
+                console.warn('Realtime subscriptions not available:', err.message);
+            }
+        }
+
+        async function fetchPendingInvites() {
+            pendingInvites = [];
+            if (!currentUserEmail) {
+                renderPendingInvites();
+                return;
+            }
+            try {
+                const { data, error } = await supabaseClient.from('invites').select('id, email, invited_by, invite_link, status, invited_at').eq('invited_by', currentUserEmail).neq('status', 'accepted').order('invited_at', { ascending: false });
+                if (!error && data) {
+                    pendingInvites = data;
+                }
+            } catch (err) {
+                console.warn('Could not fetch pending invites:', err.message);
+            }
+            renderPendingInvites();
+            renderStats();
+        }
+
+        function renderPendingInvites() {
+            const list = document.getElementById('pendingInvitesList');
+            list.innerHTML = '';
+            if (!pendingInvites.length) {
+                list.innerHTML = '<p class="text-[11px] text-gray-400 italic">No pending invites. Invite your batchmates!</p>';
+                return;
+            }
+            pendingInvites.forEach(invite => {
+                const item = document.createElement('div');
+                item.className = 'bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs';
+                item.innerHTML = `
+                    <div class="flex items-center justify-between gap-2">
+                        <span>${invite.email}</span>
+                        <span class="text-[10px] text-gray-500 uppercase">${invite.status || 'sent'}</span>
+                    </div>
+                    <p class="text-[10px] text-gray-500 mt-1">Sent on ${new Date(invite.invited_at).toLocaleDateString()}</p>
+                `;
+                list.appendChild(item);
+            });
+            document.getElementById('pendingInvitesCountInline').innerText = `${pendingInvites.length} pending`;
         }
 
         async function fetchTestimonials() {
-            const { data: testimonials, error } = await supabaseClient
-                .from('testimonials')
-                .select('*')
-                .order('created_at', { ascending: false });
+            try {
+                let query = supabaseClient.from('testimonials').select('id, author_name, author_email, message_content, category, likes, approved, featured, created_at').order('created_at', { ascending: false });
+                if (!isAdminUser()) {
+                    query = query.eq('approved', true);
+                }
+                const { data, error } = await query;
+                if (!error && data) {
+                    allTestimonials = data;
+                }
+            } catch (err) {
+                console.warn('Could not fetch testimonials:', err.message);
+            }
+            renderTestimonials();
+            renderStats();
+        }
 
-            if (error) {
-                console.error("Could not fetch database records:", error);
+        function renderTestimonials() {
+            const list = document.getElementById('testimonialList');
+            list.innerHTML = '';
+            const filtered = allTestimonials.filter(item => {
+                if (testimonialFilter === 'all') return item.approved || isAdminUser();
+                if (testimonialFilter === 'featured') return item.featured;
+                return item.category === testimonialFilter;
+            });
+
+            if (!filtered.length) {
+                list.innerHTML = '<p class="text-[11px] text-gray-400 italic">No testimonials match this filter.</p>';
                 return;
             }
 
-            const listContainer = document.getElementById('testimonialList');
-            listContainer.innerHTML = '';
-
-            if (!testimonials || testimonials.length === 0) {
-                listContainer.innerHTML = `<p class="text-xs text-gray-400 italic text-center py-2">No testimonials written yet. Be the first!</p>`;
-                return;
-            }
-
-            testimonials.forEach(item => {
+            filtered.forEach(item => {
                 const card = document.createElement('div');
-                card.className = "bg-gray-50 p-3 rounded-lg text-xs space-y-1 transform transition-all duration-200 hover:scale-[1.01]";
+                card.className = 'bg-gray-50 p-4 rounded-xl border border-gray-200 text-xs space-y-2';
                 card.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <span class="font-bold text-[#800020]">${item.author_name}</span>
-                        <span class="text-[10px] text-gray-400">${new Date(item.created_at).toLocaleDateString()}</span>
+                    <div class="flex items-center justify-between gap-2">
+                        <div>
+                            <p class="font-bold text-gray-800">${item.author_name}</p>
+                            <p class="text-[10px] text-gray-500">${item.category || 'General'} • ${new Date(item.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <span class="text-[10px] text-[#800020] font-semibold">${item.likes || 0} likes</span>
                     </div>
-                    <p class="text-gray-600 mt-0.5">${item.message_content}</p>
+                    <p class="text-gray-600">${item.message_content}</p>
+                    <div class="flex items-center gap-2 text-[10px]">
+                        <button type="button" onclick="likeTestimonial(${item.id})" class="font-semibold text-[#800020] hover:text-red-900">Like</button>
+                        ${isAdminUser() && !item.approved ? '<span class="px-2 py-1 rounded-full bg-red-50 text-red-700">Awaiting approval</span>' : ''}
+                    </div>
                 `;
-                listContainer.appendChild(card);
+                list.appendChild(card);
             });
         }
 
         async function submitTestimonial() {
             const inputField = document.getElementById('testimonialInput');
+            const categorySelect = document.getElementById('testimonialCategory');
             const text = inputField.value.trim();
+            const category = categorySelect.value || 'professional';
 
             if (!text) return;
-            if (!currentUser) {
-                alert("Please sign in before posting a testimonial.");
+            if (!currentUserEmail) {
+                alert('Please sign in before posting a testimonial.');
                 authOverlay.classList.remove('hidden');
                 return;
             }
 
-            const { error } = await supabaseClient
-                .from('testimonials')
-                .insert([{ author_name: currentUser, message_content: text }]);
+            try {
+                const { error } = await supabaseClient.from('testimonials').insert([{
+                    author_name: currentUser,
+                    author_email: currentUserEmail,
+                    message_content: text,
+                    category,
+                    likes: 0,
+                    approved: false,
+                    featured: false,
+                    created_at: new Date().toISOString()
+                }]);
+                if (error) throw error;
+                inputField.value = '';
+                await fetchTestimonials();
+                alert('Testimonial submitted for review.');
+            } catch (err) {
+                console.warn('Could not submit testimonial:', err.message);
+            }
+        }
 
-            if (error) {
-                alert("Write transmission error failed: " + error.message);
+        async function likeTestimonial(id) {
+            if (!currentUserEmail) {
+                alert('Please sign in to like testimonials.');
+                authOverlay.classList.remove('hidden');
                 return;
             }
+            const item = allTestimonials.find(test => test.id === id);
+            if (!item) return;
+            try {
+                const { error } = await supabaseClient.from('testimonials').update({ likes: (item.likes || 0) + 1 }).eq('id', id);
+                if (error) throw error;
+                await fetchTestimonials();
+            } catch (err) {
+                console.warn('Could not like testimonial:', err.message);
+            }
+        }
 
-            inputField.value = "";
-            fetchTestimonials();
+        function updateTestimonialTabStyles() {
+            document.querySelectorAll('[data-testimonial-filter]').forEach(button => {
+                button.classList.toggle('bg-[#800020] text-white', button.dataset.testimonialFilter === testimonialFilter);
+                button.classList.toggle('bg-gray-100 text-gray-700', button.dataset.testimonialFilter !== testimonialFilter);
+            });
+        }
+
+        function isAdminUser() {
+            return currentUserEmail && adminEmails.includes(currentUserEmail.toLowerCase());
+        }
+
+        async function renderAdminPanel() {
+            const panel = document.getElementById('adminPanel');
+            if (!isAdminUser()) {
+                panel.classList.add('hidden');
+                return;
+            }
+            panel.classList.remove('hidden');
+            await loadAdminModeration();
+        }
+
+        async function loadAdminModeration() {
+            const testimonialsSection = document.getElementById('adminTestimonials');
+            const invitesSection = document.getElementById('adminInvites');
+            const eventsSection = document.getElementById('adminEvents');
+            testimonialsSection.innerHTML = '';
+            invitesSection.innerHTML = '';
+            eventsSection.innerHTML = '';
+
+            try {
+                const { data: pendingTestimonials, error: tError } = await supabaseClient.from('testimonials').select('*').eq('approved', false).order('created_at', { ascending: false });
+                if (!tError && pendingTestimonials.length) {
+                    pendingTestimonials.forEach(item => {
+                        const row = document.createElement('div');
+                        row.className = 'bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs';
+                        row.innerHTML = `
+                            <div class="flex items-center justify-between gap-2 mb-2">
+                                <span class="font-semibold text-gray-700">${item.author_name}</span>
+                                <span class="text-[10px] text-gray-500">${item.category || 'General'}</span>
+                            </div>
+                            <p class="text-gray-600 mb-2">${item.message_content}</p>
+                            <div class="flex gap-2">
+                                <button onclick="approveTestimonial(${item.id})" class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-[10px]">Approve</button>
+                                <button onclick="deleteTestimonial(${item.id})" class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-[10px]">Delete</button>
+                            </div>
+                        `;
+                        testimonialsSection.appendChild(row);
+                    });
+                } else {
+                    testimonialsSection.innerHTML = '<p class="text-[11px] text-gray-400 italic">No testimonials awaiting approval.</p>';
+                }
+            } catch (err) {
+                testimonialsSection.innerHTML = '<p class="text-[11px] text-red-600">Unable to load admin testimonials.</p>';
+            }
+
+            try {
+                const { data: inviteRows, error: iError } = await supabaseClient.from('invites').select('*').order('invited_at', { ascending: false }).limit(5);
+                if (!iError && inviteRows.length) {
+                    inviteRows.forEach(invite => {
+                        const row = document.createElement('div');
+                        row.className = 'bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs';
+                        row.innerHTML = `
+                            <div class="flex items-center justify-between gap-2 mb-1">
+                                <span>${invite.email}</span>
+                                <span class="text-[10px] text-gray-500 uppercase">${invite.status || 'sent'}</span>
+                            </div>
+                            <p class="text-[10px] text-gray-500">Invited by ${invite.invited_by}</p>
+                        `;
+                        invitesSection.appendChild(row);
+                    });
+                } else {
+                    invitesSection.innerHTML = '<p class="text-[11px] text-gray-400 italic">No recent invite requests.</p>';
+                }
+            } catch (err) {
+                invitesSection.innerHTML = '<p class="text-[11px] text-red-600">Unable to load invites.</p>';
+            }
+
+            try {
+                const { data: eventRows, error: eError } = await supabaseClient.from('events').select('*').order('date', { ascending: true }).limit(5);
+                if (!eError && eventRows.length) {
+                    eventRows.forEach(event => {
+                        const row = document.createElement('div');
+                        row.className = 'bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs';
+                        row.innerHTML = `
+                            <div class="flex items-center justify-between gap-2 mb-1">
+                                <span class="font-semibold text-gray-700">${event.title}</span>
+                                <span class="text-[10px] text-gray-500">${event.date}</span>
+                            </div>
+                            <p class="text-[10px] text-gray-500">${event.location}</p>
+                        `;
+                        eventsSection.appendChild(row);
+                    });
+                } else {
+                    eventsSection.innerHTML = '<p class="text-[11px] text-gray-400 italic">No upcoming events to manage.</p>';
+                }
+            } catch (err) {
+                eventsSection.innerHTML = '<p class="text-[11px] text-red-600">Unable to load events.</p>';
+            }
+        }
+
+        async function approveTestimonial(id) {
+            try {
+                const { error } = await supabaseClient.from('testimonials').update({ approved: true }).eq('id', id);
+                if (error) throw error;
+                await fetchTestimonials();
+                await renderAdminPanel();
+            } catch (err) {
+                console.warn('Could not approve testimonial:', err.message);
+            }
+        }
+
+        async function deleteTestimonial(id) {
+            try {
+                const { error } = await supabaseClient.from('testimonials').delete().eq('id', id);
+                if (error) throw error;
+                await fetchTestimonials();
+                await renderAdminPanel();
+            } catch (err) {
+                console.warn('Could not delete testimonial:', err.message);
+            }
+        }
+
+        function renderBatchDirectory() {
+            const list = document.getElementById('batchDirectoryList');
+            list.innerHTML = '';
+            const query = document.getElementById('batchSearch')?.value.trim().toLowerCase() || '';
+            const selectedBatch = document.getElementById('batchFilter')?.value || '';
+            const filtered = batchmates.filter(batchmate => {
+                const searchText = `${batchmate.name} ${batchmate.title} ${batchmate.company} ${batchmate.summary} ${batchmate.batchName}`.toLowerCase();
+                const matchesSearch = !query || searchText.includes(query);
+                const matchesBatch = !selectedBatch || batchmate.batchName === selectedBatch;
+                return matchesSearch && matchesBatch;
+            });
+            if (filtered.length === 0) {
+                list.innerHTML = '<p class="text-[11px] text-gray-400 italic">No batchmates match your search or selected batch.</p>';
+                return;
+            }
+            filtered.forEach(batchmate => {
+                const card = document.createElement('div');
+                card.className = 'bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs space-y-2';
+                card.setAttribute('data-batch', batchmate.batchName || '');
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <img class="w-10 h-10 rounded-full object-cover" src="${batchmate.avatar}" alt="${batchmate.name}">
+                            <div>
+                                <p class="font-bold text-gray-700">${batchmate.name}</p>
+                                <p class="text-[10px] text-gray-500">${batchmate.company}</p>
+                                <p class="text-[10px] text-gray-500">${batchmate.batchName || 'Batch A'}</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="toggleConnection(${batchmate.id})" class="px-3 py-1 rounded-full text-[10px] font-semibold ${connectedBatchmates.has(batchmate.id) ? 'bg-green-100 text-green-800' : 'bg-[#800020] text-white hover:bg-red-900'}">${connectedBatchmates.has(batchmate.id) ? 'Connected' : 'Connect'}</button>
+                    </div>
+                    <p class="text-[11px] text-gray-600">${batchmate.summary}</p>
+                    <div class="flex items-center justify-between gap-2">
+                        <button type="button" onclick="viewBatchmate(${batchmate.id})" class="text-[10px] font-semibold text-[#800020] hover:text-red-900">View Profile</button>
+                        <span class="text-[10px] text-gray-500">${batchmate.gradYear}</span>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function filterBatchDirectory(query) {
+            renderBatchDirectory();
+        }
+
+        function renderNetwork() {
+            const network = document.getElementById('networkList');
+            network.innerHTML = '';
+            const connected = batchmates.filter(batchmate => connectedBatchmates.has(batchmate.id));
+            if (connected.length === 0) {
+                network.innerHTML = '<p class="text-[11px] italic text-gray-400">You have not connected with any batchmates yet.</p>';
+                return;
+            }
+            connected.forEach(batchmate => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between gap-3 bg-gray-50 p-3 rounded-xl border border-gray-200';
+                item.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <img class="w-10 h-10 rounded-full object-cover" src="${batchmate.avatar}" alt="${batchmate.name}">
+                        <div>
+                            <p class="font-bold text-gray-700">${batchmate.name}</p>
+                            <p class="text-[10px] text-gray-500">${batchmate.company}</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="viewBatchmate(${batchmate.id})" class="text-[10px] font-semibold text-[#800020] hover:text-red-900">View</button>
+                `;
+                network.appendChild(item);
+            });
+        }
+
+        function renderEvents() {
+            const board = document.getElementById('eventsBoard');
+            board.innerHTML = '';
+            events.forEach(event => {
+                const status = rsvpResponses[event.id] ? `You ${rsvpResponses[event.id] === 'yes' ? 'are attending' : 'declined'} this event` : 'No response yet';
+                const card = document.createElement('div');
+                card.className = 'bg-gray-50 p-4 rounded-xl border border-gray-200 text-xs space-y-2';
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="font-bold text-gray-800">${event.title}</p>
+                            <p class="text-[10px] text-gray-500">${event.date} · ${event.time}</p>
+                        </div>
+                        <span class="text-[10px] text-[#800020] font-semibold">${event.location}</span>
+                    </div>
+                    <p class="text-[11px] text-gray-600">${event.description}</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="rsvpEvent(${event.id}, 'yes')" class="px-3 py-1 rounded-full bg-[#800020] text-white text-[10px] font-semibold hover:bg-red-900">RSVP Yes</button>
+                        <button type="button" onclick="rsvpEvent(${event.id}, 'no')" class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-[10px] font-semibold hover:bg-gray-200">RSVP No</button>
+                    </div>
+                    <p class="text-[10px] text-gray-500 italic">${status}</p>
+                `;
+                board.appendChild(card);
+            });
+            document.getElementById('upcomingEventsCount').innerText = `${events.length} Events`;
+        }
+
+        function viewBatchmate(id) {
+            const batchmate = batchmates.find(item => item.id === id);
+            if (!batchmate) return;
+            document.getElementById('displayAvatar').src = batchmate.avatar;
+            document.getElementById('profileName').innerText = batchmate.name;
+            document.getElementById('displayRole').innerText = batchmate.role || batchmate.title;
+            document.getElementById('displayBatchName').innerText = batchmate.batchName || 'Batch A';
+            document.getElementById('displayCompany').innerText = batchmate.company;
+            document.getElementById('displayYear').innerText = batchmate.gradYear;
+            document.getElementById('displayStatus').innerText = `"Viewing ${batchmate.name}'s profile"`;
+            document.getElementById('displaySkills').innerText = `Skills: ${batchmate.skills}`;
+            const badgesEl = document.getElementById('displayBadges');
+            badgesEl.innerHTML = '';
+            (batchmate.badges || []).forEach(badge => {
+                const chip = document.createElement('span');
+                chip.className = 'px-2 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px]';
+                chip.innerText = badge;
+                badgesEl.appendChild(chip);
+            });
         }
 
         window.toggleProfileModal = function(show) {
             const modal = document.getElementById('profileModal');
             if (show) {
                 modal.classList.remove('hidden');
-                document.getElementById('inputStatus').value = document.getElementById('displayStatus').innerText.replace(/"/g, "");
-                document.getElementById('inputCourse').value = document.getElementById('displayCourse').innerText;
+                document.getElementById('inputStatus').value = currentUserProfile.status;
+                document.getElementById('inputBatchName').value = currentUserProfile.batchName || '';
+                document.getElementById('inputBatchYear').value = currentUserProfile.gradYear;
+                document.getElementById('inputCompany').value = currentUserProfile.company;
+                document.getElementById('inputRole').value = currentUserProfile.role;
+                document.getElementById('inputSkills').value = currentUserProfile.skills;
+                document.getElementById('inputAvatar').value = currentUserProfile.avatar;
+                document.getElementById('inputBadges').value = currentUserProfile.badges.join(', ');
             } else {
                 modal.classList.add('hidden');
             }
         }
 
-        window.saveProfileChanges = function() {
+        window.saveProfileChanges = async function() {
             const newStatus = document.getElementById('inputStatus').value.trim();
-            const newCourse = document.getElementById('inputCourse').value.trim();
+            const newBatchName = document.getElementById('inputBatchName').value.trim();
+            const newYear = document.getElementById('inputBatchYear').value.trim();
+            const newCompany = document.getElementById('inputCompany').value.trim();
+            const newRole = document.getElementById('inputRole').value.trim();
+            const newSkills = document.getElementById('inputSkills').value.trim();
             const newAvatar = document.getElementById('inputAvatar').value.trim();
+            const newBadges = document.getElementById('inputBadges').value.split(',').map(b => b.trim()).filter(Boolean);
 
-            if (newStatus) document.getElementById('displayStatus').innerText = `"${newStatus}"`;
-            if (newCourse) document.getElementById('displayCourse').innerText = newCourse;
-            if (newAvatar) document.getElementById('displayAvatar').src = newAvatar;
+            if (newStatus) currentUserProfile.status = newStatus;
+            if (newBatchName) currentUserProfile.batchName = newBatchName;
+            if (newYear) currentUserProfile.gradYear = newYear;
+            if (newCompany) currentUserProfile.company = newCompany;
+            if (newRole) currentUserProfile.role = newRole;
+            if (newSkills) currentUserProfile.skills = newSkills;
+            if (newAvatar) currentUserProfile.avatar = newAvatar;
+            if (newBadges.length) currentUserProfile.badges = newBadges;
+
+            document.getElementById('displayAvatar').src = currentUserProfile.avatar;
+            document.getElementById('profileName').innerText = currentUserProfile.name;
+            document.getElementById('displayRole').innerText = currentUserProfile.role;
+            document.getElementById('displayBatchName').innerText = currentUserProfile.batchName || 'Batch A';
+            document.getElementById('displayCompany').innerText = currentUserProfile.company;
+            document.getElementById('displayYear').innerText = currentUserProfile.gradYear;
+            document.getElementById('displayStatus').innerText = `"${currentUserProfile.status}"`;
+            document.getElementById('displaySkills').innerText = `Skills: ${currentUserProfile.skills}`;
+            const badgesEl = document.getElementById('displayBadges');
+            badgesEl.innerHTML = '';
+            currentUserProfile.badges.forEach(badge => {
+                const chip = document.createElement('span');
+                chip.className = 'px-2 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px]';
+                chip.innerText = badge;
+                badgesEl.appendChild(chip);
+            });
+
+            if (currentUserEmail) {
+                try {
+                    const { error } = await supabaseClient.from('alumni_profiles').upsert([{
+                        email: currentUserEmail,
+                        name: currentUser,
+                        avatar: currentUserProfile.avatar,
+                        title: currentUserProfile.role,
+                        company: currentUserProfile.company,
+                        grad_year: currentUserProfile.gradYear,
+                        batch_name: currentUserProfile.batchName,
+                        skills: currentUserProfile.skills,
+                        badges: currentUserProfile.badges.join(', '),
+                        status: currentUserProfile.status,
+                        updated_at: new Date().toISOString()
+                    }], { onConflict: ['email'] });
+                    if (error) throw error;
+                } catch (err) {
+                    console.warn('Could not save profile:', err.message);
+                }
+            }
 
             toggleProfileModal(false);
         }
@@ -412,7 +1285,7 @@
         }
 
         window.copyInviteLink = async function() {
-            const inviteLink = `${window.location.href}${window.location.href.includes('?') ? '&' : '?'}ref=${encodeURIComponent(currentUser || 'friend')}`;
+            const inviteLink = `${window.location.href}${window.location.href.includes('?') ? '&' : '?'}ref=${encodeURIComponent(currentUserEmail || 'friend')}`;
             try {
                 await navigator.clipboard.writeText(inviteLink);
                 const message = document.getElementById('inviteMessage');
@@ -439,41 +1312,33 @@
                 return;
             }
 
-            if (!currentUser) {
+            if (!currentUserEmail) {
                 alert('Please sign in to send invites.');
                 authOverlay.classList.remove('hidden');
                 showInviteModal(false);
                 return;
             }
 
-            const inviteLink = `${window.location.href}${window.location.href.includes('?') ? '&' : '?'}ref=${encodeURIComponent(currentUser)}`;
-            const { data, error } = await supabaseClient
-                .from('invites')
-                .insert([{ email, invited_by: currentUser, invite_link: inviteLink, created_at: new Date().toISOString() }]);
-
-            if (error) {
-                console.warn('Invite save failed:', error.message);
+            const inviteLink = `${window.location.href}${window.location.href.includes('?') ? '&' : '?'}ref=${encodeURIComponent(currentUserEmail)}`;
+            try {
+                const { error } = await supabaseClient.from('invites').insert([{ email, invited_by: currentUserEmail, invite_link: inviteLink, status: 'sent', invited_at: new Date().toISOString() }]);
+                if (error) throw error;
+                await fetchPendingInvites();
+                await fetchMetrics();
+                message.innerText = 'Invite sent successfully!';
+                message.classList.remove('hidden');
+                document.getElementById('inviteEmail').value = '';
+            } catch (err) {
+                console.warn('Invite save failed:', err.message);
                 message.innerText = 'Invite request recorded. Copy the link to share instead.';
                 message.classList.remove('hidden');
-                return;
             }
-
-            message.innerText = 'Invite sent successfully!';
-            message.classList.remove('hidden');
-            document.getElementById('inviteEmail').value = '';
         }
 
         window.logout = async function() {
             await supabaseClient.auth.signOut();
             clearAuthState();
             authForm.reset();
-        }
-
-        window.viewClassmate = function(name, avatarUrl, course) {
-            document.getElementById('displayAvatar').src = avatarUrl;
-            document.getElementById('profileName').innerText = name;
-            document.getElementById('displayCourse').innerText = course;
-            document.getElementById('displayStatus').innerText = `"Viewing ${name}'s profile"`;
         }
     </script>
 </body>
