@@ -170,6 +170,39 @@
         </div>
     </div>
 
+    <!-- ================= MEMBER PROFILE MODAL ================= -->
+    <div id="memberProfileModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" onclick="if (event.target === this) showMemberProfileModal(null)">
+        <div class="bg-white rounded-xl max-w-sm w-full p-5 shadow-xl border border-gray-100 space-y-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="flex items-start gap-3 border-b border-gray-100 pb-3">
+                <img id="memberProfileAvatar" class="w-16 h-16 rounded-full object-cover border-2 border-[#800020] bg-gray-200 shrink-0" src="" alt="">
+                <div class="flex-1 min-w-0">
+                    <h3 id="memberProfileName" class="text-base font-bold text-gray-900">Alumni Member</h3>
+                    <p id="memberProfileRole" class="text-xs font-bold text-[#800020] mt-0.5"></p>
+                    <p id="memberProfileBatch" class="text-[11px] text-gray-500 mt-1"></p>
+                </div>
+                <button type="button" onclick="showMemberProfileModal(null)" class="text-gray-400 hover:text-gray-600 text-lg leading-none shrink-0" aria-label="Close">&times;</button>
+            </div>
+            <div class="space-y-1 text-xs text-gray-600">
+                <p id="memberProfileCompany"></p>
+                <p id="memberProfileYear"></p>
+                <p id="memberProfileSkills"></p>
+                <p id="memberProfileEmail" class="hidden text-gray-500"></p>
+                <p id="memberProfileStatus" class="italic bg-amber-50/50 px-2 py-1 rounded text-gray-600"></p>
+                <p id="memberProfileNote" class="hidden text-[10px] text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1.5"></p>
+            </div>
+            <div id="memberMessageCompose" class="hidden space-y-2 border-t border-gray-100 pt-3">
+                <label class="text-[10px] font-bold text-gray-500 uppercase">Message</label>
+                <textarea id="memberMessageInput" rows="3" placeholder="Write your message..." class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020]/20 resize-none"></textarea>
+                <button type="button" onclick="sendMessageToActiveProfile()" class="w-full bg-[#800020] text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-red-900">Send Message</button>
+            </div>
+            <div class="flex flex-wrap gap-2 pt-1">
+                <button type="button" id="memberProfileMessageBtn" onclick="openMessageToActiveProfile()" class="flex-1 min-w-[100px] bg-[#800020] text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-red-900">Message</button>
+                <button type="button" id="memberProfileConnectBtn" onclick="connectFromProfileModal()" class="hidden flex-1 min-w-[100px] px-4 py-2 rounded-lg text-xs font-bold border border-[#800020] text-[#800020] hover:bg-amber-50">Connect</button>
+                <button type="button" onclick="showMemberProfileModal(null)" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-600 text-xs font-semibold hover:bg-gray-200">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ================= EVENT ANNOUNCEMENT MODAL ================= -->
     <div id="eventModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" onclick="if (event.target === this) showEventDetail(null)">
         <div class="bg-white rounded-xl max-w-md w-full p-5 shadow-xl border border-gray-100 space-y-4 max-h-[90vh] overflow-y-auto">
@@ -491,6 +524,8 @@
         let batchOfficers = [];
         let appMetrics = { members: 0, testimonials: 0, invites: 0 };
         let activeStatsDetailType = null;
+        let activeMessageRecipient = null;
+        let activeProfileModalId = null;
         let unreadMessages = 0;
         let selectedProfileAvatarFile = null;
         let selectedRegAvatarFile = null;
@@ -1411,7 +1446,7 @@
 
         async function fetchMessages() {
             try {
-                const { data, error } = await supabaseClient.from('messages').select('id, author_name, author_email, content, created_at').order('created_at', { ascending: false }).limit(20);
+                const { data, error } = await supabaseClient.from('messages').select('id, author_name, author_email, content, recipient_name, recipient_email, created_at').order('created_at', { ascending: false }).limit(20);
                 if (!error && data) {
                     messages = data;
                 }
@@ -1431,38 +1466,199 @@
             messages.slice(0, 20).forEach(message => {
                 const item = document.createElement('div');
                 item.className = 'bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs';
+                const toLine = message.recipient_name
+                    ? `<p class="text-[10px] font-semibold text-[#800020] mb-1">To: ${escapeHtml(message.recipient_name)}</p>`
+                    : '';
                 item.innerHTML = `
                     <div class="flex items-center justify-between gap-2 mb-1">
-                        <span class="font-semibold text-gray-700">${message.author_name}</span>
+                        <span class="font-semibold text-gray-700">${escapeHtml(message.author_name)}</span>
                         <span class="text-[10px] text-gray-400">${new Date(message.created_at).toLocaleString()}</span>
                     </div>
-                    <p class="text-gray-600">${message.content}</p>
+                    ${toLine}
+                    <p class="text-gray-600">${escapeHtml(message.content)}</p>
                 `;
                 list.appendChild(item);
             });
+        }
+
+        async function sendDirectedMessage(recipient, text) {
+            if (!currentUserEmail) {
+                showToast('Sign in to send a message', 'error');
+                setAuthOverlayOpen(true);
+                return false;
+            }
+            const payload = {
+                author_name: currentUser,
+                author_email: currentUserEmail,
+                content: text,
+                recipient_name: recipient?.name || null,
+                recipient_email: recipient?.email || null,
+                created_at: new Date().toISOString()
+            };
+            try {
+                let { error } = await supabaseClient.from('messages').insert([payload]);
+                if (error && /recipient_/i.test(error.message || '')) {
+                    const fallback = {
+                        author_name: currentUser,
+                        author_email: currentUserEmail,
+                        content: `To ${recipient?.name || 'member'}: ${text}`,
+                        created_at: payload.created_at
+                    };
+                    ({ error } = await supabaseClient.from('messages').insert([fallback]));
+                }
+                if (error) throw error;
+                await fetchMessages();
+                showToast(`Message sent to ${recipient?.name || 'member'}`, 'success');
+                return true;
+            } catch (err) {
+                console.warn('Could not send message:', err.message);
+                showToast('Unable to send message', 'error');
+                return false;
+            }
         }
 
         async function submitMessage() {
             const input = document.getElementById('messageInput');
             const text = input.value.trim();
             if (!text) return;
-            if (!currentUserEmail) {
-                alert('Please sign in to send a message.');
-                setAuthOverlayOpen(true);
+            const ok = await sendDirectedMessage(null, text);
+            if (ok) input.value = '';
+        }
+
+        function buildProfileFromOfficerData(officer) {
+            const match = officer.profileId
+                ? batchmates.find(item => String(item.id) === String(officer.profileId))
+                : findBatchmateForOfficer(officer.name);
+            if (match) return { ...match, isOfficialOnly: false };
+            return {
+                id: null,
+                name: officer.name,
+                role: 'Officer',
+                designation: officer.designation,
+                batchName: officer.batchName || officer.batchLabel || '',
+                company: officer.company || '',
+                email: '',
+                avatar: officer.avatar || DEFAULT_AVATAR,
+                skills: '',
+                status: '',
+                summary: '',
+                gradYear: batchLabelToYear(officer.batchName || ''),
+                badges: [],
+                isOfficialOnly: true
+            };
+        }
+
+        window.showMemberProfileModal = function(profile) {
+            const modal = document.getElementById('memberProfileModal');
+            if (!modal) return;
+            if (!profile) {
+                modal.classList.add('hidden');
+                document.getElementById('memberMessageCompose')?.classList.add('hidden');
+                activeMessageRecipient = null;
+                activeProfileModalId = null;
                 return;
             }
 
-            try {
-                const { error } = await supabaseClient.from('messages').insert([{ author_name: currentUser, author_email: currentUserEmail, content: text, created_at: new Date().toISOString() }]);
-                if (error) throw error;
-                input.value = '';
-                await fetchMessages();
-                showToast('Message sent', 'success');
-            } catch (err) {
-                console.warn('Could not send message:', err.message);
-                showToast('Unable to send message', 'error');
+            activeProfileModalId = profile.id || null;
+            activeMessageRecipient = { name: profile.name || 'Alumni Member', email: profile.email || '' };
+
+            document.getElementById('memberProfileAvatar').src = profile.avatar || DEFAULT_AVATAR;
+            document.getElementById('memberProfileName').innerText = profile.name || 'Alumni Member';
+            const roleLine = profile.designation || (profile.role === 'Officer' ? 'Officer' : (profile.role || 'Member'));
+            document.getElementById('memberProfileRole').innerText = roleLine;
+            document.getElementById('memberProfileBatch').innerText = profile.batchName || profile.batchLabel || '—';
+
+            const companyEl = document.getElementById('memberProfileCompany');
+            companyEl.innerText = profile.company ? profile.company : '';
+            companyEl.classList.toggle('hidden', !profile.company);
+
+            const yearEl = document.getElementById('memberProfileYear');
+            if (profile.gradYear) {
+                yearEl.innerText = `Class of ${profile.gradYear}`;
+                yearEl.classList.remove('hidden');
+            } else {
+                yearEl.classList.add('hidden');
             }
-        }
+
+            const skillsEl = document.getElementById('memberProfileSkills');
+            skillsEl.innerText = profile.skills ? `Skills: ${profile.skills}` : '';
+            skillsEl.classList.toggle('hidden', !profile.skills);
+
+            const emailEl = document.getElementById('memberProfileEmail');
+            if (profile.email && profile.email !== currentUserEmail) {
+                emailEl.innerText = profile.email;
+                emailEl.classList.remove('hidden');
+            } else {
+                emailEl.classList.add('hidden');
+            }
+
+            const statusEl = document.getElementById('memberProfileStatus');
+            if (profile.status) {
+                statusEl.innerText = `"${profile.status}"`;
+                statusEl.classList.remove('hidden');
+            } else {
+                statusEl.classList.add('hidden');
+            }
+
+            const noteEl = document.getElementById('memberProfileNote');
+            if (profile.isOfficialOnly || (!profile.id && !profile.email)) {
+                noteEl.innerText = 'UTC leadership roster — not registered on Connect yet. Your message will appear on the board addressed to them.';
+                noteEl.classList.remove('hidden');
+            } else {
+                noteEl.classList.add('hidden');
+            }
+
+            document.getElementById('memberMessageCompose')?.classList.add('hidden');
+            const msgInput = document.getElementById('memberMessageInput');
+            if (msgInput) msgInput.value = '';
+
+            const connectBtn = document.getElementById('memberProfileConnectBtn');
+            const canConnect = profile.id && profile.email !== currentUserEmail;
+            if (connectBtn) {
+                connectBtn.classList.toggle('hidden', !canConnect);
+                if (canConnect) {
+                    const connected = connectedBatchmates.has(profile.id);
+                    connectBtn.innerText = connected ? 'Connected ✓' : 'Connect';
+                    connectBtn.disabled = connected;
+                    connectBtn.classList.toggle('opacity-70', connected);
+                }
+            }
+
+            modal.classList.remove('hidden');
+        };
+
+        window.openMessageToActiveProfile = function() {
+            if (!currentUserEmail) {
+                showToast('Sign in to send a message', 'error');
+                setAuthOverlayOpen(true);
+                return;
+            }
+            document.getElementById('memberMessageCompose')?.classList.remove('hidden');
+            const input = document.getElementById('memberMessageInput');
+            if (input) {
+                input.placeholder = `Write a message to ${activeMessageRecipient?.name || 'this member'}...`;
+                input.focus();
+            }
+        };
+
+        window.sendMessageToActiveProfile = async function() {
+            const input = document.getElementById('memberMessageInput');
+            const text = input?.value.trim() || '';
+            if (!text) return;
+            const ok = await sendDirectedMessage(activeMessageRecipient, text);
+            if (ok) {
+                if (input) input.value = '';
+                showMemberProfileModal(null);
+                document.getElementById('messagesList')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        };
+
+        window.connectFromProfileModal = async function() {
+            if (!activeProfileModalId) return;
+            await toggleConnection(activeProfileModalId);
+            const profile = batchmates.find(item => String(item.id) === String(activeProfileModalId));
+            if (profile) showMemberProfileModal(profile);
+        };
 
         function setupRealtimeSubscriptions() {
             try {
@@ -1945,13 +2141,7 @@
                 viewBatchmate(officer.profileId);
                 return;
             }
-            if (officer.batchName) {
-                setBatchSelectValue('batchFilter', officer.batchName);
-                onBatchFilterChange();
-                showToast(`Opened ${officer.batchLabel || officer.batchName} in Batch Directory`, 'info');
-                return;
-            }
-            showToast(`${officer.name} — ${officer.designation}`, 'info');
+            showMemberProfileModal(buildProfileFromOfficerData(officer));
         };
 
         function appendOfficerBoardCard(board, officer) {
@@ -2182,7 +2372,7 @@
             }
 
             renderProfileSidebar(profile, { viewingOther: true });
-            document.getElementById('profileName')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            showMemberProfileModal({ ...profile, isOfficialOnly: false });
         };
 
         function readFileAsDataURL(file) {
