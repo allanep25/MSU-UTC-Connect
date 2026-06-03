@@ -32,22 +32,6 @@
             #dashboardSidebar.open { transform: translateX(0); }
             #sidebarBackdrop.open { display: block; }
         }
-        .ad-card-construction {
-            border-color: rgba(251, 191, 36, 0.55);
-            box-shadow: 0 4px 16px rgba(128, 0, 32, 0.1);
-        }
-        .ad-construction-banner {
-            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 35%, #800020 100%);
-        }
-        .ad-construction-stripes {
-            background-image: repeating-linear-gradient(
-                -45deg,
-                transparent,
-                transparent 10px,
-                rgba(255, 255, 255, 0.12) 10px,
-                rgba(255, 255, 255, 0.12) 20px
-            );
-        }
     </style>
     <!-- Supabase CDN Script (Loads cloud database connectivity) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -561,7 +545,7 @@
                                         <div class="grid grid-cols-2 gap-2">
                                             <input id="adminAdTag" type="text" placeholder="Tag (Event, Sponsor…)" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
                                             <select id="adminAdAccent" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none bg-white">
-                                                <option value="construction">Under construction (featured)</option>
+                                                <option value="construction">Community brown + under construction</option>
                                                 <option value="from-[#800020] to-red-900">Maroon</option>
                                                 <option value="from-amber-600 to-amber-800">Amber</option>
                                                 <option value="from-slate-700 to-slate-900">Slate</option>
@@ -835,10 +819,14 @@
             };
         }
 
-        function buildAdPlaceholder(accent, tag) {
+        function buildAdPlaceholder(accent, tag, options = {}) {
             const el = document.createElement('div');
-            el.className = `w-full h-28 bg-gradient-to-br ${accent} flex items-center justify-center text-white/90 text-center px-3`;
-            el.innerHTML = `<span class="text-[10px] font-bold uppercase tracking-widest">${escapeHtml(tag || 'Featured')}</span>`;
+            el.className = `w-full h-28 bg-gradient-to-br ${accent} flex flex-col items-center justify-center text-white text-center px-3 gap-1`;
+            const label = escapeHtml(tag || 'Featured');
+            const emoji = options.showConstructionIcon
+                ? '<span class="text-lg leading-none opacity-95" aria-hidden="true">🚧</span>'
+                : '';
+            el.innerHTML = `${emoji}<span class="text-[10px] font-bold uppercase tracking-widest">${label}</span>`;
             return el;
         }
 
@@ -846,46 +834,30 @@
             return ad.accent === 'construction';
         }
 
-        function buildConstructionAdBanner(headerLabel) {
-            const label = headerLabel || 'Community';
-            const wrap = document.createElement('div');
-            wrap.className = 'relative w-full h-28 ad-construction-banner ad-construction-stripes overflow-hidden';
-            wrap.innerHTML = `
-                <div class="relative h-full flex flex-col items-center justify-center text-white text-center px-3 gap-1">
-                    <span class="text-xl leading-none" aria-hidden="true">🚧</span>
-                    <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-50">${escapeHtml(label)}</span>
-                    <span class="text-[9px] font-semibold uppercase tracking-wider text-white/90">Under construction</span>
-                </div>
-            `;
-            return wrap;
-        }
-
         function appendOverviewAdCard(board, ad) {
             const construction = isConstructionAd(ad);
             const card = document.createElement('article');
-            card.className = construction
-                ? 'ad-card-construction flex flex-col rounded-xl border-2 overflow-hidden bg-gradient-to-b from-amber-50/80 via-white to-white hover:shadow-lg transition-all'
-                : 'flex flex-col rounded-xl border border-gray-200 overflow-hidden bg-gray-50 hover:border-[#800020]/30 hover:shadow-md transition-all';
+            card.className = 'flex flex-col rounded-xl border border-gray-200 overflow-hidden bg-gray-50 hover:border-[#800020]/30 hover:shadow-md transition-all';
 
-            const accent = ad.accent || 'from-[#800020] to-red-900';
+            const accent = construction ? 'from-amber-600 to-amber-800' : (ad.accent || 'from-[#800020] to-red-900');
             let media;
-            if (construction && !ad.image) {
-                media = buildConstructionAdBanner(ad.tag || 'Community');
-            } else if (ad.image) {
+            if (ad.image) {
                 const img = document.createElement('img');
                 img.src = ad.image;
                 img.alt = ad.title || 'Advertisement';
                 img.className = 'w-full h-28 object-cover bg-gray-200';
                 img.onerror = () => {
-                    img.replaceWith(construction ? buildConstructionAdBanner(ad.tag) : buildAdPlaceholder(accent, ad.tag));
+                    img.replaceWith(buildAdPlaceholder(accent, ad.tag, { showConstructionIcon: construction }));
                 };
                 media = img;
             } else {
-                media = buildAdPlaceholder(accent, ad.tag);
+                media = buildAdPlaceholder(accent, ad.tag || (construction ? 'Community' : 'Featured'), {
+                    showConstructionIcon: construction
+                });
             }
 
             const tagHtml = ad.tag
-                ? `<span class="text-[9px] font-bold uppercase tracking-wide ${construction ? 'text-amber-900 bg-amber-100 border border-amber-300' : 'text-[#800020] bg-white/80'} px-2 py-0.5 rounded-full">${escapeHtml(ad.tag)}</span>`
+                ? `<span class="text-[9px] font-bold uppercase tracking-wide text-[#800020] bg-amber-100 px-1.5 py-0.5 rounded">${escapeHtml(ad.tag)}</span>`
                 : '';
 
             const cta = ad.link
