@@ -4,6 +4,7 @@
 |------|----------|
 | `notable-alumni-nominations.jpg` | Notable Alumni call for nominations (Overview ad) |
 | `fun-run-2026.jpg` | 6th Alumni Homecoming Fun Run (Overview ad + Events poster) |
+| `homecoming-2026.png` | 6th Alumni Homecoming — Brotherhood for World Peace (Events) |
 
 Use only letters, numbers, and hyphens in filenames (no `:` or `?`).
 
