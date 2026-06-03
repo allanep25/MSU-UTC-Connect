@@ -1078,6 +1078,74 @@
             };
         }
 
+        const COMMUNITY_AD_IMAGE_BASE = 'assets/ads/';
+        const BUILTIN_OVERVIEW_ADS = [
+            {
+                id: 'builtin-notable-alumni',
+                title: 'Call for Nominations: Notable Alumni',
+                body: 'Honor outstanding MSU-UTC alumni. Submit a 100–150 word bionote and one high-quality photo on or before July 1, 2026.',
+                image: COMMUNITY_AD_IMAGE_BASE + 'notable-alumni-nominations.png',
+                link: 'mailto:abdulhamidgunda@gmail.com?cc=gabrielmohammadomar3@gmail.com,m2angni@gmail.com&subject=Notable%20Alumni%20Nomination',
+                linkLabel: 'Email nominations',
+                tag: 'Association',
+                accent: 'from-[#800020] to-red-900',
+                panel: '',
+                active: true,
+                sortOrder: -2
+            },
+            {
+                id: 'builtin-fun-run-ad',
+                title: '6th Alumni Homecoming Fun Run',
+                body: 'July 12, 2026 · 5:30 AM · MSU-Main · Run for World Peace. 3K & 5K — ₱500 includes finisher shirt, medal, and food.',
+                image: COMMUNITY_AD_IMAGE_BASE + 'fun-run-2026.png',
+                link: '',
+                linkLabel: 'View event details',
+                tag: 'Event',
+                accent: 'from-emerald-800 to-emerald-950',
+                panel: 'events',
+                active: true,
+                sortOrder: -1
+            }
+        ];
+
+        const BUILTIN_FUN_RUN_EVENT = {
+            id: 'builtin-fun-run-2026',
+            title: '6th Alumni Homecoming Fun Run',
+            date: '2026-07-12',
+            time: '5:30 AM',
+            location: 'MSU-Main',
+            description: 'MSU-UTC (PHS, UHS) Alumni Association — Run for World Peace.\n\nDistances: 3 KM and 5 KM\nRegistration: ₱500 (finisher shirt, medal, food & drinks)\n\nContact: msuutc.alumni@gmail.com\nFacebook: MSU-UTC (PHS, UHS) Alumni Association',
+            photoUrls: [COMMUNITY_AD_IMAGE_BASE + 'fun-run-2026.png']
+        };
+
+        function isBuiltinEventId(id) {
+            return String(id || '').startsWith('builtin-');
+        }
+
+        function isPosterFlyerAd(ad) {
+            return !!(ad.image && String(ad.image).includes('assets/ads/'));
+        }
+
+        function communityContentAlreadyPresent(titleFragment) {
+            const needle = titleFragment.toLowerCase();
+            return overviewAds.some(ad => (ad.title || '').toLowerCase().includes(needle))
+                || events.some(ev => (ev.title || '').toLowerCase().includes(needle));
+        }
+
+        function mergeBuiltinCommunityContent() {
+            BUILTIN_OVERVIEW_ADS.forEach(builtin => {
+                if (!overviewAds.some(ad => (ad.title || '').toLowerCase() === builtin.title.toLowerCase())) {
+                    overviewAds.push({ ...builtin });
+                }
+            });
+            overviewAds.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || String(a.id).localeCompare(String(b.id)));
+
+            if (!communityContentAlreadyPresent('fun run')) {
+                events.push({ ...BUILTIN_FUN_RUN_EVENT });
+                events.sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+            }
+        }
+
         function buildAdPlaceholder(accent, tag, options = {}) {
             const el = document.createElement('div');
             el.className = `w-full h-28 bg-gradient-to-br ${accent} flex flex-col items-center justify-center text-white text-center px-3 gap-1`;
@@ -1104,7 +1172,9 @@
                 const img = document.createElement('img');
                 img.src = ad.image;
                 img.alt = ad.title || 'Advertisement';
-                img.className = 'w-full h-28 object-cover bg-gray-200';
+                img.className = isPosterFlyerAd(ad)
+                    ? 'w-full h-44 sm:h-52 object-contain bg-gray-100'
+                    : 'w-full h-28 object-cover bg-gray-200';
                 img.onerror = () => {
                     img.replaceWith(buildAdPlaceholder(accent, ad.tag, { showConstructionIcon: construction }));
                 };
@@ -1175,6 +1245,7 @@
                 console.warn('Could not load overview ads:', err.message);
                 overviewAds = [];
             }
+            mergeBuiltinCommunityContent();
             renderOverviewAdBoard();
         }
 
@@ -2844,6 +2915,7 @@
                 console.warn('Could not fetch events:', err.message);
                 events = [];
             }
+            mergeBuiltinCommunityContent();
             renderEvents();
         }
 
@@ -2862,6 +2934,10 @@
         }
 
         async function rsvpEvent(eventId, response) {
+            if (isBuiltinEventId(eventId)) {
+                showToast('RSVP opens when this event is saved in Admin → Events', 'info');
+                return;
+            }
             if (!currentUserEmail) {
                 setAuthOverlayOpen(true);
                 return;
@@ -3851,28 +3927,44 @@
                 const urls = event.photoUrls || [];
                 if (urls.length) {
                     photosEl.classList.remove('hidden');
-                    photosEl.innerHTML = urls.map(url => `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="block"><img src="${escapeHtml(url)}" alt="Event" class="rounded-lg w-full h-24 object-cover border border-gray-200"></a>`).join('');
+                    photosEl.innerHTML = urls.map(url => `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="block"><img src="${escapeHtml(url)}" alt="Event" class="rounded-lg w-full max-h-64 object-contain bg-gray-50 border border-gray-200"></a>`).join('');
                 } else {
                     photosEl.classList.add('hidden');
                     photosEl.innerHTML = '';
                 }
             }
             const countEl = document.getElementById('eventModalRsvpCount');
-            if (countEl) countEl.innerText = formatEventJoinCount(eventId);
-            document.getElementById('eventModalRsvpStatus').innerText = getEventRsvpLabel(eventId);
+            if (countEl) {
+                countEl.innerText = isBuiltinEventId(eventId)
+                    ? 'Register via msuutc.alumni@gmail.com'
+                    : formatEventJoinCount(eventId);
+            }
+            document.getElementById('eventModalRsvpStatus').innerText = isBuiltinEventId(eventId)
+                ? 'Preview event — save in Admin → Events to enable Join RSVP.'
+                : getEventRsvpLabel(eventId);
             const joinBtn = document.getElementById('eventModalJoinBtn');
             if (joinBtn) {
-                const joined = rsvpResponses[eventId] === 'yes';
-                joinBtn.innerText = joined ? 'Joined ✓' : 'Join Event';
-                joinBtn.disabled = joined;
-                joinBtn.classList.toggle('opacity-70', joined);
-                joinBtn.classList.toggle('cursor-not-allowed', joined);
+                if (isBuiltinEventId(eventId)) {
+                    joinBtn.innerText = 'Email to register';
+                    joinBtn.disabled = false;
+                    joinBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+                } else {
+                    const joined = rsvpResponses[eventId] === 'yes';
+                    joinBtn.innerText = joined ? 'Joined ✓' : 'Join Event';
+                    joinBtn.disabled = joined;
+                    joinBtn.classList.toggle('opacity-70', joined);
+                    joinBtn.classList.toggle('cursor-not-allowed', joined);
+                }
             }
             modal.classList.remove('hidden');
         };
 
         window.joinEventFromModal = async function() {
             if (!activeEventId) return;
+            if (isBuiltinEventId(activeEventId)) {
+                window.location.href = 'mailto:msuutc.alumni@gmail.com?subject=Fun%20Run%20Registration';
+                return;
+            }
             if (!currentUserEmail) {
                 showToast('Sign in to join an event', 'error');
                 setAuthOverlayOpen(true);
