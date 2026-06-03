@@ -242,6 +242,20 @@
                     <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Badges</label>
                     <input id="inputBadges" type="text" placeholder="Mentor, Volunteer" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
                 </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">City</label>
+                        <input id="inputCity" type="text" placeholder="e.g. Iligan" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Country</label>
+                        <input id="inputCountry" type="text" placeholder="e.g. Philippines" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                    </div>
+                </div>
+                <label class="flex items-center gap-2 text-[11px] text-gray-600 cursor-pointer">
+                    <input id="inputHideContact" type="checkbox" class="rounded border-gray-300">
+                    <span>Hide email & phone until someone connects with me</span>
+                </label>
                 <details class="rounded-lg border border-gray-200 bg-gray-50/80 px-2.5 py-2">
                     <summary class="text-[10px] font-bold text-[#800020] cursor-pointer select-none">Social & contact links</summary>
                     <div class="space-y-2 mt-2 pt-2 border-t border-gray-200">
@@ -330,6 +344,7 @@
             </div>
             <p id="eventModalLocation" class="text-xs font-semibold text-gray-700"></p>
             <p id="eventModalDescription" class="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap"></p>
+            <div id="eventModalPhotos" class="grid grid-cols-2 gap-2 hidden"></div>
             <p id="eventModalRsvpCount" class="text-[10px] font-semibold text-[#800020]"></p>
             <p id="eventModalRsvpStatus" class="text-[10px] text-gray-500 italic"></p>
             <div class="flex flex-wrap gap-2 pt-1">
@@ -385,6 +400,9 @@
                 <button type="button" data-panel="officers" class="dash-nav-item w-full text-left px-4 py-2.5 hover:bg-white/10">Alumni Officers</button>
                 <button type="button" data-panel="network" class="dash-nav-item w-full text-left px-4 py-2.5 hover:bg-white/10">My Network</button>
                 <button type="button" data-panel="events" class="dash-nav-item w-full text-left px-4 py-2.5 hover:bg-white/10">Events</button>
+                <button type="button" data-panel="announcements" class="dash-nav-item w-full text-left px-4 py-2.5 hover:bg-white/10">Batch News</button>
+                <button type="button" data-panel="opportunities" class="dash-nav-item w-full text-left px-4 py-2.5 hover:bg-white/10">Opportunities</button>
+                <button type="button" data-panel="locations" class="dash-nav-item w-full text-left px-4 py-2.5 hover:bg-white/10">Where We Are</button>
                 <button type="button" data-panel="testimonials" class="dash-nav-item w-full text-left px-4 py-2.5 hover:bg-white/10">Testimonials</button>
                 <button type="button" data-panel="messages" class="dash-nav-item w-full text-left px-4 py-2.5 hover:bg-white/10 flex items-center gap-2">
                     <span>Messages</span>
@@ -413,15 +431,19 @@
         </aside>
 
         <div class="flex-1 flex flex-col min-w-0 min-h-screen">
-            <header class="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3 shrink-0 sticky top-0 z-30">
+            <header class="bg-white border-b border-gray-200 px-4 py-3 flex flex-wrap items-center gap-3 shrink-0 sticky top-0 z-30">
                 <button type="button" id="dashboardMenuToggle" class="lg:hidden p-2 rounded-lg border border-gray-200 text-sm" aria-label="Open menu">☰</button>
-                <div class="flex-1 min-w-0">
+                <div class="flex-1 min-w-0 basis-[140px]">
                     <h1 id="pageTitle" class="text-lg font-bold text-[#800020] truncate">Overview</h1>
                     <p id="pageSubtitle" class="text-[11px] text-gray-500 truncate">Stats and quick actions</p>
                 </div>
+                <div class="w-full sm:w-auto sm:flex-1 sm:max-w-xs order-last sm:order-none basis-full sm:basis-auto">
+                    <input id="globalSearch" type="search" placeholder="Search alumni by name, batch, skill…" class="w-full p-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/20" oninput="onGlobalSearchInput(this.value)">
+                </div>
                 <div class="relative shrink-0">
-                    <button id="notificationButton" type="button" onclick="resetNotifications()" class="relative p-2 rounded-full border border-gray-200 text-sm hover:bg-gray-50">🔔</button>
+                    <button id="notificationButton" type="button" onclick="toggleNotificationPanel()" class="relative p-2 rounded-full border border-gray-200 text-sm hover:bg-gray-50">🔔</button>
                     <span id="notificationBadge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-4 rounded-full bg-amber-400 text-[9px] text-black font-bold flex items-center justify-center px-1">0</span>
+                    <div id="notificationDropdown" class="hidden absolute right-0 top-full mt-1 w-72 max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-xl shadow-lg z-50 p-2 max-h-64 overflow-y-auto text-xs"></div>
                 </div>
                 <span id="topbarRoleBadge" class="hidden sm:inline text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">Member</span>
             </header>
@@ -492,6 +514,7 @@
                         <p id="displaySummary" class="text-[11px] text-gray-600 hidden"></p>
                         <p id="displayStatus" class="text-xs text-gray-600 italic mt-1 bg-amber-50/50 px-2 py-1 rounded">"—"</p>
                         <p id="displaySkills" class="text-[10px] text-gray-500">Skills: —</p>
+                        <p id="displayLocation" class="text-[10px] text-gray-500 hidden"></p>
                         <div id="displaySocialLinks" class="flex flex-wrap gap-2 text-[10px] hidden"></div>
                         <button id="personalizeProfileBtn" type="button" onclick="toggleProfileModal(true)" class="w-full text-[11px] font-bold bg-[#800020] text-white px-3 py-2 rounded-lg hover:bg-red-900 transition-colors">Personalize Profile</button>
                         <button id="backToMyProfileBtn" type="button" onclick="restoreMyProfile()" class="hidden w-full text-[11px] font-bold bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors">← Back to My Profile</button>
@@ -505,7 +528,10 @@
                                 <span class="text-xs font-bold text-[#800020] uppercase tracking-wider">Batch Directory</span>
                                 <span class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full">Roster</span>
                             </div>
-                            <button type="button" onclick="showInviteModal(true)" class="text-[10px] font-semibold bg-[#800020] text-white px-2 py-1 rounded-md hover:bg-red-900 transition-colors">Invite</button>
+                            <div class="flex gap-2">
+                                <button type="button" id="exportRosterBtn" onclick="exportBatchRosterCsv()" class="hidden text-[10px] font-semibold bg-gray-100 text-gray-700 px-2 py-1 rounded-md hover:bg-gray-200">Export CSV</button>
+                                <button type="button" onclick="showInviteModal(true)" class="text-[10px] font-semibold bg-[#800020] text-white px-2 py-1 rounded-md hover:bg-red-900 transition-colors">Invite</button>
+                            </div>
                         </div>
                         <div class="space-y-3">
                             <div>
@@ -599,6 +625,53 @@
                         </div>
                         <div id="eventCalendar" class="grid grid-cols-3 gap-2 mb-4"></div>
                         <div id="eventsBoard" class="space-y-3"></div>
+                    </section>
+                </section>
+
+                <section id="dashboard-panel-announcements" class="dashboard-panel space-y-4">
+                    <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-3">
+                        <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Batch News</h3>
+                        <p class="text-[11px] text-gray-600">Updates for a specific batch — homecoming, meetings, reminders.</p>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase">Show batch</label>
+                        <select id="announcementBatchFilter" class="w-full p-2.5 border border-gray-200 rounded-lg text-xs" onchange="renderBatchAnnouncements()"></select>
+                        <div id="announcementsList" class="space-y-3 text-xs"></div>
+                    </section>
+                    <section id="announcementPostSection" class="hidden bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-3">
+                        <h3 class="text-xs font-bold text-[#800020] uppercase">Post batch news</h3>
+                        <input id="announcementTitle" type="text" placeholder="Headline" class="w-full p-2 border rounded-lg text-xs">
+                        <textarea id="announcementBody" rows="3" placeholder="Details for your batch…" class="w-full p-2 border rounded-lg text-xs resize-none"></textarea>
+                        <button type="button" onclick="submitBatchAnnouncement()" class="bg-[#800020] text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-red-900">Publish to batch</button>
+                    </section>
+                </section>
+
+                <section id="dashboard-panel-opportunities" class="dashboard-panel space-y-4">
+                    <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-3">
+                        <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Post an opportunity</h3>
+                        <input id="jobTitle" type="text" placeholder="Title" class="w-full p-2 border rounded-lg text-xs">
+                        <select id="jobCategory" class="w-full p-2 border rounded-lg text-xs bg-white">
+                            <option value="hiring">Hiring</option>
+                            <option value="mentorship">Mentorship</option>
+                            <option value="internship">Internship</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <select id="jobBatch" class="w-full p-2 border rounded-lg text-xs bg-white">
+                            <option value="">All batches</option>
+                        </select>
+                        <textarea id="jobBody" rows="3" placeholder="Describe the role or opportunity…" class="w-full p-2 border rounded-lg text-xs resize-none"></textarea>
+                        <button type="button" onclick="submitJobPost()" class="bg-[#800020] text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-red-900">Post opportunity</button>
+                    </section>
+                    <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-3">
+                        <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Opportunities board</h3>
+                        <div id="jobPostsList" class="space-y-3 text-xs"></div>
+                    </section>
+                </section>
+
+                <section id="dashboard-panel-locations" class="dashboard-panel">
+                    <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-3">
+                        <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Where we are</h3>
+                        <p class="text-[11px] text-gray-600">Alumni who shared their city on their profile.</p>
+                        <input id="locationSearch" type="search" placeholder="Filter by city or country…" class="w-full p-2.5 border rounded-lg text-xs" oninput="renderAlumniLocations()">
+                        <div id="locationsList" class="space-y-2 text-xs max-h-[28rem] overflow-y-auto"></div>
                     </section>
                 </section>
 
@@ -704,6 +777,7 @@
                                     </div>
                                     <input id="adminEventLocation" type="text" placeholder="Alumni Hall" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
                                     <textarea id="adminEventDescription" rows="2" placeholder="Short description..." class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none resize-none"></textarea>
+                                    <input id="adminEventPhotos" type="text" placeholder="Photo URLs (comma-separated, optional)" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
                                     <div class="flex gap-2">
                                         <button type="submit" id="adminEventSubmitBtn" class="flex-1 px-3 py-1.5 bg-[#800020] text-white rounded-lg text-[10px] font-semibold hover:bg-red-900">Add Event</button>
                                         <button type="button" id="adminEventCancelEditBtn" onclick="cancelEventEdit()" class="hidden px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg text-[10px] font-semibold hover:bg-gray-300">Cancel</button>
@@ -745,7 +819,9 @@
          - testimonials: id, author_name, author_email, message_content, category, likes, approved, featured, created_at
          - overview_ads: id, title, body, image, link, link_label, tag, accent, panel, active, sort_order, created_at, updated_at
          - site_feedback: id, author_name, author_email, message, created_at
-         - alumni_profiles also: linkedin, facebook, phone
+         - alumni_profiles also: linkedin, facebook, phone, city, country, hide_contact
+         - events also: photo_urls
+         - batch_announcements, job_posts (tier 2)
         */
 
         let currentMode = 'register';
@@ -766,7 +842,13 @@
             status: '',
             title: '',
             summary: '',
-            designation: ''
+            designation: '',
+            linkedin: '',
+            facebook: '',
+            phone: '',
+            city: '',
+            country: '',
+            hideContact: false
         };
 
         let batchmates = [];
@@ -775,6 +857,9 @@
         let connectedBatchmates = new Set();
         let rsvpResponses = {};
         let messages = [];
+        let batchAnnouncements = [];
+        let jobPosts = [];
+        const NOTIFICATION_STORAGE_KEY = 'utc_notification_seen_v1';
         let pendingInvites = [];
         let allTestimonials = [];
         let batchOfficers = [];
@@ -841,8 +926,23 @@
                 badges: item.badges ? String(item.badges).split(',').map(b => b.trim()).filter(Boolean) : [],
                 linkedin: (item.linkedin || '').trim(),
                 facebook: (item.facebook || '').trim(),
-                phone: (item.phone || '').trim()
+                phone: (item.phone || '').trim(),
+                city: (item.city || '').trim(),
+                country: (item.country || '').trim(),
+                hideContact: !!item.hide_contact
             };
+        }
+
+        function canViewContactInfo(profile, viewingOther) {
+            if (!viewingOther) return true;
+            if (!profile?.hideContact) return true;
+            if (!profile?.id) return false;
+            return connectedBatchmates.has(profile.id);
+        }
+
+        function getProfileContactEmail(profile, viewingOther) {
+            if (!canViewContactInfo(profile, viewingOther)) return '';
+            return profile.email || '';
         }
 
         function renderSocialLinks(profile, containerId) {
@@ -882,11 +982,26 @@
 
             const emailEl = document.getElementById('displayEmail');
             if (emailEl) {
-                if (viewingOther && profile.email) {
-                    emailEl.innerText = profile.email;
+                const email = getProfileContactEmail(profile, viewingOther);
+                if (viewingOther && email) {
+                    emailEl.innerText = email;
+                    emailEl.classList.remove('hidden');
+                } else if (viewingOther && profile.hideContact) {
+                    emailEl.innerText = 'Connect to view contact info';
                     emailEl.classList.remove('hidden');
                 } else {
                     emailEl.classList.add('hidden');
+                }
+            }
+
+            const locEl = document.getElementById('displayLocation');
+            if (locEl) {
+                const loc = [profile.city, profile.country].filter(Boolean).join(', ');
+                if (loc) {
+                    locEl.innerText = `📍 ${loc}`;
+                    locEl.classList.remove('hidden');
+                } else {
+                    locEl.classList.add('hidden');
                 }
             }
 
@@ -928,7 +1043,10 @@
             }
 
             setProfileActionButtons(viewingOther);
-            renderSocialLinks(profile, 'displaySocialLinks');
+            const socialProfile = viewingOther && !canViewContactInfo(profile, true)
+                ? { ...profile, linkedin: '', facebook: '', phone: '' }
+                : profile;
+            renderSocialLinks(socialProfile, 'displaySocialLinks');
         }
 
         const BATCH_OPTIONS = [
@@ -1316,7 +1434,9 @@
             const configs = [
                 { id: 'regBatchName', placeholder: 'Select batch (required)' },
                 { id: 'inputBatchName', placeholder: 'Select batch' },
-                { id: 'batchFilter', placeholder: 'All Batches — full roster' }
+                { id: 'batchFilter', placeholder: 'All Batches — full roster' },
+                { id: 'announcementBatchFilter', placeholder: 'Select batch' },
+                { id: 'jobBatch', placeholder: 'All batches' }
             ];
             configs.forEach(({ id, placeholder }) => {
                 const select = document.getElementById(id);
@@ -1357,6 +1477,9 @@
             officers: ['Alumni Officers', 'UTC leadership roster'],
             network: ['My Network', 'Connected batchmates'],
             events: ['Events', 'Upcoming batch announcements'],
+            announcements: ['Batch News', 'Updates for your batch'],
+            opportunities: ['Opportunities', 'Jobs, mentorship, and internships'],
+            locations: ['Where We Are', 'Alumni locations on the map'],
             testimonials: ['Testimonials', 'Stories from the community'],
             messages: ['Messages', 'Community message board'],
             invites: ['Invites', 'Pending and sent invites'],
@@ -1461,6 +1584,13 @@
             });
             updateTestimonialTabStyles();
             initDashboardNav();
+            document.addEventListener('click', (e) => {
+                const dd = document.getElementById('notificationDropdown');
+                const btn = document.getElementById('notificationButton');
+                if (!dd || dd.classList.contains('hidden')) return;
+                if (dd.contains(e.target) || btn?.contains(e.target)) return;
+                dd.classList.add('hidden');
+            });
 
             await restoreSession();
             await loadAppData();
@@ -1485,6 +1615,8 @@
             await fetchMessages();
             await fetchPendingInvites();
             await fetchOverviewAds();
+            await fetchBatchAnnouncements();
+            await fetchJobPosts();
             await fetchMetrics();
             renderStats();
             renderBatchDirectory();
@@ -1493,7 +1625,10 @@
             renderEvents();
             renderMessages();
             renderPendingInvites();
+            renderAlumniLocations();
             renderAdminPanel();
+            updateTier2Ui();
+            updateNotificationBadge();
             updateTestimonialTabStyles();
         }
 
@@ -1611,8 +1746,12 @@
                         designation: mapped.designation,
                         linkedin: mapped.linkedin,
                         facebook: mapped.facebook,
-                        phone: mapped.phone
+                        phone: mapped.phone,
+                        city: mapped.city,
+                        country: mapped.country,
+                        hideContact: mapped.hideContact
                     };
+                    updateTier2Ui();
                     if (viewingOtherProfileId) {
                         await viewBatchmate(viewingOtherProfileId);
                     } else {
@@ -1919,7 +2058,12 @@
             await fetchMetrics();
             renderStats();
             await fetchOverviewAds();
+            await fetchBatchAnnouncements();
+            await fetchJobPosts();
             renderAdminPanel();
+            renderAlumniLocations();
+            updateTier2Ui();
+            updateNotificationBadge();
             updateAccountRoleBadge();
         }
 
@@ -2097,14 +2241,143 @@
             }, 3200);
         }
 
+        function resetNotifications() {
+            unreadMessages = 0;
+            const seen = getNotificationSeenSet();
+            rebuildNotificationItems().forEach(item => seen.add(item.id));
+            if (unreadMessages > 0) seen.add('live-messages');
+            saveNotificationSeenSet(seen);
+            updateNotificationBadge();
+            const dd = document.getElementById('notificationDropdown');
+            if (dd) dd.classList.add('hidden');
+            showToast('Notifications cleared', 'success');
+        }
+
+        function parsePhotoUrls(raw) {
+            if (!raw) return [];
+            return String(raw).split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+        }
+
+        function getNotificationSeenSet() {
+            try {
+                const raw = localStorage.getItem(NOTIFICATION_STORAGE_KEY);
+                return new Set(JSON.parse(raw || '[]'));
+            } catch {
+                return new Set();
+            }
+        }
+
+        function saveNotificationSeenSet(set) {
+            const arr = Array.from(set).slice(-300);
+            localStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(arr));
+        }
+
+        function markNotificationSeen(id) {
+            if (!id) return;
+            const seen = getNotificationSeenSet();
+            seen.add(id);
+            saveNotificationSeenSet(seen);
+            updateNotificationBadge();
+        }
+
+        function rebuildNotificationItems() {
+            const seen = getNotificationSeenSet();
+            const items = [];
+            if (!currentUserEmail) return items;
+
+            messages.forEach(msg => {
+                if (!msg.id || msg.author_email === currentUserEmail) return;
+                const directed = msg.recipient_email && msg.recipient_email === currentUserEmail;
+                if (!directed) return;
+                const id = 'msg-' + msg.id;
+                if (seen.has(id)) return;
+                items.push({
+                    id,
+                    label: `${msg.author_name} sent you a message`,
+                    panel: 'messages'
+                });
+            });
+
+            const myBatch = currentUserProfile.batchName;
+            if (myBatch) {
+                batchAnnouncements.forEach(ann => {
+                    if (!ann.id || !batchesMatch(ann.batch_name, myBatch)) return;
+                    const id = 'ann-' + ann.id;
+                    if (seen.has(id)) return;
+                    items.push({
+                        id,
+                        label: `Batch news: ${ann.title}`,
+                        panel: 'announcements'
+                    });
+                });
+            }
+
+            jobPosts.slice(0, 8).forEach(job => {
+                if (!job.id) return;
+                const id = 'job-' + job.id;
+                if (seen.has(id)) return;
+                if (job.batch_name && myBatch && !batchesMatch(job.batch_name, myBatch)) return;
+                items.push({
+                    id,
+                    label: `Opportunity: ${job.title}`,
+                    panel: 'opportunities'
+                });
+            });
+
+            return items;
+        }
+
+        window.toggleNotificationPanel = function() {
+            const dd = document.getElementById('notificationDropdown');
+            if (!dd) return;
+            const opening = dd.classList.contains('hidden');
+            dd.classList.toggle('hidden');
+            if (!opening) return;
+
+            const items = rebuildNotificationItems();
+            if (unreadMessages > 0 && !getNotificationSeenSet().has('live-messages')) {
+                items.unshift({
+                    id: 'live-messages',
+                    label: `${unreadMessages} new community message${unreadMessages === 1 ? '' : 's'}`,
+                    panel: 'messages'
+                });
+            }
+
+            if (!items.length) {
+                dd.innerHTML = '<p class="text-gray-400 p-2 italic">You\'re all caught up.</p>';
+                return;
+            }
+
+            dd.innerHTML = '';
+            items.forEach(item => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'w-full text-left px-2 py-2 rounded-lg hover:bg-amber-50 text-gray-700 border-b border-gray-100 last:border-0';
+                btn.innerText = item.label;
+                btn.onclick = () => {
+                    markNotificationSeen(item.id);
+                    dd.classList.add('hidden');
+                    navigateDashboard(item.panel);
+                };
+                dd.appendChild(btn);
+            });
+            const clearBtn = document.createElement('button');
+            clearBtn.type = 'button';
+            clearBtn.className = 'w-full mt-2 px-2 py-1.5 rounded-lg bg-gray-100 text-gray-600 font-semibold hover:bg-gray-200';
+            clearBtn.innerText = 'Clear all';
+            clearBtn.onclick = () => resetNotifications();
+            dd.appendChild(clearBtn);
+        };
+
         function updateNotificationBadge() {
             const badge = document.getElementById('notificationBadge');
             const navBadge = document.getElementById('navMessagesBadge');
-            const count = unreadMessages > 0 ? unreadMessages.toString() : '';
+            const count = rebuildNotificationItems().length + unreadMessages;
+            const label = count > 99 ? '99+' : String(count);
             [badge, navBadge].forEach(el => {
                 if (!el) return;
-                if (unreadMessages > 0) {
-                    el.innerText = count;
+                if (count > 0) {
+                    el.innerText = label;
                     el.classList.remove('hidden');
                 } else {
                     el.classList.add('hidden');
@@ -2112,11 +2385,301 @@
             });
         }
 
-        function resetNotifications() {
-            unreadMessages = 0;
-            updateNotificationBadge();
-            showToast('Message notifications cleared', 'success');
+        function updateTier2Ui() {
+            const postSec = document.getElementById('announcementPostSection');
+            if (postSec) postSec.classList.toggle('hidden', !currentUserEmail);
+            const exportBtn = document.getElementById('exportRosterBtn');
+            if (exportBtn) exportBtn.classList.toggle('hidden', !isAdminUser());
+            const annFilter = document.getElementById('announcementBatchFilter');
+            if (annFilter && currentUserProfile.batchName && !annFilter.value) {
+                setBatchSelectValue('announcementBatchFilter', currentUserProfile.batchName);
+            }
         }
+
+        window.onGlobalSearchInput = function(query) {
+            const q = (query || '').trim();
+            const batchSearch = document.getElementById('batchSearch');
+            const skillFilter = document.getElementById('skillFilter');
+            if (batchSearch) batchSearch.value = q;
+            if (skillFilter && q.includes(' ')) {
+                skillFilter.value = '';
+            }
+            navigateDashboard('directory');
+            renderBatchDirectory();
+        };
+
+        async function fetchBatchAnnouncements() {
+            try {
+                const { data, error } = await supabaseClient.from('batch_announcements').select('*').order('created_at', { ascending: false }).limit(50);
+                if (!error && data) {
+                    batchAnnouncements = data;
+                } else {
+                    batchAnnouncements = [];
+                }
+            } catch (err) {
+                console.warn('Could not fetch batch announcements:', err.message);
+                batchAnnouncements = [];
+            }
+            renderBatchAnnouncements();
+            updateNotificationBadge();
+        }
+
+        window.renderBatchAnnouncements = function() {
+            const list = document.getElementById('announcementsList');
+            if (!list) return;
+            const batch = document.getElementById('announcementBatchFilter')?.value || currentUserProfile.batchName || '';
+            const filtered = batch
+                ? batchAnnouncements.filter(item => batchesMatch(item.batch_name, batch))
+                : batchAnnouncements;
+            list.innerHTML = '';
+            if (!filtered.length) {
+                list.innerHTML = '<p class="text-[11px] text-gray-400 italic">No batch news yet for this batch.</p>';
+                return;
+            }
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'bg-gray-50 p-3 rounded-xl border border-gray-200';
+                const canDelete = isAdminUser() || (item.author_email || '').toLowerCase() === (currentUserEmail || '').toLowerCase();
+                card.innerHTML = `
+                    <div class="flex justify-between gap-2 mb-1">
+                        <span class="font-semibold text-gray-800">${escapeHtml(item.title)}</span>
+                        <span class="text-[10px] text-gray-400 shrink-0">${new Date(item.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <p class="text-[10px] text-[#800020] font-semibold mb-1">${escapeHtml(item.batch_name)}</p>
+                    <p class="text-gray-600 whitespace-pre-wrap">${escapeHtml(item.body)}</p>
+                    <p class="text-[10px] text-gray-400 mt-2">— ${escapeHtml(item.author_name)}</p>
+                    ${canDelete ? `<button type="button" class="mt-2 text-[10px] text-red-700 font-semibold hover:underline" data-ann-id="${item.id}">Remove</button>` : ''}
+                `;
+                const delBtn = card.querySelector('[data-ann-id]');
+                if (delBtn) delBtn.onclick = () => deleteBatchAnnouncement(item.id);
+                list.appendChild(card);
+            });
+        };
+
+        window.submitBatchAnnouncement = async function() {
+            if (!currentUserEmail) {
+                setAuthOverlayOpen(true);
+                return;
+            }
+            const batch = document.getElementById('announcementBatchFilter')?.value || currentUserProfile.batchName;
+            const title = document.getElementById('announcementTitle')?.value.trim();
+            const body = document.getElementById('announcementBody')?.value.trim();
+            if (!batch) {
+                showToast('Select a batch first', 'error');
+                return;
+            }
+            if (!title || !body) {
+                showToast('Headline and details are required', 'error');
+                return;
+            }
+            try {
+                const { error } = await supabaseClient.from('batch_announcements').insert([{
+                    batch_name: batch,
+                    title,
+                    body,
+                    author_name: currentUserProfile.name || currentUser,
+                    author_email: currentUserEmail
+                }]);
+                if (error) throw error;
+                document.getElementById('announcementTitle').value = '';
+                document.getElementById('announcementBody').value = '';
+                await fetchBatchAnnouncements();
+                showToast('Published to batch', 'success');
+            } catch (err) {
+                console.warn('Batch announcement failed:', err.message);
+                showToast('Run supabase/tier2-features.sql in Supabase', 'error');
+            }
+        };
+
+        async function deleteBatchAnnouncement(id) {
+            if (!confirm('Remove this announcement?')) return;
+            try {
+                const { error } = await supabaseClient.from('batch_announcements').delete().eq('id', id);
+                if (error) throw error;
+                await fetchBatchAnnouncements();
+                showToast('Announcement removed', 'success');
+            } catch (err) {
+                showToast('Could not remove announcement', 'error');
+            }
+        }
+
+        async function fetchJobPosts() {
+            try {
+                const { data, error } = await supabaseClient.from('job_posts').select('*').eq('active', true).order('created_at', { ascending: false }).limit(40);
+                if (!error && data) {
+                    jobPosts = data;
+                } else {
+                    jobPosts = [];
+                }
+            } catch (err) {
+                console.warn('Could not fetch job posts:', err.message);
+                jobPosts = [];
+            }
+            renderJobPosts();
+            updateNotificationBadge();
+        }
+
+        window.renderJobPosts = function() {
+            const list = document.getElementById('jobPostsList');
+            if (!list) return;
+            list.innerHTML = '';
+            if (!jobPosts.length) {
+                list.innerHTML = '<p class="text-[11px] text-gray-400 italic">No opportunities posted yet.</p>';
+                return;
+            }
+            const categoryLabels = { hiring: 'Hiring', mentorship: 'Mentorship', internship: 'Internship', other: 'Other' };
+            jobPosts.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'bg-gray-50 p-3 rounded-xl border border-gray-200';
+                const canRemove = isAdminUser() || (item.author_email || '').toLowerCase() === (currentUserEmail || '').toLowerCase();
+                const batchLine = item.batch_name ? `<p class="text-[10px] text-[#800020]">${escapeHtml(item.batch_name)}</p>` : '<p class="text-[10px] text-gray-500">All batches</p>';
+                card.innerHTML = `
+                    <div class="flex justify-between gap-2 mb-1">
+                        <span class="font-semibold text-gray-800">${escapeHtml(item.title)}</span>
+                        <span class="text-[10px] bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full">${escapeHtml(categoryLabels[item.category] || 'Other')}</span>
+                    </div>
+                    ${batchLine}
+                    <p class="text-gray-600 mt-1 whitespace-pre-wrap">${escapeHtml(item.body)}</p>
+                    <p class="text-[10px] text-gray-400 mt-2">${escapeHtml(item.author_name)} · ${new Date(item.created_at).toLocaleDateString()}</p>
+                    ${canRemove ? `<button type="button" class="mt-2 text-[10px] text-red-700 font-semibold hover:underline" data-job-id="${item.id}">Remove</button>` : ''}
+                `;
+                const delBtn = card.querySelector('[data-job-id]');
+                if (delBtn) delBtn.onclick = () => deactivateJobPost(item.id);
+                list.appendChild(card);
+            });
+        };
+
+        window.submitJobPost = async function() {
+            if (!currentUserEmail) {
+                setAuthOverlayOpen(true);
+                return;
+            }
+            const title = document.getElementById('jobTitle')?.value.trim();
+            const body = document.getElementById('jobBody')?.value.trim();
+            const category = document.getElementById('jobCategory')?.value || 'other';
+            const batch_name = document.getElementById('jobBatch')?.value.trim() || null;
+            if (!title || !body) {
+                showToast('Title and description are required', 'error');
+                return;
+            }
+            try {
+                const { error } = await supabaseClient.from('job_posts').insert([{
+                    title,
+                    body,
+                    category,
+                    batch_name,
+                    author_name: currentUserProfile.name || currentUser,
+                    author_email: currentUserEmail,
+                    active: true
+                }]);
+                if (error) throw error;
+                document.getElementById('jobTitle').value = '';
+                document.getElementById('jobBody').value = '';
+                await fetchJobPosts();
+                showToast('Opportunity posted', 'success');
+            } catch (err) {
+                console.warn('Job post failed:', err.message);
+                showToast('Run supabase/tier2-features.sql in Supabase', 'error');
+            }
+        };
+
+        async function deactivateJobPost(id) {
+            if (!confirm('Remove this opportunity from the board?')) return;
+            try {
+                const { error } = await supabaseClient.from('job_posts').update({ active: false }).eq('id', id);
+                if (error) throw error;
+                await fetchJobPosts();
+                showToast('Opportunity removed', 'success');
+            } catch (err) {
+                showToast('Could not remove opportunity', 'error');
+            }
+        }
+
+        window.renderAlumniLocations = function() {
+            const list = document.getElementById('locationsList');
+            if (!list) return;
+            const q = (document.getElementById('locationSearch')?.value || '').trim().toLowerCase();
+            const withLocation = batchmates.filter(m => (m.city || m.country));
+            const filtered = withLocation.filter(m => {
+                if (!q) return true;
+                const hay = `${m.name} ${m.city} ${m.country} ${m.batchName}`.toLowerCase();
+                return hay.includes(q);
+            }).sort((a, b) => {
+                const la = `${a.country || ''} ${a.city || ''}`.toLowerCase();
+                const lb = `${b.country || ''} ${b.city || ''}`.toLowerCase();
+                return la.localeCompare(lb) || (a.name || '').localeCompare(b.name || '');
+            });
+            list.innerHTML = '';
+            if (!filtered.length) {
+                list.innerHTML = '<p class="text-[11px] text-gray-400 italic">No locations shared yet. Add city & country in Personalize Profile.</p>';
+                return;
+            }
+            filtered.forEach(m => {
+                const row = document.createElement('button');
+                row.type = 'button';
+                row.className = 'w-full text-left flex items-center justify-between gap-2 bg-gray-50 p-2.5 rounded-lg border border-gray-200 hover:bg-amber-50/50';
+                row.onclick = () => viewBatchmate(m.id);
+                row.innerHTML = `
+                    <div>
+                        <p class="font-semibold text-gray-800">${escapeHtml(m.name)}</p>
+                        <p class="text-[10px] text-gray-500">${escapeHtml(m.batchName || '—')}</p>
+                    </div>
+                    <p class="text-[10px] text-[#800020] font-semibold shrink-0">📍 ${escapeHtml([m.city, m.country].filter(Boolean).join(', '))}</p>
+                `;
+                list.appendChild(row);
+            });
+        };
+
+        window.exportBatchRosterCsv = function() {
+            if (!isAdminUser()) {
+                showToast('Admin access required', 'error');
+                return;
+            }
+            const selectedBatch = document.getElementById('batchFilter')?.value || '';
+            const query = document.getElementById('batchSearch')?.value.trim().toLowerCase() || '';
+            const selectedYear = document.getElementById('batchYearFilter')?.value || '';
+            const skillQuery = document.getElementById('skillFilter')?.value.trim().toLowerCase() || '';
+            const rows = batchmates.filter(batchmate => {
+                const searchText = `${batchmate.name} ${batchmate.title} ${batchmate.company} ${batchmate.summary} ${batchmate.batchName}`.toLowerCase();
+                const skillsText = (batchmate.skills || '').toLowerCase();
+                const matchesSearch = !query || searchText.includes(query);
+                const matchesBatch = batchesMatch(batchmate.batchName, selectedBatch);
+                const matchesYear = !selectedYear || String(batchmate.gradYear) === String(selectedYear) || batchLabelToYear(batchmate.batchName) === selectedYear;
+                const matchesSkill = !skillQuery || skillsText.includes(skillQuery) || searchText.includes(skillQuery);
+                return matchesSearch && matchesBatch && matchesYear && matchesSkill;
+            });
+            if (!rows.length) {
+                showToast('No rows to export for current filters', 'error');
+                return;
+            }
+            const headers = ['Name', 'Email', 'Batch', 'Year', 'Company', 'Role', 'City', 'Country', 'Skills'];
+            const escapeCsv = (v) => {
+                const s = String(v ?? '');
+                return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+            };
+            const lines = [headers.join(',')];
+            rows.forEach(m => {
+                const email = canViewContactInfo(m, true) ? (m.email || '') : '';
+                lines.push([
+                    m.name,
+                    email,
+                    m.batchName,
+                    m.gradYear,
+                    m.company,
+                    m.role,
+                    m.city,
+                    m.country,
+                    m.skills
+                ].map(escapeCsv).join(','));
+            });
+            const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `utc-roster-${selectedBatch ? selectedBatch.replace(/\s+/g, '-') : 'all'}-${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+            showToast(`Exported ${rows.length} alumni`, 'success');
+        };
 
         function setBatchSelectValue(selectId, value) {
             const select = document.getElementById(selectId);
@@ -2152,8 +2715,13 @@
         }
 
         async function fetchBatchmates() {
+            const fullSelect = 'id, email, name, avatar, title, company, summary, role, designation, grad_year, batch_name, skills, badges, city, country, hide_contact, linkedin, facebook, phone';
+            const baseSelect = 'id, email, name, avatar, title, company, summary, role, designation, grad_year, batch_name, skills, badges';
             try {
-                const { data, error } = await supabaseClient.from('alumni_profiles').select('id, email, name, avatar, title, company, summary, role, designation, grad_year, batch_name, skills, badges');
+                let { data, error } = await supabaseClient.from('alumni_profiles').select(fullSelect);
+                if (error) {
+                    ({ data, error } = await supabaseClient.from('alumni_profiles').select(baseSelect));
+                }
                 if (!error && data) {
                     batchmates = data.map(item => mapAlumniProfileRow(item));
                     batchOfficers = batchmates
@@ -2178,7 +2746,9 @@
             renderBatchDirectory();
             populateYearFilterOptions();
             renderOfficersBoard();
+            renderAlumniLocations();
             applyDefaultBatchFilter();
+            updateTier2Ui();
         }
 
         async function fetchConnections() {
@@ -2226,6 +2796,10 @@
 
             renderBatchDirectory();
             renderNetwork();
+            if (viewingOtherProfileId && String(viewingOtherProfileId) === String(id)) {
+                const profile = batchmates.find(item => String(item.id) === String(id));
+                if (profile) renderProfileSidebar(profile, { viewingOther: true });
+            }
         }
 
         function getEventJoinCount(eventId) {
@@ -2249,7 +2823,10 @@
 
         async function fetchEvents() {
             try {
-                const { data, error } = await supabaseClient.from('events').select('id, title, date, time, location, description').order('date', { ascending: true });
+                let { data, error } = await supabaseClient.from('events').select('id, title, date, time, location, description, photo_urls').order('date', { ascending: true });
+                if (error) {
+                    ({ data, error } = await supabaseClient.from('events').select('id, title, date, time, location, description').order('date', { ascending: true }));
+                }
                 if (!error && data) {
                     events = data.map(event => ({
                         id: event.id,
@@ -2257,7 +2834,8 @@
                         date: event.date,
                         time: event.time,
                         location: event.location,
-                        description: event.description
+                        description: event.description,
+                        photoUrls: parsePhotoUrls(event.photo_urls)
                     }));
                 } else {
                     events = [];
@@ -2315,6 +2893,7 @@
                 console.warn('Could not fetch messages:', err.message);
             }
             renderMessages();
+            updateNotificationBadge();
         }
 
         function renderMessages() {
@@ -2770,6 +3349,7 @@
 
             if (!canManageEvents()) {
                 navAdmin?.classList.add('hidden');
+                updateTier2Ui();
                 return;
             }
 
@@ -2787,6 +3367,7 @@
             }
 
             await loadAdminModeration();
+            updateTier2Ui();
         }
 
         async function loadAdminModeration() {
@@ -2957,6 +3538,8 @@
         function resetAdminEventForm() {
             document.getElementById('adminEventEditId').value = '';
             document.getElementById('adminEventForm')?.reset();
+            const photosEl = document.getElementById('adminEventPhotos');
+            if (photosEl) photosEl.value = '';
             const submitBtn = document.getElementById('adminEventSubmitBtn');
             if (submitBtn) submitBtn.innerText = 'Add Event';
             document.getElementById('adminEventCancelEditBtn')?.classList.add('hidden');
@@ -2975,6 +3558,8 @@
             document.getElementById('adminEventTime').value = event.time || '';
             document.getElementById('adminEventLocation').value = event.location || '';
             document.getElementById('adminEventDescription').value = event.description || '';
+            const photosInput = document.getElementById('adminEventPhotos');
+            if (photosInput) photosInput.value = (event.photoUrls || []).join(', ');
             document.getElementById('adminEventSubmitBtn').innerText = 'Update Event';
             document.getElementById('adminEventCancelEditBtn')?.classList.remove('hidden');
             navigateDashboard('admin');
@@ -3017,15 +3602,25 @@
                 return;
             }
 
-            const payload = { title, date, time, location, description };
+            const photoRaw = document.getElementById('adminEventPhotos')?.value.trim() || '';
+            const photo_urls = parsePhotoUrls(photoRaw).join(', ') || null;
+            const payload = { title, date, time, location, description, photo_urls };
 
             try {
                 if (editId) {
-                    const { error } = await supabaseClient.from('events').update(payload).eq('id', editId);
+                    let { error } = await supabaseClient.from('events').update(payload).eq('id', editId);
+                    if (error && /photo_urls/i.test(error.message || '')) {
+                        const { photo_urls: _p, ...fallback } = payload;
+                        ({ error } = await supabaseClient.from('events').update(fallback).eq('id', editId));
+                    }
                     if (error) throw error;
                     showToast('Event updated', 'success');
                 } else {
-                    const { error } = await supabaseClient.from('events').insert([payload]);
+                    let { error } = await supabaseClient.from('events').insert([payload]);
+                    if (error && /photo_urls/i.test(error.message || '')) {
+                        const { photo_urls: _p, ...fallback } = payload;
+                        ({ error } = await supabaseClient.from('events').insert([fallback]));
+                    }
                     if (error) throw error;
                     showToast('Event added', 'success');
                 }
@@ -3251,6 +3846,17 @@
             document.getElementById('eventModalMeta').innerText = `${event.date}${event.time ? ' · ' + event.time : ''}`;
             document.getElementById('eventModalLocation').innerText = event.location ? `Location: ${event.location}` : '';
             document.getElementById('eventModalDescription').innerText = event.description || 'No additional details for this announcement.';
+            const photosEl = document.getElementById('eventModalPhotos');
+            if (photosEl) {
+                const urls = event.photoUrls || [];
+                if (urls.length) {
+                    photosEl.classList.remove('hidden');
+                    photosEl.innerHTML = urls.map(url => `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="block"><img src="${escapeHtml(url)}" alt="Event" class="rounded-lg w-full h-24 object-cover border border-gray-200"></a>`).join('');
+                } else {
+                    photosEl.classList.add('hidden');
+                    photosEl.innerHTML = '';
+                }
+            }
             const countEl = document.getElementById('eventModalRsvpCount');
             if (countEl) countEl.innerText = formatEventJoinCount(eventId);
             document.getElementById('eventModalRsvpStatus').innerText = getEventRsvpLabel(eventId);
@@ -3548,6 +4154,9 @@
                 document.getElementById('inputLinkedin').value = currentUserProfile.linkedin || '';
                 document.getElementById('inputFacebook').value = currentUserProfile.facebook || '';
                 document.getElementById('inputPhone').value = currentUserProfile.phone || '';
+                document.getElementById('inputCity').value = currentUserProfile.city || '';
+                document.getElementById('inputCountry').value = currentUserProfile.country || '';
+                document.getElementById('inputHideContact').checked = !!currentUserProfile.hideContact;
             } else {
                 modal.classList.add('hidden');
             }
@@ -3565,6 +4174,9 @@
             const newLinkedin = document.getElementById('inputLinkedin')?.value.trim() || '';
             const newFacebook = document.getElementById('inputFacebook')?.value.trim() || '';
             const newPhone = document.getElementById('inputPhone')?.value.trim() || '';
+            const newCity = document.getElementById('inputCity')?.value.trim() || '';
+            const newCountry = document.getElementById('inputCountry')?.value.trim() || '';
+            const newHideContact = !!document.getElementById('inputHideContact')?.checked;
 
             if (newRole === 'Officer' && !newDesignation) {
                 showToast('Enter your officer designation', 'error');
@@ -3583,6 +4195,9 @@
             currentUserProfile.linkedin = newLinkedin;
             currentUserProfile.facebook = newFacebook;
             currentUserProfile.phone = newPhone;
+            currentUserProfile.city = newCity;
+            currentUserProfile.country = newCountry;
+            currentUserProfile.hideContact = newHideContact;
 
             document.getElementById('displayAvatar').src = currentUserProfile.avatar;
             document.getElementById('profileName').innerText = currentUserProfile.name;
@@ -3600,7 +4215,7 @@
                 chip.innerText = badge;
                 badgesEl.appendChild(chip);
             });
-            renderSocialLinks(currentUserProfile, 'displaySocialLinks');
+            renderProfileSidebar({ ...currentUserProfile, email: currentUserEmail || '' }, { viewingOther: false });
 
             if (currentUserEmail) {
                 try {
@@ -3625,16 +4240,22 @@
                         linkedin: currentUserProfile.linkedin || null,
                         facebook: currentUserProfile.facebook || null,
                         phone: currentUserProfile.phone || null,
+                        city: currentUserProfile.city || null,
+                        country: currentUserProfile.country || null,
+                        hide_contact: currentUserProfile.hideContact,
                         updated_at: new Date().toISOString()
                     };
                     let { error } = await supabaseClient.from('alumni_profiles').upsert([profileRow], { onConflict: ['email'] });
-                    if (error && /linkedin|facebook|phone|column/i.test(error.message || '')) {
+                    if (error && /linkedin|facebook|phone|city|country|hide_contact|column/i.test(error.message || '')) {
                         const fallback = { ...profileRow };
                         delete fallback.linkedin;
                         delete fallback.facebook;
                         delete fallback.phone;
+                        delete fallback.city;
+                        delete fallback.country;
+                        delete fallback.hide_contact;
                         ({ error } = await supabaseClient.from('alumni_profiles').upsert([fallback], { onConflict: ['email'] }));
-                        if (!error) showToast('Profile saved (run tier1-features.sql for social links)', 'info');
+                        if (!error) showToast('Profile saved (run tier1/tier2 SQL for full fields)', 'info');
                     }
                     if (error) throw error;
                 } catch (err) {

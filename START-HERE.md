@@ -30,6 +30,7 @@ The `avatars` Storage bucket in Supabase is **optional** (only for larger teams 
 | Registration error | Run `finish-setup.sql` |
 | Officer designation or Message fails | Run **`supabase/run-pending-migrations.sql`** once in SQL Editor (copies both fixes) |
 | Feedback, social links, event edit | Run **`supabase/tier1-features.sql`** once in SQL Editor |
+| Batch news, jobs board, locations, privacy | Run **`supabase/tier2-features.sql`** once in SQL Editor (after tier 1) |
 
 ---
 
