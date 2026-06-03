@@ -1125,6 +1125,23 @@
             photoUrls: [COMMUNITY_AD_IMAGE_BASE + 'fun-run-2026.jpg']
         };
 
+        const BUILTIN_HOMECOMING_EVENT = {
+            id: 'builtin-homecoming-2026',
+            title: '6th Alumni Homecoming',
+            date: '2026-07-11',
+            time: '',
+            location: 'MSU-UTC (PHS, UHS) Alumni Association',
+            description: 'Brotherhood for World Peace\n\nJuly 11, 12, and 13, 2026\n\nThe MSU-UTC (PHS, UHS) Alumni Association welcomes all batches for the 6th Alumni Homecoming. Full schedule and venue details will be posted here as they are confirmed.\n\nContact: msuutc.alumni@gmail.com',
+            photoUrls: [COMMUNITY_AD_IMAGE_BASE + 'homecoming-2026.png']
+        };
+
+        function hasHomecomingMainEvent() {
+            return events.some(ev => {
+                const t = (ev.title || '').toLowerCase();
+                return t.includes('homecoming') && !t.includes('fun run');
+            });
+        }
+
         function isBuiltinEventId(id) {
             return String(id || '').startsWith('builtin-');
         }
@@ -1149,8 +1166,11 @@
 
             if (!communityContentAlreadyPresent('fun run')) {
                 events.push({ ...BUILTIN_FUN_RUN_EVENT });
-                events.sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
             }
+            if (!hasHomecomingMainEvent()) {
+                events.push({ ...BUILTIN_HOMECOMING_EVENT });
+            }
+            events.sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
         }
 
         function buildAdPlaceholder(accent, tag, options = {}) {
