@@ -34,15 +34,20 @@ The `avatars` Storage bucket in Supabase is **optional** (only for larger teams 
 
 ---
 
-## Live site looks “Not secure” or browser warns?
+## Live site shows “Not secure” (red badge, https crossed out)?
 
-Always open **`https://utc.marawionline.com`** (with **https**, not `http`).
+The site is still using GitHub’s **\*.github.io** certificate instead of one for **utc.marawionline.com**. Fix it in GitHub (not in code):
 
-On GitHub: repo **Settings → Pages** → under your custom domain, turn on **Enforce HTTPS** (wait up to 24 hours after first setup for the certificate).
+1. Open **https://github.com/allanep25/MSU-UTC-Connect/settings/pages**
+2. Set custom domain to `utc.marawionline.com` → **Save**
+3. Wait for **DNS** and **certificate** green checks, then enable **Enforce HTTPS**
+4. If stuck: **Remove** the domain, wait 5 minutes, add it again
 
-Do **not** open `index.html` from File Explorer for the real site — that uses `file://` and Chrome will always say “Not secure.” Use the HTTPS link above.
+Full steps: **`docs/fix-https-custom-domain.md`**
 
-Poster images: `https://utc.marawionline.com/assets/ads/homecoming-2026.png`
+**Temporary safe link:** https://allanep25.github.io/MSU-UTC-Connect/
+
+Do **not** open `index.html` from File Explorer — that always shows “Not secure” (`file://`).
 
 ---
 
