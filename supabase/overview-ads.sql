@@ -42,9 +42,8 @@ create policy "overview_ads_delete" on public.overview_ads for delete to authent
 -- Optional starter ads (skip if you already have rows)
 insert into public.overview_ads (title, body, tag, accent, link_label, panel, sort_order)
 select * from (values
-  ('This Site Is Still Under Construction', 'We are actively improving MSU-UTC Connect. Please leave your comments and suggestions in Messages so we can make the platform better for every batch.', 'Notice', 'construction', 'Share feedback', 'messages', 0),
   ('UTC Alumni Homecoming', 'Reconnect with your batch, meet national officers, and celebrate MSU-UTC pride together.', 'Event', 'from-[#800020] to-red-900', 'View events', 'events', 1),
-  ('Grow Your Professional Network', 'Browse the batch directory, send messages, and invite classmates who are not on the platform yet.', 'Community', 'from-amber-600 to-amber-800', 'Open directory', 'directory', 2),
+  ('This Site Is Still Under Construction', 'This site is still under construction. Leave your comments in Messages for more improvements — we appreciate your feedback!', 'Community', 'construction', 'Leave a comment', 'messages', 2),
   ('Partner With MSU-UTC Connect', 'Businesses and alumni groups can sponsor this board. Contact the alumni officers to post an announcement.', 'Sponsor', 'from-slate-700 to-slate-900', 'Inquire', null, 3)
 ) as v(title, body, tag, accent, link_label, panel, sort_order)
 where not exists (select 1 from public.overview_ads limit 1);
