@@ -32,6 +32,23 @@
             #dashboardSidebar.open { transform: translateX(0); }
             #sidebarBackdrop.open { display: block; }
         }
+        .ad-card-construction {
+            grid-column: 1 / -1;
+            border-color: rgba(251, 191, 36, 0.55);
+            box-shadow: 0 4px 20px rgba(128, 0, 32, 0.08);
+        }
+        .ad-construction-banner {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 35%, #800020 100%);
+        }
+        .ad-construction-stripes {
+            background-image: repeating-linear-gradient(
+                -45deg,
+                transparent,
+                transparent 10px,
+                rgba(255, 255, 255, 0.12) 10px,
+                rgba(255, 255, 255, 0.12) 20px
+            );
+        }
     </style>
     <!-- Supabase CDN Script (Loads cloud database connectivity) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -545,6 +562,7 @@
                                         <div class="grid grid-cols-2 gap-2">
                                             <input id="adminAdTag" type="text" placeholder="Tag (Event, Sponsor…)" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
                                             <select id="adminAdAccent" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none bg-white">
+                                                <option value="construction">Under construction (featured)</option>
                                                 <option value="from-[#800020] to-red-900">Maroon</option>
                                                 <option value="from-amber-600 to-amber-800">Amber</option>
                                                 <option value="from-slate-700 to-slate-900">Slate</option>
@@ -825,39 +843,70 @@
             return el;
         }
 
+        function isConstructionAd(ad) {
+            return ad.accent === 'construction' || (ad.tag || '').toLowerCase() === 'notice';
+        }
+
+        function buildConstructionAdBanner() {
+            const wrap = document.createElement('div');
+            wrap.className = 'relative w-full ad-construction-banner ad-construction-stripes overflow-hidden';
+            wrap.innerHTML = `
+                <div class="relative flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 px-5 py-6 sm:py-7 min-h-[7.5rem] text-white text-center sm:text-left">
+                    <div class="flex items-center justify-center w-14 h-14 rounded-2xl bg-white/15 border border-white/25 backdrop-blur-sm shrink-0 text-3xl shadow-lg" aria-hidden="true">🚧</div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-bold uppercase tracking-[0.25em] text-amber-100">MSU-UTC Connect</p>
+                        <p class="text-base sm:text-lg font-bold tracking-tight mt-0.5">Under Construction</p>
+                        <p class="text-[11px] text-white/85 mt-1 max-w-md">We&apos;re polishing the alumni experience — your feedback shapes what we build next.</p>
+                    </div>
+                    <span class="hidden sm:inline-flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider bg-black/20 border border-white/20 px-3 py-1.5 rounded-full shrink-0">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse"></span>
+                        Preview
+                    </span>
+                </div>
+            `;
+            return wrap;
+        }
+
         function appendOverviewAdCard(board, ad) {
+            const construction = isConstructionAd(ad);
             const card = document.createElement('article');
-            card.className = 'flex flex-col rounded-xl border border-gray-200 overflow-hidden bg-gray-50 hover:border-[#800020]/30 hover:shadow-md transition-all';
+            card.className = construction
+                ? 'ad-card-construction flex flex-col sm:flex-row rounded-xl border-2 overflow-hidden bg-gradient-to-br from-amber-50 via-white to-red-50/40 hover:shadow-lg transition-all'
+                : 'flex flex-col rounded-xl border border-gray-200 overflow-hidden bg-gray-50 hover:border-[#800020]/30 hover:shadow-md transition-all';
 
             const accent = ad.accent || 'from-[#800020] to-red-900';
             let media;
-            if (ad.image) {
+            if (construction && !ad.image) {
+                media = buildConstructionAdBanner();
+            } else if (ad.image) {
                 const img = document.createElement('img');
                 img.src = ad.image;
                 img.alt = ad.title || 'Advertisement';
-                img.className = 'w-full h-28 object-cover bg-gray-200';
+                img.className = construction ? 'w-full sm:w-48 h-32 sm:h-auto sm:min-h-full object-cover bg-gray-200 shrink-0' : 'w-full h-28 object-cover bg-gray-200';
                 img.onerror = () => {
-                    img.replaceWith(buildAdPlaceholder(accent, ad.tag));
+                    img.replaceWith(construction ? buildConstructionAdBanner() : buildAdPlaceholder(accent, ad.tag));
                 };
                 media = img;
             } else {
                 media = buildAdPlaceholder(accent, ad.tag);
             }
 
-            const tag = ad.tag ? `<span class="text-[9px] font-bold uppercase tracking-wide text-[#800020] bg-white/80 px-1.5 py-0.5 rounded">${escapeHtml(ad.tag)}</span>` : '';
+            const tagHtml = ad.tag
+                ? `<span class="text-[9px] font-bold uppercase tracking-wide ${construction ? 'text-amber-900 bg-amber-200/80 border border-amber-300' : 'text-[#800020] bg-white/80'} px-2 py-0.5 rounded-full">${escapeHtml(ad.tag)}</span>`
+                : '';
 
             const cta = ad.link
-                ? `<a href="${escapeHtml(ad.link)}" ${ad.link.startsWith('http') ? 'target="_blank" rel="noopener noreferrer"' : ''} class="inline-block text-[10px] font-bold text-[#800020] hover:text-red-900 mt-2">${escapeHtml(ad.linkLabel || 'Learn more')} →</a>`
+                ? `<a href="${escapeHtml(ad.link)}" ${ad.link.startsWith('http') ? 'target="_blank" rel="noopener noreferrer"' : ''} class="inline-flex items-center gap-1 text-[11px] font-bold ${construction ? 'bg-[#800020] text-white px-3 py-1.5 rounded-lg hover:bg-red-900 shadow-sm' : 'text-[#800020] hover:text-red-900'} mt-3">${escapeHtml(ad.linkLabel || 'Learn more')} →</a>`
                 : ad.panel
-                    ? `<button type="button" data-ad-panel="${escapeHtml(ad.panel)}" class="text-[10px] font-bold text-[#800020] hover:text-red-900 mt-2">${escapeHtml(ad.linkLabel || 'Learn more')} →</button>`
+                    ? `<button type="button" data-ad-panel="${escapeHtml(ad.panel)}" class="inline-flex items-center gap-1 text-[11px] font-bold ${construction ? 'bg-[#800020] text-white px-3 py-1.5 rounded-lg hover:bg-red-900 shadow-sm' : 'text-[#800020] hover:text-red-900'} mt-3">${escapeHtml(ad.linkLabel || 'Learn more')} →</button>`
                     : '';
 
             const body = document.createElement('div');
-            body.className = 'p-3 flex flex-col flex-1';
+            body.className = construction ? 'p-4 sm:p-5 flex flex-col flex-1 justify-center min-w-0' : 'p-3 flex flex-col flex-1';
             body.innerHTML = `
-                <div class="flex items-start justify-between gap-2 mb-1">${tag}</div>
-                <h3 class="text-sm font-bold text-gray-900 leading-snug">${escapeHtml(ad.title)}</h3>
-                <p class="text-[11px] text-gray-600 mt-1 flex-1">${escapeHtml(ad.body)}</p>
+                <div class="flex items-center gap-2 mb-2">${tagHtml}</div>
+                <h3 class="${construction ? 'text-lg sm:text-xl' : 'text-sm'} font-bold text-gray-900 leading-snug">${escapeHtml(ad.title)}</h3>
+                <p class="${construction ? 'text-sm text-gray-700 mt-2' : 'text-[11px] text-gray-600 mt-1'} flex-1 leading-relaxed">${escapeHtml(ad.body)}</p>
                 ${cta}
             `;
 
