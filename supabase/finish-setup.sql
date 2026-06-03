@@ -12,6 +12,7 @@ create table if not exists public.alumni_profiles (
   company text,
   summary text,
   role text,
+  designation text,
   grad_year text,
   batch_name text,
   skills text,

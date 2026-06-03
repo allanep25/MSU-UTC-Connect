@@ -65,12 +65,17 @@
                                 <input id="regCompany" type="text" placeholder="UTC Alumni Network" class="w-full p-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Role / Title</label>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Alumni Role</label>
                                 <select id="regRole" class="w-full p-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
                                     <option value="Member">Member</option>
                                     <option value="Officer">Officer</option>
                                 </select>
                             </div>
+                        </div>
+                        <div id="regDesignationWrap" class="hidden">
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Officer Designation</label>
+                            <input id="regDesignation" type="text" placeholder="e.g. Batch President, Treasurer, PRO" class="w-full p-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
+                            <p class="text-[10px] text-gray-500 mt-1">Posted on the Batch Officers board after you sign up.</p>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Skills (comma separated)</label>
@@ -103,11 +108,16 @@
                     <input id="inputCompany" type="text" placeholder="UTC Alumni Network" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Role / Title</label>
+                    <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Alumni Role</label>
                     <select id="inputRole" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
                         <option value="Member">Member</option>
                         <option value="Officer">Officer</option>
                     </select>
+                </div>
+                <div id="inputDesignationWrap" class="hidden">
+                    <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Officer Designation</label>
+                    <input id="inputDesignation" type="text" placeholder="e.g. Batch President, Treasurer, PRO" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                    <p class="text-[10px] text-gray-400 mt-1">Shown on the Batch Officers board.</p>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
@@ -372,20 +382,23 @@
 
             <section id="adminPanel" class="hidden bg-white rounded-xl p-4 border border-red-100 shadow-sm space-y-4">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-xs font-bold text-red-700 uppercase tracking-wider">Admin & Moderation</h3>
-                    <span class="text-[10px] text-red-600">Community control center</span>
+                    <h3 id="moderationPanelTitle" class="text-xs font-bold text-red-700 uppercase tracking-wider">Admin & Moderation</h3>
+                    <span id="moderationPanelSubtitle" class="text-[10px] text-red-600">Community control center</span>
                 </div>
                 <div class="grid gap-3">
-                    <div>
-                        <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Pending Testimonials</h4>
-                        <div id="adminTestimonials" class="space-y-3 text-xs text-gray-700"></div>
+                    <div id="adminOnlyModeration" class="hidden space-y-3">
+                        <div>
+                            <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Pending Testimonials</h4>
+                            <div id="adminTestimonials" class="space-y-3 text-xs text-gray-700"></div>
+                        </div>
+                        <div>
+                            <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Invite Requests</h4>
+                            <div id="adminInvites" class="space-y-3 text-xs text-gray-700"></div>
+                        </div>
                     </div>
-                    <div>
-                        <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Invite Requests</h4>
-                        <div id="adminInvites" class="space-y-3 text-xs text-gray-700"></div>
-                    </div>
-                    <div>
+                    <div id="eventManagementSection">
                         <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Event Management</h4>
+                        <p id="eventManagementHint" class="text-[10px] text-gray-500 mb-2 hidden">Officers can add and update batch events for all alumni.</p>
                         <form id="adminEventForm" class="space-y-2 mb-3 p-3 bg-gray-50 rounded-xl border border-gray-200" onsubmit="createAdminEvent(event)">
                             <input id="adminEventTitle" type="text" required placeholder="Event title" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
                             <div class="grid grid-cols-2 gap-2">
@@ -445,7 +458,8 @@
             badges: [],
             status: '',
             title: '',
-            summary: ''
+            summary: '',
+            designation: ''
         };
 
         let batchmates = [];
@@ -470,6 +484,29 @@
             return v === 'officer' ? 'Officer' : 'Member';
         }
 
+        function syncOfficerDesignationVisibility(roleSelectId, wrapId, inputId) {
+            const roleEl = document.getElementById(roleSelectId);
+            const wrap = document.getElementById(wrapId);
+            const input = document.getElementById(inputId);
+            if (!roleEl || !wrap) return;
+            const isOfficer = normalizeMemberRole(roleEl.value) === 'Officer';
+            wrap.classList.toggle('hidden', !isOfficer);
+            if (input) input.required = isOfficer;
+        }
+
+        function bindOfficerDesignationToggles() {
+            const pairs = [
+                { roleId: 'regRole', wrapId: 'regDesignationWrap', inputId: 'regDesignation' },
+                { roleId: 'inputRole', wrapId: 'inputDesignationWrap', inputId: 'inputDesignation' }
+            ];
+            pairs.forEach(({ roleId, wrapId, inputId }) => {
+                const roleEl = document.getElementById(roleId);
+                if (!roleEl) return;
+                roleEl.addEventListener('change', () => syncOfficerDesignationVisibility(roleId, wrapId, inputId));
+                syncOfficerDesignationVisibility(roleId, wrapId, inputId);
+            });
+        }
+
         function mapAlumniProfileRow(item) {
             const rawTitle = (item.title || '').trim();
             const rawRole = (item.role || '').trim();
@@ -487,6 +524,7 @@
                 role: memberRole,
                 gradYear: item.grad_year || batchLabelToYear(item.batch_name) || '',
                 skills: item.skills || '',
+                designation: (item.designation || '').trim(),
                 badges: item.badges ? String(item.badges).split(',').map(b => b.trim()).filter(Boolean) : []
             };
         }
@@ -502,7 +540,10 @@
             const viewingOther = !!options.viewingOther;
             document.getElementById('displayAvatar').src = profile.avatar || DEFAULT_AVATAR;
             document.getElementById('profileName').innerText = profile.name || 'Alumni Member';
-            document.getElementById('displayRole').innerText = profile.role || 'Member';
+            const roleLine = profile.role === 'Officer' && profile.designation
+                ? profile.designation
+                : (profile.role || 'Member');
+            document.getElementById('displayRole').innerText = roleLine;
             document.getElementById('displayBatchName').innerText = profile.batchName || '—';
             document.getElementById('displayCompany').innerText = profile.company ? profile.company : '—';
             document.getElementById('displayYear').innerText = profile.gradYear ? `Class of ${profile.gradYear}` : '—';
@@ -634,6 +675,7 @@
             populateBatchSelects();
             syncGradYearFromBatch('regBatchName', 'regBatchYear');
             syncGradYearFromBatch('inputBatchName', 'inputBatchYear');
+            bindOfficerDesignationToggles();
 
             authForm.addEventListener('submit', handleAuthSubmit);
             document.getElementById('testimonialSubmitBtn').addEventListener('click', submitTestimonial);
@@ -742,7 +784,8 @@
                         badges: mapped.badges,
                         status: mapped.status,
                         title: mapped.title,
-                        summary: mapped.summary
+                        summary: mapped.summary,
+                        designation: mapped.designation
                     };
                     if (viewingOtherProfileId) {
                         await viewBatchmate(viewingOtherProfileId);
@@ -814,7 +857,13 @@
                 const regBatchYear = document.getElementById('regBatchYear')?.value || batchLabelToYear(regBatchName) || '';
                 const regCompany = document.getElementById('regCompany')?.value || '';
                 const regRole = normalizeMemberRole(document.getElementById('regRole')?.value || 'Member');
+                const regDesignation = document.getElementById('regDesignation')?.value.trim() || '';
                 const regSkills = document.getElementById('regSkills')?.value || '';
+
+                if (regRole === 'Officer' && !regDesignation) {
+                    alert('Please enter your officer designation (e.g. Batch President).');
+                    return;
+                }
 
                 try {
                     const { data, error } = await supabaseClient.auth.signUp({
@@ -843,6 +892,8 @@
                             grad_year: regBatchYear || null,
                             company: regCompany || null,
                             title: regRole || null,
+                            role: regRole || null,
+                            designation: regRole === 'Officer' ? regDesignation : null,
                             skills: regSkills || null,
                             avatar: avatarUrl || null,
                             status: 'Joined — complete your profile',
@@ -1004,7 +1055,7 @@
 
         async function fetchBatchmates() {
             try {
-                const { data, error } = await supabaseClient.from('alumni_profiles').select('id, email, name, avatar, title, company, summary, role, grad_year, batch_name, skills, badges');
+                const { data, error } = await supabaseClient.from('alumni_profiles').select('id, email, name, avatar, title, company, summary, role, designation, grad_year, batch_name, skills, badges');
                 if (!error && data) {
                     batchmates = data.map(item => mapAlumniProfileRow(item));
                     batchOfficers = batchmates
@@ -1012,8 +1063,9 @@
                         .map(item => ({
                             id: item.id,
                             name: item.name,
-                            role: 'Officer',
-                            responsibility: item.company || item.batchName || 'Alumni officer',
+                            designation: item.designation || 'Batch Officer',
+                            batchName: item.batchName || '',
+                            company: item.company || '',
                             avatar: item.avatar
                         }));
                 } else {
@@ -1027,6 +1079,7 @@
             }
             renderBatchDirectory();
             populateYearFilterOptions();
+            renderOfficersBoard();
         }
 
         async function fetchConnections() {
@@ -1378,6 +1431,14 @@
             return !!email && adminEmails.includes(email);
         }
 
+        function isOfficerUser() {
+            return currentUserProfile.role === 'Officer';
+        }
+
+        function canManageEvents() {
+            return isAdminUser() || isOfficerUser();
+        }
+
         function updateAccountRoleBadge() {
             const badge = document.getElementById('accountRoleBadge');
             const meta = document.getElementById('signedInMeta');
@@ -1409,21 +1470,41 @@
 
         async function renderAdminPanel() {
             const panel = document.getElementById('adminPanel');
-            if (!isAdminUser()) {
+            const adminOnly = document.getElementById('adminOnlyModeration');
+            const titleEl = document.getElementById('moderationPanelTitle');
+            const subtitleEl = document.getElementById('moderationPanelSubtitle');
+            const eventHint = document.getElementById('eventManagementHint');
+
+            if (!canManageEvents()) {
                 panel.classList.add('hidden');
                 return;
             }
+
             panel.classList.remove('hidden');
+            const officerOnly = isOfficerUser() && !isAdminUser();
+            if (adminOnly) adminOnly.classList.toggle('hidden', !isAdminUser());
+            if (eventHint) eventHint.classList.toggle('hidden', !officerOnly);
+            if (titleEl) {
+                titleEl.innerText = isAdminUser() ? 'Admin & Moderation' : 'Officer — Event Management';
+            }
+            if (subtitleEl) {
+                subtitleEl.innerText = isAdminUser()
+                    ? 'Community control center'
+                    : 'Add events for your batch and the alumni community';
+            }
+
             await loadAdminModeration();
         }
 
         async function loadAdminModeration() {
-            const testimonialsSection = document.getElementById('adminTestimonials');
-            const invitesSection = document.getElementById('adminInvites');
             const eventsSection = document.getElementById('adminEvents');
-            testimonialsSection.innerHTML = '';
-            invitesSection.innerHTML = '';
-            eventsSection.innerHTML = '';
+            if (eventsSection) eventsSection.innerHTML = '';
+
+            if (isAdminUser()) {
+                const testimonialsSection = document.getElementById('adminTestimonials');
+                const invitesSection = document.getElementById('adminInvites');
+                if (testimonialsSection) testimonialsSection.innerHTML = '';
+                if (invitesSection) invitesSection.innerHTML = '';
 
             try {
                 const { data: pendingTestimonials, error: tError } = await supabaseClient.from('testimonials').select('*').eq('approved', false).order('created_at', { ascending: false });
@@ -1472,6 +1553,9 @@
             } catch (err) {
                 invitesSection.innerHTML = '<p class="text-[11px] text-red-600">Unable to load invites.</p>';
             }
+            }
+
+            if (!canManageEvents() || !eventsSection) return;
 
             try {
                 const { data: eventRows, error: eError } = await supabaseClient.from('events').select('*').order('date', { ascending: true }).limit(5);
@@ -1520,8 +1604,8 @@
 
         window.createAdminEvent = async function(event) {
             event.preventDefault();
-            if (!isAdminUser()) {
-                showToast('Admin access required', 'error');
+            if (!canManageEvents()) {
+                showToast('Officer or admin access required to add events', 'error');
                 return;
             }
 
@@ -1629,18 +1713,23 @@
             const board = document.getElementById('officersBoard');
             board.innerHTML = '';
             if (!batchOfficers.length) {
-                board.innerHTML = '<p class="text-[11px] italic text-gray-400">No officers listed yet. Alumni with role Officer appear here.</p>';
+                board.innerHTML = '<p class="text-[11px] italic text-gray-400">No officers listed yet. Sign up as Officer with a designation to appear here.</p>';
                 return;
             }
             batchOfficers.forEach(officer => {
-                const card = document.createElement('div');
-                card.className = 'flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-200';
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = 'flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-200 w-full text-left hover:bg-amber-50/80 hover:border-amber-200 transition-colors focus:outline-none focus:ring-2 focus:ring-[#800020]/20';
+                card.onclick = () => viewBatchmate(officer.id);
+                const batchLine = officer.batchName ? `<p class="text-[10px] text-gray-500">${officer.batchName}</p>` : '';
+                const companyLine = officer.company ? `<p class="text-[10px] text-gray-400">${officer.company}</p>` : '';
                 card.innerHTML = `
-                    <img class="w-12 h-12 rounded-full object-cover" src="${officer.avatar}" alt="${officer.name}">
-                    <div class="flex-1 text-xs">
+                    <img class="w-12 h-12 rounded-full object-cover border border-[#800020]/20" src="${officer.avatar || DEFAULT_AVATAR}" alt="${officer.name}">
+                    <div class="flex-1 text-xs min-w-0">
                         <p class="font-semibold text-gray-800">${officer.name}</p>
-                        <p class="text-[10px] text-gray-500">${officer.role}</p>
-                        <p class="text-[10px] text-gray-600 mt-1">${officer.responsibility}</p>
+                        <p class="text-[11px] font-bold text-[#800020] mt-0.5">${officer.designation}</p>
+                        ${batchLine}
+                        ${companyLine}
                     </div>
                 `;
                 board.appendChild(card);
@@ -1724,7 +1813,7 @@
             }
             board.innerHTML = '';
             if (!events.length) {
-                board.innerHTML = '<p class="text-[11px] text-gray-400 italic">No events yet. Officers can add events in the admin panel.</p>';
+                board.innerHTML = '<p class="text-[11px] text-gray-400 italic">No events yet. Batch officers can add events under Officer — Event Management.</p>';
                 document.getElementById('upcomingEventsCount').innerText = '0 Events';
                 return;
             }
@@ -1942,6 +2031,8 @@
                 document.getElementById('inputBatchYear').value = currentUserProfile.gradYear || batchLabelToYear(currentUserProfile.batchName);
                 document.getElementById('inputCompany').value = currentUserProfile.company;
                 document.getElementById('inputRole').value = normalizeMemberRole(currentUserProfile.role);
+                document.getElementById('inputDesignation').value = currentUserProfile.designation || '';
+                syncOfficerDesignationVisibility('inputRole', 'inputDesignationWrap', 'inputDesignation');
                 document.getElementById('inputSkills').value = currentUserProfile.skills;
                 const fileInput = document.getElementById('inputAvatarFile');
                 if (fileInput) fileInput.value = '';
@@ -1957,14 +2048,22 @@
             const newYear = document.getElementById('inputBatchYear').value.trim();
             const newCompany = document.getElementById('inputCompany').value.trim();
             const newRole = normalizeMemberRole(document.getElementById('inputRole').value);
+            let newDesignation = document.getElementById('inputDesignation')?.value.trim() || '';
             const newSkills = document.getElementById('inputSkills').value.trim();
             const newBadges = document.getElementById('inputBadges').value.split(',').map(b => b.trim()).filter(Boolean);
+
+            if (newRole === 'Officer' && !newDesignation) {
+                showToast('Enter your officer designation', 'error');
+                return;
+            }
+            if (newRole !== 'Officer') newDesignation = '';
 
             if (newStatus) currentUserProfile.status = newStatus;
             if (newBatchName) currentUserProfile.batchName = newBatchName;
             currentUserProfile.gradYear = newYear || batchLabelToYear(newBatchName) || currentUserProfile.gradYear;
             if (newCompany) currentUserProfile.company = newCompany;
             currentUserProfile.role = newRole;
+            currentUserProfile.designation = newDesignation;
             if (newSkills) currentUserProfile.skills = newSkills;
             if (newBadges.length) currentUserProfile.badges = newBadges;
 
@@ -1997,6 +2096,8 @@
                         name: currentUser,
                         avatar: currentUserProfile.avatar,
                         title: currentUserProfile.role,
+                        role: currentUserProfile.role,
+                        designation: currentUserProfile.role === 'Officer' ? (currentUserProfile.designation || null) : null,
                         company: currentUserProfile.company,
                         grad_year: currentUserProfile.gradYear,
                         batch_name: currentUserProfile.batchName,
@@ -2012,6 +2113,8 @@
             }
 
             updateAccountRoleBadge();
+            await renderAdminPanel();
+            await fetchBatchmates();
             toggleProfileModal(false);
         }
 
