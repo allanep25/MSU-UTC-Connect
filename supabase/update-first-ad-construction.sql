@@ -1,0 +1,1 @@
+-- Deprecated: use update-middle-ad-construction.sql for the center Community ad slot.

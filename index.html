@@ -545,6 +545,7 @@
                                         <div class="grid grid-cols-2 gap-2">
                                             <input id="adminAdTag" type="text" placeholder="Tag (Event, Sponsor…)" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
                                             <select id="adminAdAccent" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none bg-white">
+                                                <option value="construction">Community brown + under construction</option>
                                                 <option value="from-[#800020] to-red-900">Maroon</option>
                                                 <option value="from-amber-600 to-amber-800">Amber</option>
                                                 <option value="from-slate-700 to-slate-900">Slate</option>
@@ -818,18 +819,27 @@
             };
         }
 
-        function buildAdPlaceholder(accent, tag) {
+        function buildAdPlaceholder(accent, tag, options = {}) {
             const el = document.createElement('div');
-            el.className = `w-full h-28 bg-gradient-to-br ${accent} flex items-center justify-center text-white/90 text-center px-3`;
-            el.innerHTML = `<span class="text-[10px] font-bold uppercase tracking-widest">${escapeHtml(tag || 'Featured')}</span>`;
+            el.className = `w-full h-28 bg-gradient-to-br ${accent} flex flex-col items-center justify-center text-white text-center px-3 gap-1`;
+            const label = escapeHtml(tag || 'Featured');
+            const emoji = options.showConstructionIcon
+                ? '<span class="text-lg leading-none opacity-95" aria-hidden="true">🚧</span>'
+                : '';
+            el.innerHTML = `${emoji}<span class="text-[10px] font-bold uppercase tracking-widest">${label}</span>`;
             return el;
         }
 
+        function isConstructionAd(ad) {
+            return ad.accent === 'construction';
+        }
+
         function appendOverviewAdCard(board, ad) {
+            const construction = isConstructionAd(ad);
             const card = document.createElement('article');
             card.className = 'flex flex-col rounded-xl border border-gray-200 overflow-hidden bg-gray-50 hover:border-[#800020]/30 hover:shadow-md transition-all';
 
-            const accent = ad.accent || 'from-[#800020] to-red-900';
+            const accent = construction ? 'from-amber-600 to-amber-800' : (ad.accent || 'from-[#800020] to-red-900');
             let media;
             if (ad.image) {
                 const img = document.createElement('img');
@@ -837,27 +847,31 @@
                 img.alt = ad.title || 'Advertisement';
                 img.className = 'w-full h-28 object-cover bg-gray-200';
                 img.onerror = () => {
-                    img.replaceWith(buildAdPlaceholder(accent, ad.tag));
+                    img.replaceWith(buildAdPlaceholder(accent, ad.tag, { showConstructionIcon: construction }));
                 };
                 media = img;
             } else {
-                media = buildAdPlaceholder(accent, ad.tag);
+                media = buildAdPlaceholder(accent, ad.tag || (construction ? 'Community' : 'Featured'), {
+                    showConstructionIcon: construction
+                });
             }
 
-            const tag = ad.tag ? `<span class="text-[9px] font-bold uppercase tracking-wide text-[#800020] bg-white/80 px-1.5 py-0.5 rounded">${escapeHtml(ad.tag)}</span>` : '';
+            const tagHtml = ad.tag
+                ? `<span class="text-[9px] font-bold uppercase tracking-wide text-[#800020] bg-amber-100 px-1.5 py-0.5 rounded">${escapeHtml(ad.tag)}</span>`
+                : '';
 
             const cta = ad.link
-                ? `<a href="${escapeHtml(ad.link)}" ${ad.link.startsWith('http') ? 'target="_blank" rel="noopener noreferrer"' : ''} class="inline-block text-[10px] font-bold text-[#800020] hover:text-red-900 mt-2">${escapeHtml(ad.linkLabel || 'Learn more')} →</a>`
+                ? `<a href="${escapeHtml(ad.link)}" ${ad.link.startsWith('http') ? 'target="_blank" rel="noopener noreferrer"' : ''} class="inline-block text-[10px] font-bold ${construction ? 'text-[#800020] hover:text-red-900' : 'text-[#800020] hover:text-red-900'} mt-2">${escapeHtml(ad.linkLabel || 'Learn more')} →</a>`
                 : ad.panel
-                    ? `<button type="button" data-ad-panel="${escapeHtml(ad.panel)}" class="text-[10px] font-bold text-[#800020] hover:text-red-900 mt-2">${escapeHtml(ad.linkLabel || 'Learn more')} →</button>`
+                    ? `<button type="button" data-ad-panel="${escapeHtml(ad.panel)}" class="inline-block text-[10px] font-bold text-[#800020] hover:text-red-900 mt-2">${escapeHtml(ad.linkLabel || 'Learn more')} →</button>`
                     : '';
 
             const body = document.createElement('div');
             body.className = 'p-3 flex flex-col flex-1';
             body.innerHTML = `
-                <div class="flex items-start justify-between gap-2 mb-1">${tag}</div>
+                <div class="flex items-center gap-2 mb-1">${tagHtml}</div>
                 <h3 class="text-sm font-bold text-gray-900 leading-snug">${escapeHtml(ad.title)}</h3>
-                <p class="text-[11px] text-gray-600 mt-1 flex-1">${escapeHtml(ad.body)}</p>
+                <p class="text-[11px] text-gray-600 mt-1 flex-1 leading-relaxed">${escapeHtml(ad.body)}</p>
                 ${cta}
             `;
 
