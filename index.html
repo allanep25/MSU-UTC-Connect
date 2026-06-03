@@ -75,7 +75,7 @@
                         <div id="regDesignationWrap" class="hidden">
                             <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Officer Designation</label>
                             <input id="regDesignation" type="text" placeholder="e.g. Batch President, Treasurer, PRO" class="w-full p-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
-                            <p class="text-[10px] text-gray-500 mt-1">Posted on the Batch Officers board after you sign up.</p>
+                            <p class="text-[10px] text-gray-500 mt-1">Posted on the Alumni Officers board after you sign up.</p>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Skills (comma separated)</label>
@@ -117,7 +117,7 @@
                 <div id="inputDesignationWrap" class="hidden">
                     <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Officer Designation</label>
                     <input id="inputDesignation" type="text" placeholder="e.g. Batch President, Treasurer, PRO" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
-                    <p class="text-[10px] text-gray-400 mt-1">Shown on the Batch Officers board.</p>
+                    <p class="text-[10px] text-gray-400 mt-1">Shown on the Alumni Officers board.</p>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
@@ -148,6 +148,24 @@
             <div class="flex space-x-2 justify-end text-xs font-semibold">
                 <button onclick="toggleProfileModal(false)" class="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200">Cancel</button>
                 <button onclick="saveProfileChanges()" class="px-3 py-1.5 rounded-lg bg-[#800020] text-white hover:bg-red-900 shadow-sm">Save Profile</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= STATS DETAIL MODAL ================= -->
+    <div id="statsModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" onclick="if (event.target === this) showStatsDetail(null)">
+        <div class="bg-white rounded-xl max-w-md w-full p-5 shadow-xl border border-gray-100 space-y-3 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-start justify-between gap-3 border-b border-gray-100 pb-3">
+                <div>
+                    <h3 id="statsModalTitle" class="text-sm font-bold text-[#800020] uppercase tracking-wider">Details</h3>
+                    <p id="statsModalMeta" class="text-[11px] text-gray-500 mt-1"></p>
+                </div>
+                <button type="button" onclick="showStatsDetail(null)" class="text-gray-400 hover:text-gray-600 text-lg leading-none" aria-label="Close">&times;</button>
+            </div>
+            <div id="statsModalList" class="space-y-2 text-xs text-gray-700"></div>
+            <div class="flex flex-wrap gap-2 pt-1 border-t border-gray-100">
+                <button type="button" id="statsModalGoBtn" onclick="goToStatsSection()" class="flex-1 min-w-[120px] bg-[#800020] text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-red-900 transition-colors">Go to section</button>
+                <button type="button" onclick="showStatsDetail(null)" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-600 text-xs font-semibold hover:bg-gray-200">Close</button>
             </div>
         </div>
     </div>
@@ -218,23 +236,22 @@
         </div>
     </header>
 
-    <section class="max-w-6xl mx-auto p-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <div class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
+    <section class="max-w-6xl mx-auto p-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <button type="button" onclick="showStatsDetail('members')" class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm text-left w-full hover:border-[#800020]/30 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-[#800020]/25 cursor-pointer">
             <p class="text-[10px] uppercase tracking-wider text-gray-500">Alumni Members</p>
             <p id="membersCount" class="mt-4 text-3xl font-bold text-gray-900">0</p>
-        </div>
-        <div class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
+            <p class="text-[9px] text-[#800020] font-semibold mt-2">Tap to view roster →</p>
+        </button>
+        <button type="button" onclick="showStatsDetail('testimonials')" class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm text-left w-full hover:border-[#800020]/30 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-[#800020]/25 cursor-pointer">
             <p class="text-[10px] uppercase tracking-wider text-gray-500">Testimonials</p>
             <p id="testimonialsCount" class="mt-4 text-3xl font-bold text-gray-900">0</p>
-        </div>
-        <div class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
+            <p class="text-[9px] text-[#800020] font-semibold mt-2">Tap to read posts →</p>
+        </button>
+        <button type="button" onclick="showStatsDetail('invites')" class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm text-left w-full hover:border-[#800020]/30 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-[#800020]/25 cursor-pointer">
             <p class="text-[10px] uppercase tracking-wider text-gray-500">Pending Invites</p>
             <p id="pendingInvitesCount" class="mt-4 text-3xl font-bold text-gray-900">0</p>
-        </div>
-        <div class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
-            <p class="text-[10px] uppercase tracking-wider text-gray-500">Active Events</p>
-            <p id="eventsCount" class="mt-4 text-3xl font-bold text-gray-900">0</p>
-        </div>
+            <p class="text-[9px] text-[#800020] font-semibold mt-2">Tap to view invites →</p>
+        </button>
     </section>
 
     <main class="max-w-6xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -295,7 +312,7 @@
 
             <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
                 <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Batch Officers</h3>
+                    <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Alumni Officers</h3>
                     <span class="text-[10px] text-gray-500">Current leadership</span>
                 </div>
                 <div id="officersBoard" class="space-y-3 text-xs text-gray-700"></div>
@@ -470,7 +487,8 @@
         let pendingInvites = [];
         let allTestimonials = [];
         let batchOfficers = [];
-        let appMetrics = { members: 0, testimonials: 0, invites: 0, events: 0 };
+        let appMetrics = { members: 0, testimonials: 0, invites: 0 };
+        let activeStatsDetailType = null;
         let unreadMessages = 0;
         let selectedProfileAvatarFile = null;
         let selectedRegAvatarFile = null;
@@ -965,30 +983,155 @@
                 console.warn('Metrics testimonials failed', err.message);
             }
 
-            try {
-                const { count: inviteCount, error: iError } = await supabaseClient.from('invites').select('id', { count: 'exact', head: true });
-                if (!iError) appMetrics.invites = inviteCount || appMetrics.invites;
-            } catch (err) {
-                console.warn('Metrics invites failed', err.message);
-            }
-
-            try {
-                const { count: eventCount, error: eError } = await supabaseClient.from('events').select('id', { count: 'exact', head: true });
-                if (!eError) appMetrics.events = eventCount || appMetrics.events;
-            } catch (err) {
-                console.warn('Metrics events failed', err.message);
-            }
-
             renderStats();
         }
 
         function renderStats() {
             document.getElementById('membersCount').innerText = appMetrics.members;
             document.getElementById('testimonialsCount').innerText = appMetrics.testimonials;
-            document.getElementById('pendingInvitesCount').innerText = appMetrics.invites;
-            document.getElementById('eventsCount').innerText = appMetrics.events;
+            const inviteDisplay = currentUserEmail ? pendingInvites.length : appMetrics.invites;
+            document.getElementById('pendingInvitesCount').innerText = inviteDisplay;
             document.getElementById('pendingInvitesCountInline').innerText = `${pendingInvites.length} pending`;
         }
+
+        function escapeHtml(text) {
+            return String(text ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        window.showStatsDetail = async function(type) {
+            const modal = document.getElementById('statsModal');
+            const titleEl = document.getElementById('statsModalTitle');
+            const metaEl = document.getElementById('statsModalMeta');
+            const listEl = document.getElementById('statsModalList');
+            const goBtn = document.getElementById('statsModalGoBtn');
+            if (!modal || !listEl) return;
+
+            if (!type) {
+                modal.classList.add('hidden');
+                activeStatsDetailType = null;
+                return;
+            }
+
+            activeStatsDetailType = type;
+            listEl.innerHTML = '<p class="text-[11px] text-gray-400 italic">Loading…</p>';
+            modal.classList.remove('hidden');
+
+            if (type === 'members') {
+                titleEl.innerText = 'Alumni Members';
+                metaEl.innerText = `${appMetrics.members} registered alumni`;
+                if (!batchmates.length) {
+                    listEl.innerHTML = '<p class="text-[11px] text-gray-400 italic">No members in the directory yet.</p>';
+                } else {
+                    listEl.innerHTML = '';
+                    batchmates.forEach(member => {
+                        const row = document.createElement('button');
+                        row.type = 'button';
+                        row.className = 'w-full text-left bg-gray-50 p-3 rounded-xl border border-gray-200 hover:bg-amber-50/60 transition-colors';
+                        row.onclick = () => {
+                            showStatsDetail(null);
+                            viewBatchmate(member.id);
+                        };
+                        const roleLine = member.role === 'Officer' && member.designation
+                            ? `<p class="text-[10px] font-bold text-[#800020]">${escapeHtml(member.designation)}</p>`
+                            : `<p class="text-[10px] text-gray-500">${escapeHtml(member.role || 'Member')}</p>`;
+                        row.innerHTML = `
+                            <p class="font-semibold text-gray-800">${escapeHtml(member.name)}</p>
+                            ${roleLine}
+                            <p class="text-[10px] text-gray-500 mt-0.5">${escapeHtml(member.batchName || '—')}${member.company ? ' · ' + escapeHtml(member.company) : ''}</p>
+                        `;
+                        listEl.appendChild(row);
+                    });
+                }
+                if (goBtn) goBtn.innerText = 'Go to Batch Directory';
+            } else if (type === 'testimonials') {
+                titleEl.innerText = 'Testimonials';
+                const visible = allTestimonials.filter(item => item.approved || isAdminUser());
+                metaEl.innerText = `${visible.length} post${visible.length === 1 ? '' : 's'} shown`;
+                if (!visible.length) {
+                    listEl.innerHTML = '<p class="text-[11px] text-gray-400 italic">No testimonials yet.</p>';
+                } else {
+                    listEl.innerHTML = '';
+                    visible.slice(0, 25).forEach(item => {
+                        const row = document.createElement('div');
+                        row.className = 'bg-gray-50 p-3 rounded-xl border border-gray-200';
+                        row.innerHTML = `
+                            <div class="flex items-center justify-between gap-2 mb-1">
+                                <span class="font-semibold text-gray-800">${escapeHtml(item.author_name)}</span>
+                                <span class="text-[10px] text-gray-500">${escapeHtml(item.category || 'General')}</span>
+                            </div>
+                            <p class="text-gray-600 line-clamp-3">${escapeHtml(item.message_content)}</p>
+                            <p class="text-[10px] text-gray-400 mt-1">${item.likes || 0} likes</p>
+                        `;
+                        listEl.appendChild(row);
+                    });
+                    if (visible.length > 25) {
+                        const more = document.createElement('p');
+                        more.className = 'text-[10px] text-gray-400 italic text-center pt-1';
+                        more.innerText = `+ ${visible.length - 25} more in the testimonials section`;
+                        listEl.appendChild(more);
+                    }
+                }
+                if (goBtn) goBtn.innerText = 'Go to Testimonials';
+            } else if (type === 'invites') {
+                titleEl.innerText = 'Pending Invites';
+                let rows = pendingInvites;
+                if (isAdminUser()) {
+                    try {
+                        const { data, error } = await supabaseClient.from('invites').select('id, email, invited_by, status, invited_at').order('invited_at', { ascending: false }).limit(30);
+                        if (!error && data) rows = data.filter(item => (item.status || '').toLowerCase() !== 'accepted');
+                    } catch (err) {
+                        console.warn('Could not load invites for stats:', err.message);
+                    }
+                    metaEl.innerText = `${rows.length} open invite${rows.length === 1 ? '' : 's'} (admin view)`;
+                } else if (!currentUserEmail) {
+                    metaEl.innerText = 'Sign in to see your invites';
+                    listEl.innerHTML = '<p class="text-[11px] text-gray-400 italic">Sign in to view and send batch invites.</p>';
+                    if (goBtn) goBtn.innerText = 'Sign in';
+                    return;
+                } else {
+                    metaEl.innerText = `${rows.length} invite${rows.length === 1 ? '' : 's'} you sent`;
+                }
+                if (!rows.length) {
+                    listEl.innerHTML = '<p class="text-[11px] text-gray-400 italic">No pending invites. Use Invite in the Batch Directory.</p>';
+                } else {
+                    listEl.innerHTML = '';
+                    rows.forEach(invite => {
+                        const row = document.createElement('div');
+                        row.className = 'bg-gray-50 p-3 rounded-xl border border-gray-200';
+                        const when = invite.invited_at ? new Date(invite.invited_at).toLocaleDateString() : '';
+                        row.innerHTML = `
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="font-semibold text-gray-800">${escapeHtml(invite.email)}</span>
+                                <span class="text-[10px] text-gray-500 uppercase">${escapeHtml(invite.status || 'sent')}</span>
+                            </div>
+                            <p class="text-[10px] text-gray-500 mt-1">Invited by ${escapeHtml(invite.invited_by || '—')}${when ? ' · ' + when : ''}</p>
+                        `;
+                        listEl.appendChild(row);
+                    });
+                }
+                if (goBtn) goBtn.innerText = 'Go to Pending Invites';
+            }
+        };
+
+        window.goToStatsSection = function() {
+            const type = activeStatsDetailType;
+            showStatsDetail(null);
+            if (type === 'invites' && !currentUserEmail) {
+                setAuthOverlayOpen(true);
+                return;
+            }
+            const targets = {
+                members: document.getElementById('batchDirectoryList'),
+                testimonials: document.getElementById('testimonialList'),
+                invites: document.getElementById('pendingInvitesList')
+            };
+            const el = targets[type];
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
 
         function showToast(message, type = 'info') {
             const toastContainer = document.getElementById('toastContainer');
@@ -1713,7 +1856,7 @@
             const board = document.getElementById('officersBoard');
             board.innerHTML = '';
             if (!batchOfficers.length) {
-                board.innerHTML = '<p class="text-[11px] italic text-gray-400">No officers listed yet. Sign up as Officer with a designation to appear here.</p>';
+                board.innerHTML = '<p class="text-[11px] italic text-gray-400">No alumni officers listed yet. Sign up as Officer with a designation to appear here.</p>';
                 return;
             }
             batchOfficers.forEach(officer => {
