@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="MSU-UTC Connect">
+  <rect width="120" height="120" rx="20" fill="#800020"/>
+  <circle cx="60" cy="52" r="28" fill="none" stroke="#fbbf24" stroke-width="3"/>
+  <text x="60" y="58" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="22" font-weight="700" fill="#ffffff">UTC</text>
+  <text x="60" y="92" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="600" letter-spacing="2" fill="#fde68a">ALUMNI</text>
+</svg>

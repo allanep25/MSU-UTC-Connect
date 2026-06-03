@@ -42,10 +42,21 @@ Use these emails when registering (or in Auth) to unlock the **Admin & Moderatio
 - RLS in `schema.sql` is a starting point; tighten policies before a production launch.
 - Replace CDN Tailwind with a build step when you harden for production.
 
+## Logo
+
+Place your official logo in the project as:
+
+- **`assets/logo.png`** (recommended, square or transparent PNG), or
+- Replace **`assets/logo.svg`** with your own SVG.
+
+The app shows `logo.png` first and falls back to `logo.svg` if the PNG is missing.
+
 ## Files
 
 | File | Purpose |
 |------|---------|
+| `assets/logo.png` | Your official logo (add this file) |
+| `assets/logo.svg` | Default placeholder until PNG is added |
 | `index.html` | Full app UI and logic |
 | `supabase/schema.sql` | Database tables, seed events, RLS, realtime |
 | `.github/workflows/deploy.yml` | GitHub Pages deploy |
