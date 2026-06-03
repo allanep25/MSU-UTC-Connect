@@ -5,7 +5,7 @@ insert into public.overview_ads (title, body, image, link, link_label, tag, acce
 select
   'Call for Nominations: Notable Alumni',
   'Honor outstanding MSU-UTC alumni. Submit a 100–150 word bionote and one high-quality photo on or before July 1, 2026.',
-  'assets/ads/notable-alumni-nominations.png',
+  'assets/ads/notable-alumni-nominations.jpg',
   'mailto:abdulhamidgunda@gmail.com?cc=gabrielmohammadomar3@gmail.com,m2angni@gmail.com&subject=Notable%20Alumni%20Nomination',
   'Email nominations',
   'Association',
@@ -21,7 +21,7 @@ insert into public.overview_ads (title, body, image, link, link_label, tag, acce
 select
   '6th Alumni Homecoming Fun Run',
   'July 12, 2026 · 5:30 AM · MSU-Main · Run for World Peace. 3K & 5K — ₱500 includes finisher shirt, medal, and food.',
-  'assets/ads/fun-run-2026.png',
+  'assets/ads/fun-run-2026.jpg',
   null,
   'View event details',
   'Event',
