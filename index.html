@@ -1164,10 +1164,10 @@
             });
             overviewAds.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || String(a.id).localeCompare(String(b.id)));
 
-            if (!communityContentAlreadyPresent('fun run')) {
+            if (!communityContentAlreadyPresent('fun run') && !events.some(e => String(e.id) === String(BUILTIN_FUN_RUN_EVENT.id))) {
                 events.push({ ...BUILTIN_FUN_RUN_EVENT });
             }
-            if (!hasHomecomingMainEvent()) {
+            if (!hasHomecomingMainEvent() && !events.some(e => String(e.id) === String(BUILTIN_HOMECOMING_EVENT.id))) {
                 events.push({ ...BUILTIN_HOMECOMING_EVENT });
             }
             events.sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
@@ -1226,7 +1226,7 @@
                     e.preventDefault();
                     e.stopPropagation();
                 }
-                showImageLightbox(img.src, caption || img.alt);
+                showImageLightbox(resolveAssetUrl(img.src), caption || img.alt);
             };
             img.addEventListener('click', open);
             img.addEventListener('keydown', (e) => {
@@ -1243,7 +1243,7 @@
             let media;
             if (ad.image) {
                 const img = document.createElement('img');
-                img.src = ad.image;
+                img.src = resolveAssetUrl(ad.image);
                 img.alt = ad.title || 'Advertisement';
                 img.className = isPosterFlyerAd(ad)
                     ? 'w-full h-44 sm:h-52 object-contain bg-gray-100'
@@ -2406,6 +2406,17 @@
             return String(raw).split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
         }
 
+        function resolveAssetUrl(path) {
+            if (!path) return '';
+            const p = String(path).trim();
+            if (/^https?:\/\//i.test(p) || p.startsWith('data:')) return p;
+            try {
+                return new URL(p, window.location.href).href;
+            } catch {
+                return p;
+            }
+        }
+
         function getNotificationSeenSet() {
             try {
                 const raw = localStorage.getItem(NOTIFICATION_STORAGE_KEY);
@@ -2983,7 +2994,7 @@
                         time: event.time,
                         location: event.location,
                         description: event.description,
-                        photoUrls: parsePhotoUrls(event.photo_urls)
+                        photoUrls: parsePhotoUrls(event.photo_urls).map(resolveAssetUrl)
                     }));
                 } else {
                     events = [];
@@ -3703,7 +3714,7 @@
         };
 
         window.editAdminEvent = function(eventId) {
-            const event = events.find(item => item.id === eventId);
+            const event = events.find(item => String(item.id) === String(eventId));
             if (!event) return;
             document.getElementById('adminEventEditId').value = String(eventId);
             document.getElementById('adminEventTitle').value = event.title;
@@ -3992,7 +4003,7 @@
                 activeEventId = null;
                 return;
             }
-            const event = events.find(item => item.id === eventId);
+            const event = events.find(item => String(item.id) === String(eventId));
             if (!event) return;
             activeEventId = eventId;
             document.getElementById('eventModalTitle').innerText = event.title;
@@ -4004,7 +4015,7 @@
                 const urls = event.photoUrls || [];
                 if (urls.length) {
                     photosEl.classList.remove('hidden');
-                    photosEl.innerHTML = urls.map(url => `<img src="${escapeHtml(url)}" alt="Event poster" class="poster-expandable rounded-lg w-full max-h-64 object-contain bg-gray-50 border border-gray-200">`).join('');
+                    photosEl.innerHTML = urls.map(url => `<img src="${escapeHtml(resolveAssetUrl(url))}" alt="Event poster" class="poster-expandable rounded-lg w-full max-h-64 object-contain bg-gray-50 border border-gray-200">`).join('');
                     photosEl.querySelectorAll('.poster-expandable').forEach(el => bindExpandableImage(el, event.title));
                     const hint = document.createElement('p');
                     hint.className = 'text-[10px] text-gray-400 text-center col-span-full';
@@ -4044,7 +4055,10 @@
         window.joinEventFromModal = async function() {
             if (!activeEventId) return;
             if (isBuiltinEventId(activeEventId)) {
-                window.location.href = 'mailto:msuutc.alumni@gmail.com?subject=Fun%20Run%20Registration';
+                const subject = String(activeEventId).includes('homecoming')
+                    ? '6th%20Alumni%20Homecoming%202026'
+                    : 'Fun%20Run%20Registration';
+                window.location.href = `mailto:msuutc.alumni@gmail.com?subject=${subject}`;
                 return;
             }
             if (!currentUserEmail) {
@@ -4067,6 +4081,7 @@
         };
 
         function renderEvents() {
+            mergeBuiltinCommunityContent();
             const calendar = document.getElementById('eventCalendar');
             const board = document.getElementById('eventsBoard');
             if (calendar) {
@@ -4101,26 +4116,56 @@
                 const joined = rsvpResponses[event.id] === 'yes';
                 const card = document.createElement('div');
                 card.className = 'bg-gray-50 p-4 rounded-xl border border-gray-200 text-xs space-y-2';
-                card.innerHTML = `
-                    <button type="button" onclick="showEventDetail(${event.id})" class="w-full text-left hover:opacity-90 focus:outline-none">
-                        <div class="flex items-center justify-between gap-2">
-                            <div>
-                                <p class="font-bold text-gray-800">${event.title}</p>
-                                <p class="text-[10px] text-gray-500">${event.date} · ${event.time || 'TBA'}</p>
-                            </div>
-                            <span class="text-[10px] text-[#800020] font-semibold shrink-0">${event.location || ''}</span>
+
+                const headerBtn = document.createElement('button');
+                headerBtn.type = 'button';
+                headerBtn.className = 'w-full text-left hover:opacity-90 focus:outline-none';
+                headerBtn.innerHTML = `
+                    <div class="flex items-center justify-between gap-2">
+                        <div>
+                            <p class="font-bold text-gray-800">${escapeHtml(event.title)}</p>
+                            <p class="text-[10px] text-gray-500">${escapeHtml(event.date)} · ${escapeHtml(event.time || 'TBA')}</p>
                         </div>
-                        <p class="text-[11px] text-gray-600 mt-2 line-clamp-2">${event.description || ''}</p>
-                        <p class="text-[10px] text-[#800020] font-semibold mt-1">Read full announcement →</p>
-                    </button>
-                    <div class="flex flex-wrap gap-2 items-center">
-                        <button type="button" onclick="joinEventQuick(${event.id})" class="px-3 py-1.5 rounded-full bg-[#800020] text-white text-[10px] font-semibold hover:bg-red-900 ${joined ? 'opacity-70' : ''}" ${joined ? 'disabled' : ''}>${joined ? 'Joined ✓' : 'Join'}</button>
-                        <button type="button" onclick="showEventDetail(${event.id})" class="px-3 py-1.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-semibold hover:bg-amber-200">Details</button>
-                        <button type="button" onclick="rsvpEvent(${event.id}, 'no')" class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-[10px] font-semibold hover:bg-gray-200">Can't attend</button>
+                        <span class="text-[10px] text-[#800020] font-semibold shrink-0">${escapeHtml(event.location || '')}</span>
                     </div>
-                    <p class="text-[10px] font-semibold text-[#800020]">${formatEventJoinCount(event.id)}</p>
-                    <p class="text-[10px] text-gray-500 italic">${status}</p>
+                    <p class="text-[11px] text-gray-600 mt-2 line-clamp-2">${escapeHtml((event.description || '').split('\n')[0])}</p>
+                    <p class="text-[10px] text-[#800020] font-semibold mt-1">Read full announcement →</p>
                 `;
+                headerBtn.onclick = () => showEventDetail(event.id);
+
+                const actions = document.createElement('div');
+                actions.className = 'flex flex-wrap gap-2 items-center';
+
+                const joinBtn = document.createElement('button');
+                joinBtn.type = 'button';
+                joinBtn.className = `px-3 py-1.5 rounded-full bg-[#800020] text-white text-[10px] font-semibold hover:bg-red-900 ${joined ? 'opacity-70' : ''}`;
+                joinBtn.disabled = joined;
+                joinBtn.textContent = joined ? 'Joined ✓' : 'Join';
+                joinBtn.onclick = () => joinEventQuick(event.id);
+
+                const detailsBtn = document.createElement('button');
+                detailsBtn.type = 'button';
+                detailsBtn.className = 'px-3 py-1.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-semibold hover:bg-amber-200';
+                detailsBtn.textContent = 'Details';
+                detailsBtn.onclick = () => showEventDetail(event.id);
+
+                const declineBtn = document.createElement('button');
+                declineBtn.type = 'button';
+                declineBtn.className = 'px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-[10px] font-semibold hover:bg-gray-200';
+                declineBtn.textContent = "Can't attend";
+                declineBtn.onclick = () => rsvpEvent(event.id, 'no');
+
+                actions.append(joinBtn, detailsBtn, declineBtn);
+
+                const joinCount = document.createElement('p');
+                joinCount.className = 'text-[10px] font-semibold text-[#800020]';
+                joinCount.textContent = formatEventJoinCount(event.id);
+
+                const statusLine = document.createElement('p');
+                statusLine.className = 'text-[10px] text-gray-500 italic';
+                statusLine.textContent = status;
+
+                card.append(headerBtn, actions, joinCount, statusLine);
                 board.appendChild(card);
             });
             document.getElementById('upcomingEventsCount').innerText = `${events.length} Events`;
