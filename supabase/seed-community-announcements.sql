@@ -46,7 +46,7 @@ Registration: ₱500 (finisher shirt, medal, food & drinks)
 
 Contact: msuutc.alumni@gmail.com
 Facebook: MSU-UTC (PHS, UHS) Alumni Association',
-  'assets/ads/fun-run-2026.png'
+  'assets/ads/fun-run-2026.jpg'
 where not exists (
   select 1 from public.events where lower(title) like '%fun run%'
 );
