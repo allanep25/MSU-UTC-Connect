@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pages: write
 
     steps:
       - uses: actions/checkout@v4
@@ -23,6 +24,50 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./
           publish_branch: gh-pages
+          cname: utc.marawionline.com
           user_name: github-actions
           user_email: github-actions@github.com
           commit_message: "Deploy static site to GitHub Pages"
+
+  configure-https:
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+
+    steps:
+      - name: Set custom domain on GitHub Pages (triggers TLS certificate)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          API="https://api.github.com/repos/${{ github.repository }}/pages"
+          BODY='{"cname":"utc.marawionline.com","build_type":"legacy","source":{"branch":"gh-pages","path":"/"}}'
+          curl -fsSL -X PUT \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "${API}" \
+            -d "${BODY}"
+          echo "Custom domain registered. GitHub will provision a certificate for utc.marawionline.com (may take up to 24h)."
+
+      - name: Enable HTTPS enforcement when certificate is ready
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          API="https://api.github.com/repos/${{ github.repository }}/pages"
+          for i in 1 2 3 4 5; do
+            if curl -fsSL -X PUT \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "${API}" \
+              -d '{"cname":"utc.marawionline.com","https_enforced":true,"build_type":"legacy","source":{"branch":"gh-pages","path":"/"}}'; then
+              echo "HTTPS enforcement enabled."
+              exit 0
+            fi
+            echo "Certificate not ready yet (attempt ${i}/5). Waiting 60s..."
+            sleep 60
+          done
+          echo "HTTPS enforcement will apply automatically once GitHub finishes the certificate."
+          exit 0

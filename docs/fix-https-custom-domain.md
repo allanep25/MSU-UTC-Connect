@@ -6,7 +6,16 @@ Your DNS is correct (`utc` → `allanep25.github.io`), but the site is still usi
 
 This is fixed in **GitHub Pages settings**, not in `index.html`.
 
-## Steps (about 5–10 minutes + wait time)
+## Automatic fix (from Git — already set up in this repo)
+
+Every push to `master` runs **Configure HTTPS** after deploy. You can also run it manually:
+
+1. Open **https://github.com/allanep25/MSU-UTC-Connect/actions**
+2. Click **Configure Pages HTTPS** → **Run workflow**
+
+Ensure **Settings → Actions → General → Workflow permissions** is **Read and write** (not read-only).
+
+## Manual steps (if Actions cannot enable HTTPS yet)
 
 1. Open: **https://github.com/allanep25/MSU-UTC-Connect/settings/pages**
 
