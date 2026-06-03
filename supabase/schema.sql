@@ -78,6 +78,22 @@ create table if not exists public.testimonials (
   created_at timestamptz default now()
 );
 
+create table if not exists public.overview_ads (
+  id bigint generated always as identity primary key,
+  title text not null,
+  body text not null,
+  image text,
+  link text,
+  link_label text,
+  tag text,
+  accent text default 'from-[#800020] to-red-900',
+  panel text,
+  active boolean default true,
+  sort_order int default 0,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
 -- ============ REALTIME (message board) ============
 
 alter publication supabase_realtime add table public.messages;
@@ -91,6 +107,7 @@ alter table public.event_rsvps enable row level security;
 alter table public.messages enable row level security;
 alter table public.invites enable row level security;
 alter table public.testimonials enable row level security;
+alter table public.overview_ads enable row level security;
 
 -- Profiles: directory is public read; signed-in users manage their own row
 create policy "alumni_profiles_select" on public.alumni_profiles for select using (true);
@@ -135,6 +152,19 @@ create policy "testimonials_select" on public.testimonials for select using (app
 create policy "testimonials_insert" on public.testimonials for insert to authenticated with check (true);
 create policy "testimonials_update" on public.testimonials for update to authenticated using (true);
 create policy "testimonials_delete" on public.testimonials for delete to authenticated using (true);
+
+-- Overview ads: public sees active; admins manage
+create policy "overview_ads_select" on public.overview_ads for select using (
+  active = true
+  or (auth.jwt() ->> 'email') in ('admin@msu.edu', 'founder@msu.edu', 'realtytrail@gmail.com')
+);
+create policy "overview_ads_insert" on public.overview_ads for insert to authenticated
+  with check ((auth.jwt() ->> 'email') in ('admin@msu.edu', 'founder@msu.edu', 'realtytrail@gmail.com'));
+create policy "overview_ads_update" on public.overview_ads for update to authenticated
+  using ((auth.jwt() ->> 'email') in ('admin@msu.edu', 'founder@msu.edu', 'realtytrail@gmail.com'))
+  with check ((auth.jwt() ->> 'email') in ('admin@msu.edu', 'founder@msu.edu', 'realtytrail@gmail.com'));
+create policy "overview_ads_delete" on public.overview_ads for delete to authenticated
+  using ((auth.jwt() ->> 'email') in ('admin@msu.edu', 'founder@msu.edu', 'realtytrail@gmail.com'));
 
 -- ============ STORAGE (avatars bucket) ============
 -- In Dashboard: Storage → New bucket → name "avatars" → Public bucket

@@ -13,6 +13,25 @@
         @media (min-width: 768px) { .site-logo-header { height: 3.5rem; width: 3.5rem; } }
         #authCard { max-height: min(92vh, 640px); }
         #authFormScroll { scrollbar-width: thin; }
+        .dashboard-panel { display: none; }
+        .dashboard-panel.active { display: block; }
+        .dash-nav-item.active { background: rgba(255,255,255,0.14); border-left: 3px solid #fbbf24; }
+        #dashboardSidebar {
+            width: 16rem;
+            transition: transform 0.2s ease;
+        }
+        @media (max-width: 1023px) {
+            #dashboardSidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                z-index: 45;
+                transform: translateX(-100%);
+            }
+            #dashboardSidebar.open { transform: translateX(0); }
+            #sidebarBackdrop.open { display: block; }
+        }
     </style>
     <!-- Supabase CDN Script (Loads cloud database connectivity) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -246,229 +265,341 @@
     </div>
 
 
-    <!-- ================= MAIN PLATFORM LAYOUT ================= -->
-    <header class="bg-[#800020] text-white p-4 pt-6 max-w-6xl mx-auto md:rounded-b-xl shadow-md">
-        <div class="flex justify-between items-center mb-1 gap-3">
-            <div class="flex items-center gap-3 min-w-0">
-                <img src="assets/logo.png" alt="" class="site-logo site-logo-header shrink-0" onerror="this.onerror=null;this.src='assets/logo.svg';">
-                <div class="min-w-0">
-                    <h1 class="text-xl md:text-2xl font-bold tracking-tight truncate">MSU-UTC Connect</h1>
-                    <p class="text-[11px] md:text-xs text-gray-300 truncate">An exclusive alumni social platform</p>
+    <!-- ================= DASHBOARD (MENU LAYOUT) ================= -->
+    <div id="sidebarBackdrop" class="hidden fixed inset-0 bg-black/40 z-40 lg:hidden" onclick="closeDashboardSidebar()"></div>
+
+    <div id="dashboardApp" class="flex min-h-screen">
+        <aside id="dashboardSidebar" class="shrink-0 bg-[#800020] text-white flex flex-col z-50">
+            <div class="p-4 border-b border-white/10">
+                <div class="flex items-center gap-3">
+                    <img src="assets/logo.png" alt="" class="site-logo shrink-0" onerror="this.onerror=null;this.src='assets/logo.svg';">
+                    <div class="min-w-0">
+                        <p class="font-bold text-sm leading-tight">MSU-UTC Connect</p>
+                        <p class="text-[10px] text-white/70">Alumni Dashboard</p>
+                    </div>
                 </div>
             </div>
-            <div class="flex items-center space-x-3 shrink-0">
-                <div class="relative">
-                    <button id="notificationButton" onclick="resetNotifications()" class="relative w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-xs text-white hover:bg-white/20">🔔</button>
+
+            <nav class="flex-1 overflow-y-auto py-2 text-sm">
+                <p class="px-4 py-1 text-[10px] uppercase tracking-wider text-white/50 font-bold">Main</p>
+                <button type="button" data-panel="overview" class="dash-nav-item active w-full text-left px-4 py-2.5 hover:bg-white/10">Overview</button>
+                <button type="button" data-panel="profile" class="dash-nav-item w-full text-left px-4 py-2.5 hover:bg-white/10">My Profile</button>
+
+                <p class="px-4 py-2 mt-1 text-[10px] uppercase tracking-wider text-white/50 font-bold">Community</p>
+                <button type="button" data-panel="directory" class="dash-nav-item w-full text-left px-4 py-2.5 hover:bg-white/10">Batch Directory</button>
+                <button type="button" data-panel="officers" class="dash-nav-item w-full text-left px-4 py-2.5 hover:bg-white/10">Alumni Officers</button>
+                <button type="button" data-panel="network" class="dash-nav-item w-full text-left px-4 py-2.5 hover:bg-white/10">My Network</button>
+                <button type="button" data-panel="events" class="dash-nav-item w-full text-left px-4 py-2.5 hover:bg-white/10">Events</button>
+                <button type="button" data-panel="testimonials" class="dash-nav-item w-full text-left px-4 py-2.5 hover:bg-white/10">Testimonials</button>
+                <button type="button" data-panel="messages" class="dash-nav-item w-full text-left px-4 py-2.5 hover:bg-white/10 flex items-center gap-2">
+                    <span>Messages</span>
+                    <span id="navMessagesBadge" class="hidden ml-auto bg-amber-400 text-black text-[9px] font-bold px-1.5 rounded-full min-w-[18px] text-center">0</span>
+                </button>
+
+                <p class="px-4 py-2 mt-1 text-[10px] uppercase tracking-wider text-white/50 font-bold">Tools</p>
+                <button type="button" data-panel="invites" class="dash-nav-item w-full text-left px-4 py-2.5 hover:bg-white/10">Invites</button>
+                <button type="button" data-panel="admin" id="navItemAdmin" class="dash-nav-item hidden w-full text-left px-4 py-2.5 hover:bg-white/10 text-amber-100">Admin / Events</button>
+            </nav>
+
+            <div class="p-4 border-t border-white/10 shrink-0">
+                <div class="flex items-center gap-2 mb-2">
+                    <div id="userBadge" class="w-9 h-9 rounded-full bg-red-900 border border-white/30 flex items-center justify-center text-[10px] font-bold hidden shrink-0">AS</div>
+                    <div class="min-w-0 flex-1">
+                        <p id="sidebarUserName" class="text-xs font-semibold truncate">Alumni Member</p>
+                        <p id="sidebarUserBatch" class="text-[10px] text-white/60 truncate">—</p>
+                    </div>
+                </div>
+                <div id="signedInMeta" class="hidden mb-2">
+                    <span id="accountRoleBadge" class="text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border border-white/30 bg-white/10 text-white">Member</span>
+                    <span id="signedInEmail" class="hidden"></span>
+                </div>
+                <button type="button" onclick="logout()" class="w-full text-[11px] py-1.5 rounded border border-white/20 hover:bg-white/10">Sign out</button>
+            </div>
+        </aside>
+
+        <div class="flex-1 flex flex-col min-w-0 min-h-screen">
+            <header class="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3 shrink-0 sticky top-0 z-30">
+                <button type="button" id="dashboardMenuToggle" class="lg:hidden p-2 rounded-lg border border-gray-200 text-sm" aria-label="Open menu">☰</button>
+                <div class="flex-1 min-w-0">
+                    <h1 id="pageTitle" class="text-lg font-bold text-[#800020] truncate">Overview</h1>
+                    <p id="pageSubtitle" class="text-[11px] text-gray-500 truncate">Stats and quick actions</p>
+                </div>
+                <div class="relative shrink-0">
+                    <button id="notificationButton" type="button" onclick="resetNotifications()" class="relative p-2 rounded-full border border-gray-200 text-sm hover:bg-gray-50">🔔</button>
                     <span id="notificationBadge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-4 rounded-full bg-amber-400 text-[9px] text-black font-bold flex items-center justify-center px-1">0</span>
                 </div>
-                <div id="userBadge" class="w-8 h-8 rounded-full bg-red-900 border border-white/50 flex items-center justify-center text-xs font-bold hidden">AS</div>
-                <div class="hidden flex-col items-end gap-0.5" id="signedInMeta">
-                    <span id="accountRoleBadge" class="text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border border-white/30 bg-white/10 text-white">Member</span>
-                    <span id="signedInEmail" class="text-[9px] text-gray-300 max-w-[160px] truncate"></span>
-                </div>
-                <button onclick="logout()" class="text-xs bg-white/10 hover:bg-white/20 border border-white/20 px-2.5 py-1 rounded-md transition-all">Logout</button>
+                <span id="topbarRoleBadge" class="hidden sm:inline text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">Member</span>
+            </header>
+
+            <div id="dashboardMain" class="flex-1 overflow-y-auto p-4 md:p-6 max-w-5xl w-full mx-auto">
+
+                <section id="dashboard-panel-overview" class="dashboard-panel active space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <button type="button" onclick="showStatsDetail('members')" class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm text-left w-full hover:border-[#800020]/30 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-[#800020]/25 cursor-pointer">
+                            <p class="text-[10px] uppercase tracking-wider text-gray-500">Alumni Members</p>
+                            <p id="membersCount" class="mt-4 text-3xl font-bold text-gray-900">0</p>
+                            <p class="text-[9px] text-[#800020] font-semibold mt-2">Tap to view roster →</p>
+                        </button>
+                        <button type="button" onclick="showStatsDetail('testimonials')" class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm text-left w-full hover:border-[#800020]/30 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-[#800020]/25 cursor-pointer">
+                            <p class="text-[10px] uppercase tracking-wider text-gray-500">Testimonials</p>
+                            <p id="testimonialsCount" class="mt-4 text-3xl font-bold text-gray-900">0</p>
+                            <p class="text-[9px] text-[#800020] font-semibold mt-2">Tap to read posts →</p>
+                        </button>
+                        <button type="button" onclick="showStatsDetail('invites')" class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm text-left w-full hover:border-[#800020]/30 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-[#800020]/25 cursor-pointer">
+                            <p class="text-[10px] uppercase tracking-wider text-gray-500">Pending Invites</p>
+                            <p id="pendingInvitesCount" class="mt-4 text-3xl font-bold text-gray-900">0</p>
+                            <p class="text-[9px] text-[#800020] font-semibold mt-2">Tap to view invites →</p>
+                        </button>
+                    </div>
+
+                    <section id="overviewAdBoard" class="bg-white rounded-xl border border-amber-100/50 shadow-sm overflow-hidden">
+                        <div class="flex items-center justify-between gap-2 px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-[#800020]/5 to-transparent">
+                            <div>
+                                <p class="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Advertisement Board</p>
+                                <p class="text-[10px] text-gray-500 mt-0.5">Announcements, events & partner spotlights</p>
+                            </div>
+                            <span class="text-[9px] font-bold uppercase tracking-wide text-[#800020] bg-amber-50 border border-amber-200 px-2 py-1 rounded-full shrink-0">Featured</span>
+                        </div>
+                        <div id="overviewAdBoardInner" class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+                    </section>
+
+                    <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
+                        <p class="text-[10px] uppercase tracking-wider text-gray-500">Welcome</p>
+                        <h2 class="text-lg font-bold text-gray-900 mt-1">Find batchmates, share stories, and grow your network.</h2>
+                        <p class="text-[11px] text-gray-600 mt-2">Use the menu on the left to open Directory, Events, Messages, and more — one section at a time.</p>
+                    </section>
+                </section>
+
+                <section id="dashboard-panel-profile" class="dashboard-panel max-w-lg">
+                    <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-4">
+                        <div class="flex items-start gap-3">
+                            <img id="displayAvatar" class="w-16 h-16 rounded-full object-cover border-2 border-[#800020] bg-gray-200" src="" alt="Profile pic">
+                            <div class="flex-1">
+                                <h2 id="profileName" class="font-bold text-gray-800 text-lg">Alumni Member</h2>
+                                <p id="displayRole" class="text-xs text-gray-500 font-semibold uppercase">Member</p>
+                                <p id="displayBatchName" class="text-[11px] text-gray-500 mt-1">—</p>
+                                <p id="displayCompany" class="text-[11px] text-gray-600 mt-1">UTC Alumni Network</p>
+                                <p id="displayYear" class="text-[10px] text-gray-500 mt-1">2006</p>
+                            </div>
+                        </div>
+                        <div id="displayBadges" class="flex flex-wrap gap-2 text-[10px]"></div>
+                        <p id="displayJobTitle" class="text-[10px] text-gray-600 font-semibold hidden"></p>
+                        <p id="displayEmail" class="text-[10px] text-gray-500 hidden"></p>
+                        <p id="displaySummary" class="text-[11px] text-gray-600 hidden"></p>
+                        <p id="displayStatus" class="text-xs text-gray-600 italic mt-1 bg-amber-50/50 px-2 py-1 rounded">"—"</p>
+                        <p id="displaySkills" class="text-[10px] text-gray-500">Skills: —</p>
+                        <button id="personalizeProfileBtn" type="button" onclick="toggleProfileModal(true)" class="w-full text-[11px] font-bold bg-[#800020] text-white px-3 py-2 rounded-lg hover:bg-red-900 transition-colors">Personalize Profile</button>
+                        <button id="backToMyProfileBtn" type="button" onclick="restoreMyProfile()" class="hidden w-full text-[11px] font-bold bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors">← Back to My Profile</button>
+                    </section>
+                </section>
+
+                <section id="dashboard-panel-directory" class="dashboard-panel">
+                    <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold text-[#800020] uppercase tracking-wider">Batch Directory</span>
+                                <span class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full">Roster</span>
+                            </div>
+                            <button type="button" onclick="showInviteModal(true)" class="text-[10px] font-semibold bg-[#800020] text-white px-2 py-1 rounded-md hover:bg-red-900 transition-colors">Invite</button>
+                        </div>
+                        <div class="space-y-3">
+                            <div>
+                                <label for="batchFilter" class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Select batch</label>
+                                <select id="batchFilter" class="w-full p-2.5 border-2 border-[#800020]/40 rounded-lg text-xs font-semibold text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#800020]/30 focus:border-[#800020]">
+                                    <option value="">All Batches — full roster</option>
+                                </select>
+                            </div>
+                            <p id="batchDirectoryActiveLabel" class="text-[10px] text-[#800020] font-semibold hidden"></p>
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                                <input id="batchSearch" type="search" placeholder="Search within results..." class="flex-1 w-full p-2.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
+                                <select id="batchYearFilter" class="w-full sm:w-auto p-2.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
+                                    <option value="">All Years</option>
+                                </select>
+                            </div>
+                            <input id="skillFilter" type="search" placeholder="Filter by skill..." class="w-full p-2.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
+                            <div id="batchDirectoryList" class="grid gap-3"></div>
+                        </div>
+                    </section>
+                </section>
+
+                <section id="dashboard-panel-network" class="dashboard-panel max-w-lg">
+                    <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Your Network</h3>
+                            <span class="text-[10px] text-gray-500">Connected batchmates</span>
+                        </div>
+                        <div id="networkList" class="space-y-3 text-xs text-gray-700"></div>
+                    </section>
+                </section>
+
+                <section id="dashboard-panel-officers" class="dashboard-panel max-w-lg">
+                    <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Alumni Officers</h3>
+                            <span class="text-[10px] text-gray-500">UTC leadership roster</span>
+                        </div>
+                        <div id="officersBoard" class="space-y-3 text-xs text-gray-700"></div>
+                    </section>
+                </section>
+
+                <section id="dashboard-panel-invites" class="dashboard-panel max-w-lg">
+                    <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Pending Invites</h3>
+                            <span id="pendingInvitesCountInline" class="text-[10px] text-gray-500">0 pending</span>
+                        </div>
+                        <div id="pendingInvitesList" class="space-y-3 text-xs text-gray-700"></div>
+                    </section>
+                </section>
+
+                <section id="dashboard-panel-testimonials" class="dashboard-panel space-y-4">
+                    <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Post a Testimonial</h3>
+                            <select id="testimonialCategory" class="text-[10px] border border-gray-200 rounded-lg px-2 py-1 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#800020]/20">
+                                <option value="professional">Professional</option>
+                                <option value="academic">Academic</option>
+                                <option value="social">Social</option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <textarea id="testimonialInput" placeholder="Say something awesome about a batchmate..." rows="3" class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020] resize-none"></textarea>
+                            <div class="flex justify-between items-center">
+                                <button id="testimonialSubmitBtn" class="bg-[#800020] text-white px-4 py-1.5 rounded-lg text-xs font-semibold shadow-sm hover:bg-red-900 transition-colors">Submit Testimonial</button>
+                                <span class="text-[10px] text-gray-500">Moderated before publishing.</span>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-4">
+                        <div id="testimonialFilters" class="flex flex-wrap items-center gap-2 text-[10px] font-semibold text-gray-600 relative z-10">
+                            <span class="px-2 py-1 rounded-full bg-gray-200 text-gray-600 uppercase tracking-wide text-[9px]">Feed</span>
+                            <button type="button" data-testimonial-filter="all" onclick="setTestimonialFilter('all')" class="testimonial-tab cursor-pointer px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">All</button>
+                            <button type="button" data-testimonial-filter="featured" onclick="setTestimonialFilter('featured')" class="testimonial-tab cursor-pointer px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">Featured</button>
+                            <button type="button" data-testimonial-filter="professional" onclick="setTestimonialFilter('professional')" class="testimonial-tab cursor-pointer px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">Professional</button>
+                            <button type="button" data-testimonial-filter="academic" onclick="setTestimonialFilter('academic')" class="testimonial-tab cursor-pointer px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">Academic</button>
+                            <button type="button" data-testimonial-filter="social" onclick="setTestimonialFilter('social')" class="testimonial-tab cursor-pointer px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">Social</button>
+                        </div>
+                        <div id="testimonialList" class="space-y-3"></div>
+                    </section>
+                </section>
+
+                <section id="dashboard-panel-events" class="dashboard-panel">
+                    <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Upcoming Batch Events</h3>
+                                <p class="text-[10px] text-gray-500">Tap an event for the full announcement. Use Join to RSVP.</p>
+                            </div>
+                            <span id="upcomingEventsCount" class="text-[10px] bg-amber-100 text-amber-800 px-2 py-1 rounded-full">0 Events</span>
+                        </div>
+                        <div id="eventCalendar" class="grid grid-cols-3 gap-2 mb-4"></div>
+                        <div id="eventsBoard" class="space-y-3"></div>
+                    </section>
+                </section>
+
+                <section id="dashboard-panel-messages" class="dashboard-panel">
+                    <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-3">
+                        <div>
+                            <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Community Message Board</h3>
+                            <p class="text-[10px] text-gray-500">A simple group chat for alumni coordination.</p>
+                        </div>
+                        <div class="space-y-3">
+                            <textarea id="messageInput" rows="3" placeholder="Share an update or ask the batch..." class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020] resize-none"></textarea>
+                            <div class="flex justify-between items-center">
+                                <button id="messageSendBtn" class="bg-[#800020] text-white px-4 py-1.5 rounded-lg text-xs font-semibold shadow-sm hover:bg-red-900 transition-colors">Send Message</button>
+                                <span class="text-[10px] text-gray-500">Live alumni chat.</span>
+                            </div>
+                        </div>
+                        <div id="messagesList" class="space-y-3 max-h-[28rem] overflow-y-auto"></div>
+                    </section>
+                </section>
+
+                <section id="dashboard-panel-admin" class="dashboard-panel">
+                    <section id="adminPanel" class="bg-white rounded-xl p-4 border border-red-100 shadow-sm space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 id="moderationPanelTitle" class="text-xs font-bold text-red-700 uppercase tracking-wider">Admin & Moderation</h3>
+                            <span id="moderationPanelSubtitle" class="text-[10px] text-red-600">Community control center</span>
+                        </div>
+                        <div class="grid gap-3">
+                            <div id="adminOnlyModeration" class="hidden space-y-3">
+                                <div>
+                                    <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Pending Testimonials</h4>
+                                    <div id="adminTestimonials" class="space-y-3 text-xs text-gray-700"></div>
+                                </div>
+                                <div>
+                                    <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Invite Requests</h4>
+                                    <div id="adminInvites" class="space-y-3 text-xs text-gray-700"></div>
+                                </div>
+                                <div>
+                                    <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Advertisement Board</h4>
+                                    <p class="text-[10px] text-gray-500 mb-2">Posts appear on Overview below the stats cards. Image can be a URL or path like <code class="text-[9px]">assets/banner.jpg</code>.</p>
+                                    <form id="adminAdForm" class="space-y-2 mb-3 p-3 bg-gray-50 rounded-xl border border-gray-200" onsubmit="saveOverviewAd(event)">
+                                        <input type="hidden" id="adminAdEditId" value="">
+                                        <input id="adminAdTitle" type="text" required placeholder="Headline" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                                        <textarea id="adminAdBody" rows="2" required placeholder="Short description..." class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none resize-none"></textarea>
+                                        <input id="adminAdImage" type="text" placeholder="Image URL (optional)" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <input id="adminAdLink" type="text" placeholder="Link URL (optional)" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                                            <input id="adminAdLinkLabel" type="text" placeholder="Button text" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <input id="adminAdTag" type="text" placeholder="Tag (Event, Sponsor…)" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                                            <select id="adminAdAccent" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none bg-white">
+                                                <option value="from-[#800020] to-red-900">Maroon</option>
+                                                <option value="from-amber-600 to-amber-800">Amber</option>
+                                                <option value="from-slate-700 to-slate-900">Slate</option>
+                                                <option value="from-emerald-600 to-emerald-800">Green</option>
+                                            </select>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <select id="adminAdPanel" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none bg-white">
+                                                <option value="">No in-app link</option>
+                                                <option value="directory">Batch Directory</option>
+                                                <option value="events">Events</option>
+                                                <option value="testimonials">Testimonials</option>
+                                                <option value="messages">Messages</option>
+                                                <option value="invites">Invites</option>
+                                                <option value="profile">My Profile</option>
+                                                <option value="officers">Alumni Officers</option>
+                                                <option value="network">My Network</option>
+                                            </select>
+                                            <input id="adminAdSortOrder" type="number" min="0" value="0" placeholder="Sort order" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                                        </div>
+                                        <label class="flex items-center gap-2 text-[10px] text-gray-600">
+                                            <input id="adminAdActive" type="checkbox" checked class="rounded border-gray-300">
+                                            <span>Show on Overview (active)</span>
+                                        </label>
+                                        <div class="flex gap-2">
+                                            <button type="submit" id="adminAdSubmitBtn" class="flex-1 px-3 py-1.5 bg-[#800020] text-white rounded-lg text-[10px] font-semibold hover:bg-red-900">Add Ad</button>
+                                            <button type="button" id="adminAdCancelBtn" onclick="cancelOverviewAdEdit()" class="hidden px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg text-[10px] font-semibold hover:bg-gray-300">Cancel</button>
+                                        </div>
+                                    </form>
+                                    <div id="adminAdsList" class="space-y-3 text-xs text-gray-700"></div>
+                                </div>
+                            </div>
+                            <div id="eventManagementSection">
+                                <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Event Management</h4>
+                                <p id="eventManagementHint" class="text-[10px] text-gray-500 mb-2 hidden">Officers can add and update batch events for all alumni.</p>
+                                <form id="adminEventForm" class="space-y-2 mb-3 p-3 bg-gray-50 rounded-xl border border-gray-200" onsubmit="createAdminEvent(event)">
+                                    <input id="adminEventTitle" type="text" required placeholder="Event title" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input id="adminEventDate" type="text" required placeholder="June 15" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                                        <input id="adminEventTime" type="text" placeholder="7:00 pm" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                                    </div>
+                                    <input id="adminEventLocation" type="text" placeholder="Alumni Hall" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                                    <textarea id="adminEventDescription" rows="2" placeholder="Short description..." class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none resize-none"></textarea>
+                                    <button type="submit" class="w-full px-3 py-1.5 bg-[#800020] text-white rounded-lg text-[10px] font-semibold hover:bg-red-900">Add Event</button>
+                                </form>
+                                <div id="adminEvents" class="space-y-3 text-xs text-gray-700"></div>
+                            </div>
+                        </div>
+                    </section>
+                </section>
+
             </div>
         </div>
-    </header>
+    </div>
 
-    <section class="max-w-6xl mx-auto p-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <button type="button" onclick="showStatsDetail('members')" class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm text-left w-full hover:border-[#800020]/30 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-[#800020]/25 cursor-pointer">
-            <p class="text-[10px] uppercase tracking-wider text-gray-500">Alumni Members</p>
-            <p id="membersCount" class="mt-4 text-3xl font-bold text-gray-900">0</p>
-            <p class="text-[9px] text-[#800020] font-semibold mt-2">Tap to view roster →</p>
-        </button>
-        <button type="button" onclick="showStatsDetail('testimonials')" class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm text-left w-full hover:border-[#800020]/30 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-[#800020]/25 cursor-pointer">
-            <p class="text-[10px] uppercase tracking-wider text-gray-500">Testimonials</p>
-            <p id="testimonialsCount" class="mt-4 text-3xl font-bold text-gray-900">0</p>
-            <p class="text-[9px] text-[#800020] font-semibold mt-2">Tap to read posts →</p>
-        </button>
-        <button type="button" onclick="showStatsDetail('invites')" class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm text-left w-full hover:border-[#800020]/30 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-[#800020]/25 cursor-pointer">
-            <p class="text-[10px] uppercase tracking-wider text-gray-500">Pending Invites</p>
-            <p id="pendingInvitesCount" class="mt-4 text-3xl font-bold text-gray-900">0</p>
-            <p class="text-[9px] text-[#800020] font-semibold mt-2">Tap to view invites →</p>
-        </button>
-    </section>
-
-    <main class="max-w-6xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div class="space-y-6 lg:col-span-1">
-            <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-4">
-                <div class="flex items-start gap-3">
-                    <img id="displayAvatar" class="w-16 h-16 rounded-full object-cover border-2 border-[#800020] bg-gray-200" src="" alt="Profile pic">
-                    <div class="flex-1">
-                        <h2 id="profileName" class="font-bold text-gray-800 text-lg">Alumni Member</h2>
-                        <p id="displayRole" class="text-xs text-gray-500 font-semibold uppercase">Member</p>
-                        <p id="displayBatchName" class="text-[11px] text-gray-500 mt-1">—</p>
-                        <p id="displayCompany" class="text-[11px] text-gray-600 mt-1">UTC Alumni Network</p>
-                        <p id="displayYear" class="text-[10px] text-gray-500 mt-1">2006</p>
-                    </div>
-                </div>
-                <div id="displayBadges" class="flex flex-wrap gap-2 text-[10px]"></div>
-                <p id="displayJobTitle" class="text-[10px] text-gray-600 font-semibold hidden"></p>
-                <p id="displayEmail" class="text-[10px] text-gray-500 hidden"></p>
-                <p id="displaySummary" class="text-[11px] text-gray-600 hidden"></p>
-                <p id="displayStatus" class="text-xs text-gray-600 italic mt-1 bg-amber-50/50 px-2 py-1 rounded">"—"</p>
-                <p id="displaySkills" class="text-[10px] text-gray-500">Skills: —</p>
-                <button id="personalizeProfileBtn" type="button" onclick="toggleProfileModal(true)" class="w-full text-[11px] font-bold bg-[#800020] text-white px-3 py-2 rounded-lg hover:bg-red-900 transition-colors">Personalize Profile</button>
-                <button id="backToMyProfileBtn" type="button" onclick="restoreMyProfile()" class="hidden w-full text-[11px] font-bold bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors">← Back to My Profile</button>
-            </section>
-
-            <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-bold text-[#800020] uppercase tracking-wider">Batch Directory</span>
-                        <span class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full">Roster</span>
-                    </div>
-                    <button type="button" onclick="showInviteModal(true)" class="text-[10px] font-semibold bg-[#800020] text-white px-2 py-1 rounded-md hover:bg-red-900 transition-colors">Invite</button>
-                </div>
-                <div class="space-y-3">
-                    <div>
-                        <label for="batchFilter" class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Select batch</label>
-                        <select id="batchFilter" class="w-full p-2.5 border-2 border-[#800020]/40 rounded-lg text-xs font-semibold text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#800020]/30 focus:border-[#800020]">
-                            <option value="">All Batches — full roster</option>
-                        </select>
-                    </div>
-                    <p id="batchDirectoryActiveLabel" class="text-[10px] text-[#800020] font-semibold hidden"></p>
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-                        <input id="batchSearch" type="search" placeholder="Search within results..." class="flex-1 w-full p-2.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
-                        <select id="batchYearFilter" class="w-full sm:w-auto p-2.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
-                            <option value="">All Years</option>
-                        </select>
-                    </div>
-                    <input id="skillFilter" type="search" placeholder="Filter by skill..." class="w-full p-2.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
-                    <div id="batchDirectoryList" class="grid gap-3"></div>
-                </div>
-            </section>
-
-            <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Your Network</h3>
-                    <span class="text-[10px] text-gray-500">Connected batchmates</span>
-                </div>
-                <div id="networkList" class="space-y-3 text-xs text-gray-700"></div>
-            </section>
-
-            <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Alumni Officers</h3>
-                    <span class="text-[10px] text-gray-500">UTC leadership roster</span>
-                </div>
-                <div id="officersBoard" class="space-y-3 text-xs text-gray-700"></div>
-            </section>
-
-            <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Pending Invites</h3>
-                    <span id="pendingInvitesCountInline" class="text-[10px] text-gray-500">0 pending</span>
-                </div>
-                <div id="pendingInvitesList" class="space-y-3 text-xs text-gray-700"></div>
-            </section>
-        </div>
-
-        <div class="space-y-6 lg:col-span-2">
-            <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
-                <div class="space-y-3">
-                    <p class="text-[10px] uppercase tracking-wider text-gray-500">Welcome to the alumni hub</p>
-                    <h2 class="text-lg font-bold text-gray-900">Find batchmates, share stories, and grow your network.</h2>
-                    <p class="text-[11px] text-gray-600">Browse all alumni profiles, join conversations, RSVP to events, and access moderation tools if you are an organizer.</p>
-                </div>
-            </section>
-
-            <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-3">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Post a Testimonial</h3>
-                    <select id="testimonialCategory" class="text-[10px] border border-gray-200 rounded-lg px-2 py-1 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#800020]/20">
-                        <option value="professional">Professional</option>
-                        <option value="academic">Academic</option>
-                        <option value="social">Social</option>
-                    </select>
-                </div>
-                <div class="space-y-2">
-                    <textarea id="testimonialInput" placeholder="Say something awesome about a batchmate..." rows="3" class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020] resize-none"></textarea>
-                    <div class="flex justify-between items-center">
-                        <button id="testimonialSubmitBtn" class="bg-[#800020] text-white px-4 py-1.5 rounded-lg text-xs font-semibold shadow-sm hover:bg-red-900 transition-colors">Submit Testimonial</button>
-                        <span class="text-[10px] text-gray-500">Moderated before publishing.</span>
-                    </div>
-                </div>
-            </section>
-
-            <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-4">
-                <div id="testimonialFilters" class="flex flex-wrap items-center gap-2 text-[10px] font-semibold text-gray-600 relative z-10">
-                    <span class="px-2 py-1 rounded-full bg-gray-200 text-gray-600 uppercase tracking-wide text-[9px]">Testimonials Feed</span>
-                    <button type="button" data-testimonial-filter="all" onclick="setTestimonialFilter('all')" class="testimonial-tab cursor-pointer px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">All</button>
-                    <button type="button" data-testimonial-filter="featured" onclick="setTestimonialFilter('featured')" class="testimonial-tab cursor-pointer px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">Featured</button>
-                    <button type="button" data-testimonial-filter="professional" onclick="setTestimonialFilter('professional')" class="testimonial-tab cursor-pointer px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">Professional</button>
-                    <button type="button" data-testimonial-filter="academic" onclick="setTestimonialFilter('academic')" class="testimonial-tab cursor-pointer px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">Academic</button>
-                    <button type="button" data-testimonial-filter="social" onclick="setTestimonialFilter('social')" class="testimonial-tab cursor-pointer px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">Social</button>
-                </div>
-                <div id="testimonialList" class="space-y-3"></div>
-            </section>
-        </div>
-
-        <div class="space-y-6 lg:col-span-1">
-            <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-3">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Upcoming Batch Events</h3>
-                        <p class="text-[10px] text-gray-500">Tap an event for the full announcement. Use Join to RSVP.</p>
-                    </div>
-                    <span id="upcomingEventsCount" class="text-[10px] bg-amber-100 text-amber-800 px-2 py-1 rounded-full">0 Events</span>
-                </div>
-                <div id="eventCalendar" class="grid grid-cols-3 gap-2 mb-4"></div>
-                <div id="eventsBoard" class="space-y-3"></div>
-            </section>
-
-            <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-3">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Community Message Board</h3>
-                        <p class="text-[10px] text-gray-500">A simple group chat for alumni coordination.</p>
-                    </div>
-                </div>
-                <div class="space-y-3">
-                    <textarea id="messageInput" rows="3" placeholder="Share an update or ask the batch..." class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020] resize-none"></textarea>
-                    <div class="flex justify-between items-center">
-                        <button id="messageSendBtn" class="bg-[#800020] text-white px-4 py-1.5 rounded-lg text-xs font-semibold shadow-sm hover:bg-red-900 transition-colors">Send Message</button>
-                        <span class="text-[10px] text-gray-500">Live or asynchronous alumni chat.</span>
-                    </div>
-                </div>
-                <div id="messagesList" class="space-y-3 max-h-72 overflow-y-auto"></div>
-            </section>
-
-            <section id="adminPanel" class="hidden bg-white rounded-xl p-4 border border-red-100 shadow-sm space-y-4">
-                <div class="flex items-center justify-between">
-                    <h3 id="moderationPanelTitle" class="text-xs font-bold text-red-700 uppercase tracking-wider">Admin & Moderation</h3>
-                    <span id="moderationPanelSubtitle" class="text-[10px] text-red-600">Community control center</span>
-                </div>
-                <div class="grid gap-3">
-                    <div id="adminOnlyModeration" class="hidden space-y-3">
-                        <div>
-                            <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Pending Testimonials</h4>
-                            <div id="adminTestimonials" class="space-y-3 text-xs text-gray-700"></div>
-                        </div>
-                        <div>
-                            <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Invite Requests</h4>
-                            <div id="adminInvites" class="space-y-3 text-xs text-gray-700"></div>
-                        </div>
-                    </div>
-                    <div id="eventManagementSection">
-                        <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Event Management</h4>
-                        <p id="eventManagementHint" class="text-[10px] text-gray-500 mb-2 hidden">Officers can add and update batch events for all alumni.</p>
-                        <form id="adminEventForm" class="space-y-2 mb-3 p-3 bg-gray-50 rounded-xl border border-gray-200" onsubmit="createAdminEvent(event)">
-                            <input id="adminEventTitle" type="text" required placeholder="Event title" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
-                            <div class="grid grid-cols-2 gap-2">
-                                <input id="adminEventDate" type="text" required placeholder="June 15" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
-                                <input id="adminEventTime" type="text" placeholder="7:00 pm" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
-                            </div>
-                            <input id="adminEventLocation" type="text" placeholder="Alumni Hall" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
-                            <textarea id="adminEventDescription" rows="2" placeholder="Short description..." class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none resize-none"></textarea>
-                            <button type="submit" class="w-full px-3 py-1.5 bg-[#800020] text-white rounded-lg text-[10px] font-semibold hover:bg-red-900">Add Event</button>
-                        </form>
-                        <div id="adminEvents" class="space-y-3 text-xs text-gray-700"></div>
-                    </div>
-                </div>
-            </section>
-        </div>
-    </main>
 
     <!-- ================= JAVASCRIPT & CLOUD INFRASTRUCTURE ================= -->
     <div id="toastContainer" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
@@ -493,6 +624,7 @@
          - messages: id, author_name, author_email, content, created_at
          - invites: id, email, invited_by, invite_link, status, invited_at
          - testimonials: id, author_name, author_email, message_content, category, likes, approved, featured, created_at
+         - overview_ads: id, title, body, image, link, link_label, tag, accent, panel, active, sort_order, created_at, updated_at
         */
 
         let currentMode = 'register';
@@ -529,6 +661,8 @@
         let activeMessageRecipient = null;
         let activeProfileModalId = null;
         let unreadMessages = 0;
+        let overviewAds = [];
+        let adminOverviewAds = [];
         let selectedProfileAvatarFile = null;
         let selectedRegAvatarFile = null;
         let testimonialFilter = 'all';
@@ -668,6 +802,280 @@
             '2021 LUMINARIES', '2022 ELYSIANS', '2023 ZOSIME', '2024 AURELIUS', '2025 SALIMBAYAN', '2026 TADMAN'
         ];
 
+        function mapOverviewAdRow(row) {
+            return {
+                id: row.id,
+                title: row.title || '',
+                body: row.body || '',
+                image: row.image || '',
+                link: row.link || '',
+                linkLabel: row.link_label || '',
+                tag: row.tag || '',
+                accent: row.accent || 'from-[#800020] to-red-900',
+                panel: row.panel || '',
+                active: row.active !== false,
+                sortOrder: row.sort_order ?? 0
+            };
+        }
+
+        function buildAdPlaceholder(accent, tag) {
+            const el = document.createElement('div');
+            el.className = `w-full h-28 bg-gradient-to-br ${accent} flex items-center justify-center text-white/90 text-center px-3`;
+            el.innerHTML = `<span class="text-[10px] font-bold uppercase tracking-widest">${escapeHtml(tag || 'Featured')}</span>`;
+            return el;
+        }
+
+        function appendOverviewAdCard(board, ad) {
+            const card = document.createElement('article');
+            card.className = 'flex flex-col rounded-xl border border-gray-200 overflow-hidden bg-gray-50 hover:border-[#800020]/30 hover:shadow-md transition-all';
+
+            const accent = ad.accent || 'from-[#800020] to-red-900';
+            let media;
+            if (ad.image) {
+                const img = document.createElement('img');
+                img.src = ad.image;
+                img.alt = ad.title || 'Advertisement';
+                img.className = 'w-full h-28 object-cover bg-gray-200';
+                img.onerror = () => {
+                    img.replaceWith(buildAdPlaceholder(accent, ad.tag));
+                };
+                media = img;
+            } else {
+                media = buildAdPlaceholder(accent, ad.tag);
+            }
+
+            const tag = ad.tag ? `<span class="text-[9px] font-bold uppercase tracking-wide text-[#800020] bg-white/80 px-1.5 py-0.5 rounded">${escapeHtml(ad.tag)}</span>` : '';
+
+            const cta = ad.link
+                ? `<a href="${escapeHtml(ad.link)}" ${ad.link.startsWith('http') ? 'target="_blank" rel="noopener noreferrer"' : ''} class="inline-block text-[10px] font-bold text-[#800020] hover:text-red-900 mt-2">${escapeHtml(ad.linkLabel || 'Learn more')} →</a>`
+                : ad.panel
+                    ? `<button type="button" data-ad-panel="${escapeHtml(ad.panel)}" class="text-[10px] font-bold text-[#800020] hover:text-red-900 mt-2">${escapeHtml(ad.linkLabel || 'Learn more')} →</button>`
+                    : '';
+
+            const body = document.createElement('div');
+            body.className = 'p-3 flex flex-col flex-1';
+            body.innerHTML = `
+                <div class="flex items-start justify-between gap-2 mb-1">${tag}</div>
+                <h3 class="text-sm font-bold text-gray-900 leading-snug">${escapeHtml(ad.title)}</h3>
+                <p class="text-[11px] text-gray-600 mt-1 flex-1">${escapeHtml(ad.body)}</p>
+                ${cta}
+            `;
+
+            card.appendChild(media);
+            card.appendChild(body);
+
+            const panelBtn = body.querySelector('[data-ad-panel]');
+            if (panelBtn) {
+                panelBtn.addEventListener('click', () => navigateDashboard(panelBtn.dataset.adPanel));
+            }
+
+            board.appendChild(card);
+        }
+
+        function renderOverviewAdBoard() {
+            const board = document.getElementById('overviewAdBoardInner');
+            const section = document.getElementById('overviewAdBoard');
+            if (!board || !section) return;
+
+            section.classList.remove('hidden');
+            board.innerHTML = '';
+
+            if (!overviewAds.length) {
+                board.innerHTML = '<p class="text-[11px] text-gray-400 italic col-span-full py-4 text-center">No announcements on the board yet.</p>';
+                return;
+            }
+
+            overviewAds.forEach(ad => appendOverviewAdCard(board, ad));
+        }
+
+        async function fetchOverviewAds() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('overview_ads')
+                    .select('*')
+                    .eq('active', true)
+                    .order('sort_order', { ascending: true })
+                    .order('id', { ascending: true });
+                if (error) throw error;
+                overviewAds = (data || []).map(mapOverviewAdRow);
+            } catch (err) {
+                console.warn('Could not load overview ads:', err.message);
+                overviewAds = [];
+            }
+            renderOverviewAdBoard();
+        }
+
+        async function fetchAdminOverviewAds() {
+            if (!isAdminUser()) return;
+            try {
+                const { data, error } = await supabaseClient
+                    .from('overview_ads')
+                    .select('*')
+                    .order('sort_order', { ascending: true })
+                    .order('id', { ascending: true });
+                if (error) throw error;
+                adminOverviewAds = (data || []).map(mapOverviewAdRow);
+            } catch (err) {
+                console.warn('Could not load admin ads:', err.message);
+                adminOverviewAds = [];
+            }
+            renderAdminOverviewAdsList();
+        }
+
+        function resetOverviewAdForm() {
+            document.getElementById('adminAdEditId').value = '';
+            document.getElementById('adminAdForm')?.reset();
+            document.getElementById('adminAdActive').checked = true;
+            document.getElementById('adminAdSortOrder').value = '0';
+            document.getElementById('adminAdAccent').value = 'from-[#800020] to-red-900';
+            document.getElementById('adminAdSubmitBtn').innerText = 'Add Ad';
+            document.getElementById('adminAdCancelBtn')?.classList.add('hidden');
+        }
+
+        window.cancelOverviewAdEdit = function() {
+            resetOverviewAdForm();
+        };
+
+        window.editOverviewAd = function(id) {
+            const ad = adminOverviewAds.find(item => item.id === id);
+            if (!ad) return;
+            document.getElementById('adminAdEditId').value = String(ad.id);
+            document.getElementById('adminAdTitle').value = ad.title;
+            document.getElementById('adminAdBody').value = ad.body;
+            document.getElementById('adminAdImage').value = ad.image;
+            document.getElementById('adminAdLink').value = ad.link;
+            document.getElementById('adminAdLinkLabel').value = ad.linkLabel;
+            document.getElementById('adminAdTag').value = ad.tag;
+            document.getElementById('adminAdAccent').value = ad.accent;
+            document.getElementById('adminAdPanel').value = ad.panel || '';
+            document.getElementById('adminAdSortOrder').value = String(ad.sortOrder);
+            document.getElementById('adminAdActive').checked = ad.active;
+            document.getElementById('adminAdSubmitBtn').innerText = 'Update Ad';
+            document.getElementById('adminAdCancelBtn')?.classList.remove('hidden');
+            navigateDashboard('admin');
+            document.getElementById('adminAdForm')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        };
+
+        window.saveOverviewAd = async function(event) {
+            event.preventDefault();
+            if (!isAdminUser()) {
+                showToast('Admin access required', 'error');
+                return;
+            }
+
+            const title = document.getElementById('adminAdTitle').value.trim();
+            const body = document.getElementById('adminAdBody').value.trim();
+            const image = document.getElementById('adminAdImage').value.trim();
+            const link = document.getElementById('adminAdLink').value.trim();
+            const link_label = document.getElementById('adminAdLinkLabel').value.trim();
+            const tag = document.getElementById('adminAdTag').value.trim();
+            const accent = document.getElementById('adminAdAccent').value;
+            const panel = document.getElementById('adminAdPanel').value.trim() || null;
+            const sort_order = parseInt(document.getElementById('adminAdSortOrder').value, 10) || 0;
+            const active = document.getElementById('adminAdActive').checked;
+            const editId = document.getElementById('adminAdEditId').value.trim();
+
+            if (!title || !body) {
+                showToast('Title and description are required', 'error');
+                return;
+            }
+
+            const payload = {
+                title,
+                body,
+                image: image || null,
+                link: link || null,
+                link_label: link_label || null,
+                tag: tag || null,
+                accent,
+                panel,
+                sort_order,
+                active,
+                updated_at: new Date().toISOString()
+            };
+
+            try {
+                if (editId) {
+                    const { error } = await supabaseClient.from('overview_ads').update(payload).eq('id', editId);
+                    if (error) throw error;
+                    showToast('Advertisement updated', 'success');
+                } else {
+                    const { error } = await supabaseClient.from('overview_ads').insert([payload]);
+                    if (error) throw error;
+                    showToast('Advertisement added', 'success');
+                }
+                resetOverviewAdForm();
+                await fetchOverviewAds();
+                await fetchAdminOverviewAds();
+            } catch (err) {
+                console.warn('Could not save ad:', err.message);
+                showToast('Could not save ad. Run supabase/overview-ads.sql in Supabase first.', 'error');
+            }
+        };
+
+        window.deleteOverviewAd = async function(id) {
+            if (!isAdminUser()) return;
+            if (!confirm('Delete this advertisement?')) return;
+            try {
+                const { error } = await supabaseClient.from('overview_ads').delete().eq('id', id);
+                if (error) throw error;
+                showToast('Advertisement deleted', 'success');
+                if (document.getElementById('adminAdEditId').value === String(id)) resetOverviewAdForm();
+                await fetchOverviewAds();
+                await fetchAdminOverviewAds();
+            } catch (err) {
+                console.warn('Could not delete ad:', err.message);
+                showToast('Could not delete advertisement', 'error');
+            }
+        };
+
+        window.toggleOverviewAdActive = async function(id, makeActive) {
+            if (!isAdminUser()) return;
+            try {
+                const { error } = await supabaseClient.from('overview_ads').update({
+                    active: makeActive,
+                    updated_at: new Date().toISOString()
+                }).eq('id', id);
+                if (error) throw error;
+                await fetchOverviewAds();
+                await fetchAdminOverviewAds();
+                showToast(makeActive ? 'Ad is now visible' : 'Ad hidden from Overview', 'success');
+            } catch (err) {
+                console.warn('Could not update ad:', err.message);
+                showToast('Could not update advertisement', 'error');
+            }
+        };
+
+        function renderAdminOverviewAdsList() {
+            const list = document.getElementById('adminAdsList');
+            if (!list) return;
+            list.innerHTML = '';
+
+            if (!adminOverviewAds.length) {
+                list.innerHTML = '<p class="text-[11px] text-gray-400 italic">No ads yet. Add one above.</p>';
+                return;
+            }
+
+            adminOverviewAds.forEach(ad => {
+                const row = document.createElement('div');
+                row.className = `p-3 rounded-xl border text-xs ${ad.active ? 'bg-gray-50 border-gray-200' : 'bg-gray-100 border-gray-300 opacity-75'}`;
+                row.innerHTML = `
+                    <div class="flex items-start justify-between gap-2 mb-1">
+                        <span class="font-semibold text-gray-800">${escapeHtml(ad.title)}</span>
+                        <span class="text-[9px] uppercase ${ad.active ? 'text-green-700' : 'text-gray-500'}">${ad.active ? 'Active' : 'Hidden'}</span>
+                    </div>
+                    <p class="text-[10px] text-gray-500 line-clamp-2">${escapeHtml(ad.body)}</p>
+                    <p class="text-[9px] text-gray-400 mt-1">Order: ${ad.sortOrder}${ad.tag ? ' · ' + escapeHtml(ad.tag) : ''}</p>
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <button type="button" onclick="editOverviewAd(${ad.id})" class="px-2 py-1 bg-amber-100 text-amber-900 rounded-full text-[10px]">Edit</button>
+                        <button type="button" onclick="toggleOverviewAdActive(${ad.id}, ${!ad.active})" class="px-2 py-1 bg-gray-200 text-gray-800 rounded-full text-[10px]">${ad.active ? 'Hide' : 'Show'}</button>
+                        <button type="button" onclick="deleteOverviewAd(${ad.id})" class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-[10px]">Delete</button>
+                    </div>
+                `;
+                list.appendChild(row);
+            });
+        }
+
         const OFFICIAL_ALUMNI_OFFICERS = [
             { designation: 'President', name: 'Dr. Arsalan Diamaoden', batchDisplay: "Batch '10 Synchronic", batchName: '2010 SYNCHRONIZE' },
             { designation: 'Vice President (Internal)', name: 'Faisal Gunang', batchDisplay: "Batch '87 Silver Jubilee", batchName: '1987 ZENITH' },
@@ -787,10 +1195,75 @@
         const profileNameEl = document.getElementById('profileName');
         const userBadge = document.getElementById('userBadge');
 
+        const DASHBOARD_PANEL_TITLES = {
+            overview: ['Overview', 'Stats and quick actions'],
+            profile: ['My Profile', 'Your alumni card'],
+            directory: ['Batch Directory', 'Search and connect with batchmates'],
+            officers: ['Alumni Officers', 'UTC leadership roster'],
+            network: ['My Network', 'Connected batchmates'],
+            events: ['Events', 'Upcoming batch announcements'],
+            testimonials: ['Testimonials', 'Stories from the community'],
+            messages: ['Messages', 'Community message board'],
+            invites: ['Invites', 'Pending and sent invites'],
+            admin: ['Admin', 'Moderation & events']
+        };
+
+        let activeDashboardPanel = 'overview';
+
+        window.navigateDashboard = function(panelId) {
+            if (!panelId) return;
+            activeDashboardPanel = panelId;
+            document.querySelectorAll('.dash-nav-item').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.panel === panelId);
+            });
+            document.querySelectorAll('.dashboard-panel').forEach(panel => {
+                panel.classList.toggle('active', panel.id === 'dashboard-panel-' + panelId);
+            });
+            const titles = DASHBOARD_PANEL_TITLES[panelId] || ['MSU-UTC Connect', ''];
+            const titleEl = document.getElementById('pageTitle');
+            const subEl = document.getElementById('pageSubtitle');
+            if (titleEl) titleEl.textContent = titles[0];
+            if (subEl) subEl.textContent = titles[1];
+            closeDashboardSidebar();
+        };
+
+        window.closeDashboardSidebar = function() {
+            document.getElementById('dashboardSidebar')?.classList.remove('open');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (backdrop) {
+                backdrop.classList.remove('open');
+                backdrop.classList.add('hidden');
+            }
+        };
+
+        function openDashboardSidebar() {
+            document.getElementById('dashboardSidebar')?.classList.add('open');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (backdrop) {
+                backdrop.classList.remove('hidden');
+                backdrop.classList.add('open');
+            }
+        }
+
+        function initDashboardNav() {
+            document.querySelectorAll('.dash-nav-item').forEach(btn => {
+                btn.addEventListener('click', () => navigateDashboard(btn.dataset.panel));
+            });
+            document.getElementById('dashboardMenuToggle')?.addEventListener('click', openDashboardSidebar);
+        }
+
+        function updateDashboardSidebarUser(name, batchName) {
+            const sideName = document.getElementById('sidebarUserName');
+            const sideBatch = document.getElementById('sidebarUserBatch');
+            if (sideName) sideName.textContent = name || 'Alumni Member';
+            if (sideBatch) sideBatch.textContent = batchName || '—';
+        }
+
         function setAuthOverlayOpen(open) {
             if (!authOverlay) return;
             authOverlay.classList.toggle('hidden', !open);
             authOverlay.classList.toggle('pointer-events-none', !open);
+            document.getElementById('dashboardApp')?.classList.toggle('hidden', open);
         }
 
         window.setTestimonialFilter = function(filter) {
@@ -832,6 +1305,7 @@
                 setTestimonialFilter(button.dataset.testimonialFilter);
             });
             updateTestimonialTabStyles();
+            initDashboardNav();
 
             await restoreSession();
             await loadAppData();
@@ -854,6 +1328,7 @@
             await fetchTestimonials();
             await fetchMessages();
             await fetchPendingInvites();
+            await fetchOverviewAds();
             await fetchMetrics();
             renderStats();
             renderBatchDirectory();
@@ -945,6 +1420,8 @@
             profileNameEl.innerText = 'Alumni Member';
             userBadge.classList.add('hidden');
             document.getElementById('signedInMeta')?.classList.add('hidden');
+            updateDashboardSidebarUser('Alumni Member', '—');
+            navigateDashboard('overview');
             updateAccountRoleBadge();
             setAuthOverlayOpen(true);
             switchAuthTab('login');
@@ -996,11 +1473,13 @@
                 ...currentUserProfile,
                 email: currentUserEmail || ''
             }, { viewingOther: false });
+            updateDashboardSidebarUser(currentUserProfile.name || currentUser, currentUserProfile.batchName);
         }
 
         window.restoreMyProfile = function() {
             viewingOtherProfileId = null;
             renderCurrentUserProfile();
+            navigateDashboard('profile');
             showToast('Showing your profile', 'success');
         };
 
@@ -1190,6 +1669,7 @@
             const initials = name.split(' ').map(part => part[0]).join('').toUpperCase();
             userBadge.innerText = initials;
             userBadge.classList.remove('hidden');
+            updateDashboardSidebarUser(name, currentUserProfile.batchName);
 
             if (hideOverlay) {
                 setAuthOverlayOpen(false);
@@ -1202,6 +1682,7 @@
             await fetchPendingInvites();
             await fetchMetrics();
             renderStats();
+            await fetchOverviewAds();
             renderAdminPanel();
             updateAccountRoleBadge();
         }
@@ -1362,13 +1843,9 @@
                 setAuthOverlayOpen(true);
                 return;
             }
-            const targets = {
-                members: document.getElementById('batchDirectoryList'),
-                testimonials: document.getElementById('testimonialList'),
-                invites: document.getElementById('pendingInvitesList')
-            };
-            const el = targets[type];
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const panelMap = { members: 'directory', testimonials: 'testimonials', invites: 'invites' };
+            const panel = panelMap[type];
+            if (panel) navigateDashboard(panel);
         };
 
         function showToast(message, type = 'info') {
@@ -1386,13 +1863,17 @@
 
         function updateNotificationBadge() {
             const badge = document.getElementById('notificationBadge');
-            if (!badge) return;
-            if (unreadMessages > 0) {
-                badge.innerText = unreadMessages.toString();
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
+            const navBadge = document.getElementById('navMessagesBadge');
+            const count = unreadMessages > 0 ? unreadMessages.toString() : '';
+            [badge, navBadge].forEach(el => {
+                if (!el) return;
+                if (unreadMessages > 0) {
+                    el.innerText = count;
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
         }
 
         function resetNotifications() {
@@ -1773,6 +2254,7 @@
             if (ok) {
                 if (input) input.value = '';
                 showMemberProfileModal(null);
+                navigateDashboard('messages');
                 document.getElementById('messagesList')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         };
@@ -1984,6 +2466,7 @@
 
         function updateAccountRoleBadge() {
             const badge = document.getElementById('accountRoleBadge');
+            const topbar = document.getElementById('topbarRoleBadge');
             const meta = document.getElementById('signedInMeta');
             const emailEl = document.getElementById('signedInEmail');
             if (!badge) return;
@@ -1991,39 +2474,48 @@
             if (!currentUserEmail) {
                 badge.textContent = '';
                 if (meta) meta.classList.add('hidden');
+                if (topbar) topbar.classList.add('hidden');
                 return;
             }
 
             const email = currentUserEmail.trim().toLowerCase();
             let label = 'Member';
-            let classes = 'bg-white/10 text-white border-white/30';
+            let sidebarClasses = 'bg-white/10 text-white border-white/30';
+            let topbarClasses = 'sm:inline text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200';
             if (isAdminUser()) {
                 label = 'Admin';
-                classes = 'bg-amber-400 text-black border-amber-300';
+                sidebarClasses = 'bg-amber-400 text-black border-amber-300';
+                topbarClasses = 'sm:inline text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-amber-400 text-black border border-amber-300';
             } else if (currentUserProfile.role === 'Officer') {
                 label = 'Officer';
-                classes = 'bg-red-900 text-white border-red-800';
+                sidebarClasses = 'bg-red-900 text-white border-red-800';
+                topbarClasses = 'sm:inline text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-red-900 text-white border border-red-800';
             }
 
             badge.textContent = label;
-            badge.className = `text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${classes}`;
+            badge.className = `text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${sidebarClasses}`;
+            if (topbar) {
+                topbar.textContent = label;
+                topbar.className = topbarClasses;
+                topbar.classList.remove('hidden');
+            }
             if (emailEl) emailEl.textContent = email;
             if (meta) meta.classList.remove('hidden');
         }
 
         async function renderAdminPanel() {
-            const panel = document.getElementById('adminPanel');
+            const navAdmin = document.getElementById('navItemAdmin');
             const adminOnly = document.getElementById('adminOnlyModeration');
             const titleEl = document.getElementById('moderationPanelTitle');
             const subtitleEl = document.getElementById('moderationPanelSubtitle');
             const eventHint = document.getElementById('eventManagementHint');
 
             if (!canManageEvents()) {
-                panel.classList.add('hidden');
+                navAdmin?.classList.add('hidden');
                 return;
             }
 
-            panel.classList.remove('hidden');
+            navAdmin?.classList.remove('hidden');
             const officerOnly = isOfficerUser() && !isAdminUser();
             if (adminOnly) adminOnly.classList.toggle('hidden', !isAdminUser());
             if (eventHint) eventHint.classList.toggle('hidden', !officerOnly);
@@ -2096,6 +2588,8 @@
             } catch (err) {
                 invitesSection.innerHTML = '<p class="text-[11px] text-red-600">Unable to load invites.</p>';
             }
+
+                await fetchAdminOverviewAds();
             }
 
             if (!canManageEvents() || !eventsSection) return;
@@ -2496,6 +2990,7 @@
             }
 
             renderProfileSidebar(profile, { viewingOther: true });
+            navigateDashboard('profile');
             showMemberProfileModal({ ...profile, isOfficialOnly: false });
         };
 
