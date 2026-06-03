@@ -34,7 +34,18 @@ The `avatars` Storage bucket in Supabase is **optional** (only for larger teams 
 
 ---
 
+## Live site looks “Not secure” or browser warns?
+
+Always open **`https://utc.marawionline.com`** (with **https**, not `http`).
+
+On GitHub: repo **Settings → Pages** → under your custom domain, turn on **Enforce HTTPS** (wait up to 24 hours after first setup for the certificate).
+
+Do **not** open `index.html` from File Explorer for the real site — that uses `file://` and Chrome will always say “Not secure.” Use the HTTPS link above.
+
+Poster images: `https://utc.marawionline.com/assets/ads/homecoming-2026.png`
+
+---
+
 ## Optional later
 
 - Storage bucket `avatars` + `storage-avatars.sql` (not required for photos now)
-- GitHub Pages to put the site online
