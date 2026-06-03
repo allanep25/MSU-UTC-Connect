@@ -354,6 +354,13 @@
         </div>
     </div>
 
+    <!-- ================= POSTER / IMAGE LIGHTBOX ================= -->
+    <div id="imageLightbox" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[60] flex items-center justify-center p-4 hidden" onclick="if (event.target === this) closeImageLightbox()" role="dialog" aria-modal="true" aria-label="Enlarged image">
+        <button type="button" onclick="closeImageLightbox()" class="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 w-10 h-10 rounded-full bg-white/10 text-white text-2xl leading-none hover:bg-white/20" aria-label="Close">&times;</button>
+        <img id="imageLightboxImg" src="" alt="" class="max-w-full max-h-[92vh] w-auto object-contain rounded-lg shadow-2xl">
+        <p id="imageLightboxCaption" class="absolute bottom-4 left-4 right-4 text-center text-white/90 text-xs font-semibold pointer-events-none hidden"></p>
+    </div>
+
     <!-- ================= INVITE BATCHMATE MODAL ================= -->
     <div id="inviteModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-xl max-w-sm w-full p-5 shadow-xl border border-gray-100 space-y-4">
@@ -1161,6 +1168,52 @@
             return ad.accent === 'construction';
         }
 
+        window.showImageLightbox = function(src, caption) {
+            const modal = document.getElementById('imageLightbox');
+            const img = document.getElementById('imageLightboxImg');
+            const cap = document.getElementById('imageLightboxCaption');
+            if (!modal || !img || !src) return;
+            img.src = src;
+            img.alt = caption || 'Poster';
+            if (cap) {
+                if (caption) {
+                    cap.textContent = caption;
+                    cap.classList.remove('hidden');
+                } else {
+                    cap.classList.add('hidden');
+                }
+            }
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        };
+
+        window.closeImageLightbox = function() {
+            const modal = document.getElementById('imageLightbox');
+            const img = document.getElementById('imageLightboxImg');
+            if (modal) modal.classList.add('hidden');
+            if (img) img.src = '';
+            document.body.classList.remove('overflow-hidden');
+        };
+
+        function bindExpandableImage(img, caption) {
+            if (!img?.src) return;
+            img.classList.add('cursor-zoom-in', 'hover:opacity-95', 'transition-opacity');
+            img.title = 'Tap to view full size';
+            img.setAttribute('role', 'button');
+            img.tabIndex = 0;
+            const open = (e) => {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                showImageLightbox(img.src, caption || img.alt);
+            };
+            img.addEventListener('click', open);
+            img.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') open(e);
+            });
+        }
+
         function appendOverviewAdCard(board, ad) {
             const construction = isConstructionAd(ad);
             const card = document.createElement('article');
@@ -1178,6 +1231,7 @@
                 img.onerror = () => {
                     img.replaceWith(buildAdPlaceholder(accent, ad.tag, { showConstructionIcon: construction }));
                 };
+                bindExpandableImage(img, ad.title);
                 media = img;
             } else {
                 media = buildAdPlaceholder(accent, ad.tag || (construction ? 'Community' : 'Featured'), {
@@ -1661,6 +1715,9 @@
                 if (!dd || dd.classList.contains('hidden')) return;
                 if (dd.contains(e.target) || btn?.contains(e.target)) return;
                 dd.classList.add('hidden');
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeImageLightbox();
             });
 
             await restoreSession();
@@ -3927,7 +3984,12 @@
                 const urls = event.photoUrls || [];
                 if (urls.length) {
                     photosEl.classList.remove('hidden');
-                    photosEl.innerHTML = urls.map(url => `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="block"><img src="${escapeHtml(url)}" alt="Event" class="rounded-lg w-full max-h-64 object-contain bg-gray-50 border border-gray-200"></a>`).join('');
+                    photosEl.innerHTML = urls.map(url => `<img src="${escapeHtml(url)}" alt="Event poster" class="poster-expandable rounded-lg w-full max-h-64 object-contain bg-gray-50 border border-gray-200">`).join('');
+                    photosEl.querySelectorAll('.poster-expandable').forEach(el => bindExpandableImage(el, event.title));
+                    const hint = document.createElement('p');
+                    hint.className = 'text-[10px] text-gray-400 text-center col-span-full';
+                    hint.textContent = 'Tap poster to view full size';
+                    photosEl.appendChild(hint);
                 } else {
                     photosEl.classList.add('hidden');
                     photosEl.innerHTML = '';
