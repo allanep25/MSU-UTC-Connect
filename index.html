@@ -315,7 +315,7 @@
             <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Alumni Officers</h3>
-                    <span class="text-[10px] text-gray-500">Current leadership</span>
+                    <span class="text-[10px] text-gray-500">UTC leadership roster</span>
                 </div>
                 <div id="officersBoard" class="space-y-3 text-xs text-gray-700"></div>
             </section>
@@ -630,6 +630,32 @@
             '2016 ATROMITOS', '2017 ANOCHE', '2018 EL PEMNIATORES', '2019 THE LEGIONAIRES', '2020 PROMETHIANS',
             '2021 LUMINARIES', '2022 ELYSIANS', '2023 ZOSIME', '2024 AURELIUS', '2025 SALIMBAYAN', '2026 TADMAN'
         ];
+
+        const OFFICIAL_ALUMNI_OFFICERS = [
+            { designation: 'President', name: 'Dr. Arsalan Diamaoden', batchDisplay: "Batch '10 Synchronic", batchName: '2010 SYNCHRONIZE' },
+            { designation: 'Vice President (Internal)', name: 'Faisal Gunang', batchDisplay: "Batch '87 Silver Jubilee", batchName: '1987 ZENITH' },
+            { designation: 'Vice President (External)', name: 'Hindawi Datu', batchDisplay: "Batch '84 Sindaw", batchName: '1984 SINDAW' },
+            { designation: 'Secretary', name: 'Anniesah B.M. Adap Maniri', batchDisplay: "Batch '84 Sindaw", batchName: '1984 SINDAW' },
+            { designation: 'Asst. Secretary', name: 'Yusoph Bacarat', batchDisplay: "Batch '97 Tamagochi", batchName: '1997 TAMAGOTCHI' },
+            { designation: 'Treasurer', name: 'Anisah D. Mamaki', batchDisplay: "Batch '88 Power Cast", batchName: '1988 POWERCAST' },
+            { designation: 'Auditor', name: 'Norjeana Pangcatan', batchDisplay: "Batch '93 Mustang", batchName: '1993 MUSTANG' },
+            { designation: 'Bus. & Social Manager', name: 'Jamael Tomawis', batchDisplay: "Batch '83 Feldspar", batchName: '1983 FELDSPAR' },
+            { designation: 'P.R.O.', name: 'Junaid P. H.Esmail', batchDisplay: "Batch '12 Krieger", batchName: '2012 KRIEGER' },
+            { designation: 'P.R.O.', name: 'Drieza Biston', batchDisplay: "Batch '97 Tamagochi", batchName: '1997 TAMAGOTCHI' }
+        ];
+
+        function normalizeOfficerName(name) {
+            return (name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        }
+
+        function findBatchmateForOfficer(officialName) {
+            const key = normalizeOfficerName(officialName);
+            if (!key) return null;
+            return batchmates.find(item => {
+                const candidate = normalizeOfficerName(item.name);
+                return candidate === key || candidate.includes(key) || key.includes(candidate);
+            }) || null;
+        }
 
         function batchLabelToYear(label) {
             const match = (label || '').match(/^(\d{4})/);
@@ -1913,31 +1939,104 @@
             });
         }
 
-        function renderOfficersBoard() {
-            const board = document.getElementById('officersBoard');
-            board.innerHTML = '';
-            if (!batchOfficers.length) {
-                board.innerHTML = '<p class="text-[11px] italic text-gray-400">No alumni officers listed yet. Sign up as Officer with a designation to appear here.</p>';
+        window.openOfficerFromBoard = function(officer) {
+            if (!officer) return;
+            if (officer.profileId) {
+                viewBatchmate(officer.profileId);
                 return;
             }
-            batchOfficers.forEach(officer => {
-                const card = document.createElement('button');
-                card.type = 'button';
-                card.className = 'flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-200 w-full text-left hover:bg-amber-50/80 hover:border-amber-200 transition-colors focus:outline-none focus:ring-2 focus:ring-[#800020]/20';
-                card.onclick = () => viewBatchmate(officer.id);
-                const batchLine = officer.batchName ? `<p class="text-[10px] text-gray-500">${officer.batchName}</p>` : '';
-                const companyLine = officer.company ? `<p class="text-[10px] text-gray-400">${officer.company}</p>` : '';
-                card.innerHTML = `
-                    <img class="w-12 h-12 rounded-full object-cover border border-[#800020]/20" src="${officer.avatar || DEFAULT_AVATAR}" alt="${officer.name}">
-                    <div class="flex-1 text-xs min-w-0">
-                        <p class="font-semibold text-gray-800">${officer.name}</p>
-                        <p class="text-[11px] font-bold text-[#800020] mt-0.5">${officer.designation}</p>
-                        ${batchLine}
-                        ${companyLine}
-                    </div>
-                `;
-                board.appendChild(card);
+            if (officer.batchName) {
+                setBatchSelectValue('batchFilter', officer.batchName);
+                onBatchFilterChange();
+                showToast(`Opened ${officer.batchLabel || officer.batchName} in Batch Directory`, 'info');
+                return;
+            }
+            showToast(`${officer.name} — ${officer.designation}`, 'info');
+        };
+
+        function appendOfficerBoardCard(board, officer) {
+            const card = document.createElement('div');
+            card.className = 'flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-200 w-full';
+
+            const img = document.createElement('img');
+            img.className = 'w-12 h-12 rounded-full object-cover border border-[#800020]/20 bg-gray-200 shrink-0';
+            img.src = officer.avatar || DEFAULT_AVATAR;
+            img.alt = officer.name || 'Officer';
+
+            const body = document.createElement('div');
+            body.className = 'flex-1 text-xs min-w-0';
+
+            const nameBtn = document.createElement('button');
+            nameBtn.type = 'button';
+            nameBtn.className = 'font-semibold text-[#800020] hover:text-red-900 hover:underline text-left focus:outline-none focus:ring-2 focus:ring-[#800020]/30 rounded';
+            nameBtn.textContent = officer.name || 'Officer';
+            nameBtn.title = officer.profileId ? 'View profile' : 'View batch in directory';
+            nameBtn.onclick = () => openOfficerFromBoard(officer);
+
+            const roleEl = document.createElement('p');
+            roleEl.className = 'text-[11px] font-bold text-[#800020] mt-0.5';
+            roleEl.textContent = officer.designation || '';
+
+            body.appendChild(nameBtn);
+            body.appendChild(roleEl);
+
+            if (officer.batchLabel) {
+                const batchEl = document.createElement('p');
+                batchEl.className = 'text-[10px] text-gray-500';
+                batchEl.textContent = officer.batchLabel;
+                body.appendChild(batchEl);
+            }
+            if (officer.company) {
+                const companyEl = document.createElement('p');
+                companyEl.className = 'text-[10px] text-gray-400';
+                companyEl.textContent = officer.company;
+                body.appendChild(companyEl);
+            }
+
+            card.appendChild(img);
+            card.appendChild(body);
+            board.appendChild(card);
+        }
+
+        function renderOfficersBoard() {
+            const board = document.getElementById('officersBoard');
+            if (!board) return;
+            board.innerHTML = '';
+
+            const matchedProfileIds = new Set();
+
+            OFFICIAL_ALUMNI_OFFICERS.forEach(official => {
+                const match = findBatchmateForOfficer(official.name);
+                if (match?.id) matchedProfileIds.add(match.id);
+                appendOfficerBoardCard(board, {
+                    name: official.name,
+                    designation: official.designation,
+                    batchLabel: official.batchDisplay,
+                    batchName: official.batchName,
+                    company: match?.company || '',
+                    avatar: match?.avatar,
+                    profileId: match?.id || null
+                });
             });
+
+            const extraOfficers = batchOfficers.filter(item => !matchedProfileIds.has(item.id));
+            if (extraOfficers.length) {
+                const divider = document.createElement('p');
+                divider.className = 'text-[10px] font-bold text-gray-500 uppercase tracking-wide mt-3 pt-2 border-t border-gray-100';
+                divider.innerText = 'Also on MSU-UTC Connect';
+                board.appendChild(divider);
+                extraOfficers.forEach(officer => {
+                    appendOfficerBoardCard(board, {
+                        name: officer.name,
+                        designation: officer.designation,
+                        batchLabel: officer.batchName,
+                        batchName: officer.batchName,
+                        company: officer.company,
+                        avatar: officer.avatar,
+                        profileId: officer.id
+                    });
+                });
+            }
         }
 
         function getEventRsvpLabel(eventId) {
