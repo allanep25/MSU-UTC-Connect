@@ -7,3 +7,5 @@ alter table public.messages add column if not exists recipient_name text;
 alter table public.messages add column if not exists recipient_email text;
 
 -- Overview advertisement board — or run supabase/overview-ads.sql for policies + seed
+
+-- Tier 1 features (feedback, social links, event edit, RSVP counts) — run supabase/tier1-features.sql

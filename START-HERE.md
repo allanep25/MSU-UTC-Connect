@@ -29,6 +29,7 @@ The `avatars` Storage bucket in Supabase is **optional** (only for larger teams 
 | Photo won't save | Sign in first, then Personalize Profile → Save |
 | Registration error | Run `finish-setup.sql` |
 | Officer designation or Message fails | Run **`supabase/run-pending-migrations.sql`** once in SQL Editor (copies both fixes) |
+| Feedback, social links, event edit | Run **`supabase/tier1-features.sql`** once in SQL Editor |
 
 ---
 

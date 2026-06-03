@@ -66,6 +66,9 @@
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-0.5">Password</label>
                         <input id="authPassword" type="password" required minlength="6" placeholder="6+ characters" class="w-full p-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
                         <p id="authPasswordHint" class="text-[10px] text-gray-400 mt-0.5 hidden">Minimum 6 characters.</p>
+                        <p id="forgotPasswordWrap" class="hidden text-right mt-1">
+                            <button type="button" onclick="sendPasswordReset()" class="text-[10px] font-semibold text-[#800020] hover:text-red-900">Forgot password?</button>
+                        </p>
                     </div>
 
                     <div id="regFields" class="space-y-2">
@@ -165,6 +168,22 @@
                     <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Badges</label>
                     <input id="inputBadges" type="text" placeholder="Mentor, Volunteer" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
                 </div>
+                <details class="rounded-lg border border-gray-200 bg-gray-50/80 px-2.5 py-2">
+                    <summary class="text-[10px] font-bold text-[#800020] cursor-pointer select-none">Social & contact links</summary>
+                    <div class="space-y-2 mt-2 pt-2 border-t border-gray-200">
+                        <input id="inputLinkedin" type="url" placeholder="LinkedIn URL" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                        <input id="inputFacebook" type="url" placeholder="Facebook URL" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                        <input id="inputPhone" type="tel" placeholder="Phone (optional)" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                    </div>
+                </details>
+                <details class="rounded-lg border border-gray-200 bg-gray-50/80 px-2.5 py-2">
+                    <summary class="text-[10px] font-bold text-[#800020] cursor-pointer select-none">Change password</summary>
+                    <div class="space-y-2 mt-2 pt-2 border-t border-gray-200">
+                        <input id="inputNewPassword" type="password" minlength="6" placeholder="New password (6+ chars)" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                        <input id="inputNewPasswordConfirm" type="password" minlength="6" placeholder="Confirm new password" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                        <button type="button" onclick="changeAccountPassword()" class="w-full px-3 py-1.5 bg-gray-800 text-white rounded-lg text-[10px] font-semibold hover:bg-gray-900">Update password</button>
+                    </div>
+                </details>
             </div>
             <div class="flex space-x-2 justify-end text-xs font-semibold">
                 <button onclick="toggleProfileModal(false)" class="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200">Cancel</button>
@@ -206,6 +225,7 @@
             <div class="space-y-1 text-xs text-gray-600">
                 <p id="memberProfileCompany"></p>
                 <p id="memberProfileYear"></p>
+                <div id="memberProfileSocial" class="flex flex-wrap gap-2 pt-1 hidden"></div>
                 <p id="memberProfileSkills"></p>
                 <p id="memberProfileEmail" class="hidden text-gray-500"></p>
                 <p id="memberProfileStatus" class="italic bg-amber-50/50 px-2 py-1 rounded text-gray-600"></p>
@@ -236,6 +256,7 @@
             </div>
             <p id="eventModalLocation" class="text-xs font-semibold text-gray-700"></p>
             <p id="eventModalDescription" class="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap"></p>
+            <p id="eventModalRsvpCount" class="text-[10px] font-semibold text-[#800020]"></p>
             <p id="eventModalRsvpStatus" class="text-[10px] text-gray-500 italic"></p>
             <div class="flex flex-wrap gap-2 pt-1">
                 <button type="button" id="eventModalJoinBtn" onclick="joinEventFromModal()" class="flex-1 min-w-[120px] bg-[#800020] text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-red-900 transition-colors">Join Event</button>
@@ -248,7 +269,7 @@
     <div id="inviteModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-xl max-w-sm w-full p-5 shadow-xl border border-gray-100 space-y-4">
             <h3 class="text-sm font-bold text-[#800020] uppercase tracking-wider border-b pb-2">Invite a Batchmate</h3>
-            <p class="text-xs text-gray-500">Send an invite email or copy a shareable join link.</p>
+            <p class="text-xs text-gray-500">Saves the invite, then opens your email app with a ready-to-send message. You can also copy the share link.</p>
             <div class="space-y-3">
                 <div>
                     <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Alumni Email</label>
@@ -368,6 +389,15 @@
                         <h2 class="text-lg font-bold text-gray-900 mt-1">Find batchmates, share stories, and grow your network.</h2>
                         <p class="text-[11px] text-gray-600 mt-2">Use the menu on the left to open Directory, Events, Messages, and more — one section at a time.</p>
                     </section>
+
+                    <section class="bg-white rounded-xl p-4 border border-[#800020]/20 shadow-sm space-y-3">
+                        <div>
+                            <p class="text-[10px] uppercase tracking-wider text-[#800020] font-bold">Site feedback</p>
+                            <p class="text-[11px] text-gray-600 mt-1">This site is still improving. Send suggestions here (not the public message board).</p>
+                        </div>
+                        <textarea id="siteFeedbackInput" rows="3" placeholder="What should we add or fix?" class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020]/20 resize-none"></textarea>
+                        <button type="button" id="siteFeedbackSubmitBtn" onclick="submitSiteFeedback()" class="w-full sm:w-auto bg-[#800020] text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-red-900">Send feedback</button>
+                    </section>
                 </section>
 
                 <section id="dashboard-panel-profile" class="dashboard-panel max-w-lg">
@@ -388,6 +418,7 @@
                         <p id="displaySummary" class="text-[11px] text-gray-600 hidden"></p>
                         <p id="displayStatus" class="text-xs text-gray-600 italic mt-1 bg-amber-50/50 px-2 py-1 rounded">"—"</p>
                         <p id="displaySkills" class="text-[10px] text-gray-500">Skills: —</p>
+                        <div id="displaySocialLinks" class="flex flex-wrap gap-2 text-[10px] hidden"></div>
                         <button id="personalizeProfileBtn" type="button" onclick="toggleProfileModal(true)" class="w-full text-[11px] font-bold bg-[#800020] text-white px-3 py-2 rounded-lg hover:bg-red-900 transition-colors">Personalize Profile</button>
                         <button id="backToMyProfileBtn" type="button" onclick="restoreMyProfile()" class="hidden w-full text-[11px] font-bold bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors">← Back to My Profile</button>
                     </section>
@@ -531,6 +562,15 @@
                                     <div id="adminInvites" class="space-y-3 text-xs text-gray-700"></div>
                                 </div>
                                 <div>
+                                    <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Site feedback</h4>
+                                    <div id="adminFeedback" class="space-y-3 text-xs text-gray-700 max-h-48 overflow-y-auto"></div>
+                                </div>
+                                <div>
+                                    <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Published testimonials</h4>
+                                    <p class="text-[10px] text-gray-500 mb-2">Mark posts as Featured to highlight them on the feed.</p>
+                                    <div id="adminFeaturedTestimonials" class="space-y-3 text-xs text-gray-700 max-h-48 overflow-y-auto"></div>
+                                </div>
+                                <div>
                                     <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Advertisement Board</h4>
                                     <p class="text-[10px] text-gray-500 mb-2">Posts appear on Overview below the stats cards. Image can be a URL or path like <code class="text-[9px]">assets/banner.jpg</code>.</p>
                                     <form id="adminAdForm" class="space-y-2 mb-3 p-3 bg-gray-50 rounded-xl border border-gray-200" onsubmit="saveOverviewAd(event)">
@@ -581,7 +621,8 @@
                             <div id="eventManagementSection">
                                 <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Event Management</h4>
                                 <p id="eventManagementHint" class="text-[10px] text-gray-500 mb-2 hidden">Officers can add and update batch events for all alumni.</p>
-                                <form id="adminEventForm" class="space-y-2 mb-3 p-3 bg-gray-50 rounded-xl border border-gray-200" onsubmit="createAdminEvent(event)">
+                                <form id="adminEventForm" class="space-y-2 mb-3 p-3 bg-gray-50 rounded-xl border border-gray-200" onsubmit="saveAdminEvent(event)">
+                                    <input type="hidden" id="adminEventEditId" value="">
                                     <input id="adminEventTitle" type="text" required placeholder="Event title" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
                                     <div class="grid grid-cols-2 gap-2">
                                         <input id="adminEventDate" type="text" required placeholder="June 15" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
@@ -589,7 +630,10 @@
                                     </div>
                                     <input id="adminEventLocation" type="text" placeholder="Alumni Hall" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
                                     <textarea id="adminEventDescription" rows="2" placeholder="Short description..." class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none resize-none"></textarea>
-                                    <button type="submit" class="w-full px-3 py-1.5 bg-[#800020] text-white rounded-lg text-[10px] font-semibold hover:bg-red-900">Add Event</button>
+                                    <div class="flex gap-2">
+                                        <button type="submit" id="adminEventSubmitBtn" class="flex-1 px-3 py-1.5 bg-[#800020] text-white rounded-lg text-[10px] font-semibold hover:bg-red-900">Add Event</button>
+                                        <button type="button" id="adminEventCancelEditBtn" onclick="cancelEventEdit()" class="hidden px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg text-[10px] font-semibold hover:bg-gray-300">Cancel</button>
+                                    </div>
                                 </form>
                                 <div id="adminEvents" class="space-y-3 text-xs text-gray-700"></div>
                             </div>
@@ -626,6 +670,8 @@
          - invites: id, email, invited_by, invite_link, status, invited_at
          - testimonials: id, author_name, author_email, message_content, category, likes, approved, featured, created_at
          - overview_ads: id, title, body, image, link, link_label, tag, accent, panel, active, sort_order, created_at, updated_at
+         - site_feedback: id, author_name, author_email, message, created_at
+         - alumni_profiles also: linkedin, facebook, phone
         */
 
         let currentMode = 'register';
@@ -651,6 +697,7 @@
 
         let batchmates = [];
         let events = [];
+        let eventRsvpCounts = {};
         let connectedBatchmates = new Set();
         let rsvpResponses = {};
         let messages = [];
@@ -717,8 +764,27 @@
                 gradYear: item.grad_year || batchLabelToYear(item.batch_name) || '',
                 skills: item.skills || '',
                 designation: (item.designation || '').trim(),
-                badges: item.badges ? String(item.badges).split(',').map(b => b.trim()).filter(Boolean) : []
+                badges: item.badges ? String(item.badges).split(',').map(b => b.trim()).filter(Boolean) : [],
+                linkedin: (item.linkedin || '').trim(),
+                facebook: (item.facebook || '').trim(),
+                phone: (item.phone || '').trim()
             };
+        }
+
+        function renderSocialLinks(profile, containerId) {
+            const el = document.getElementById(containerId);
+            if (!el) return;
+            const links = [];
+            if (profile.linkedin) links.push(`<a href="${escapeHtml(profile.linkedin)}" target="_blank" rel="noopener noreferrer" class="text-[#800020] font-semibold hover:underline">LinkedIn</a>`);
+            if (profile.facebook) links.push(`<a href="${escapeHtml(profile.facebook)}" target="_blank" rel="noopener noreferrer" class="text-[#800020] font-semibold hover:underline">Facebook</a>`);
+            if (profile.phone) links.push(`<a href="tel:${escapeHtml(profile.phone.replace(/\s/g, ''))}" class="text-[#800020] font-semibold hover:underline">${escapeHtml(profile.phone)}</a>`);
+            if (!links.length) {
+                el.classList.add('hidden');
+                el.innerHTML = '';
+                return;
+            }
+            el.classList.remove('hidden');
+            el.innerHTML = links.join('<span class="text-gray-300"> · </span>');
         }
 
         function setProfileActionButtons(viewingOther) {
@@ -788,6 +854,7 @@
             }
 
             setProfileActionButtons(viewingOther);
+            renderSocialLinks(profile, 'displaySocialLinks');
         }
 
         const BATCH_OPTIONS = [
@@ -1338,6 +1405,7 @@
             await fetchBatchmates();
             await fetchConnections();
             await fetchEvents();
+            await fetchEventRsvpCounts();
             await fetchEventResponses();
             await fetchTestimonials();
             await fetchMessages();
@@ -1466,7 +1534,10 @@
                         status: mapped.status,
                         title: mapped.title,
                         summary: mapped.summary,
-                        designation: mapped.designation
+                        designation: mapped.designation,
+                        linkedin: mapped.linkedin,
+                        facebook: mapped.facebook,
+                        phone: mapped.phone
                     };
                     if (viewingOtherProfileId) {
                         await viewBatchmate(viewingOtherProfileId);
@@ -1507,6 +1578,7 @@
 
             const regBatch = document.getElementById('regBatchName');
             const pwdHint = document.getElementById('authPasswordHint');
+            const forgotWrap = document.getElementById('forgotPasswordWrap');
             if (mode === 'login') {
                 tabLog.className = 'flex-1 pb-2 border-b-2 border-[#800020] text-[#800020]';
                 tabReg.className = 'flex-1 pb-2 text-gray-400 hover:text-gray-600';
@@ -1514,6 +1586,7 @@
                 if (regFields) regFields.classList.add('hidden');
                 if (regBatch) regBatch.removeAttribute('required');
                 if (pwdHint) pwdHint.classList.add('hidden');
+                if (forgotWrap) forgotWrap.classList.remove('hidden');
                 authBtn.innerText = 'Sign In';
             } else {
                 tabReg.className = 'flex-1 pb-2 border-b-2 border-[#800020] text-[#800020]';
@@ -1522,9 +1595,83 @@
                 if (regFields) regFields.classList.remove('hidden');
                 if (regBatch) regBatch.setAttribute('required', 'required');
                 if (pwdHint) pwdHint.classList.remove('hidden');
+                if (forgotWrap) forgotWrap.classList.add('hidden');
                 authBtn.innerText = 'Get Connected';
             }
         }
+
+        window.sendPasswordReset = async function() {
+            const email = document.getElementById('authEmail')?.value.trim();
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                alert('Enter your account email above, then tap Forgot password.');
+                return;
+            }
+            try {
+                const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.origin + window.location.pathname
+                });
+                if (error) throw error;
+                showToast('Password reset email sent — check your inbox', 'success');
+            } catch (err) {
+                console.warn('Password reset failed:', err.message);
+                alert('Could not send reset email: ' + err.message);
+            }
+        };
+
+        window.changeAccountPassword = async function() {
+            if (!currentUserEmail) {
+                showToast('Sign in first', 'error');
+                setAuthOverlayOpen(true);
+                return;
+            }
+            const pwd = document.getElementById('inputNewPassword')?.value || '';
+            const confirm = document.getElementById('inputNewPasswordConfirm')?.value || '';
+            if (pwd.length < 6) {
+                showToast('Password must be at least 6 characters', 'error');
+                return;
+            }
+            if (pwd !== confirm) {
+                showToast('Passwords do not match', 'error');
+                return;
+            }
+            try {
+                const { error } = await supabaseClient.auth.updateUser({ password: pwd });
+                if (error) throw error;
+                document.getElementById('inputNewPassword').value = '';
+                document.getElementById('inputNewPasswordConfirm').value = '';
+                showToast('Password updated', 'success');
+            } catch (err) {
+                console.warn('Password update failed:', err.message);
+                showToast('Could not update password: ' + err.message, 'error');
+            }
+        };
+
+        window.submitSiteFeedback = async function() {
+            const input = document.getElementById('siteFeedbackInput');
+            const text = input?.value.trim() || '';
+            if (!text) {
+                showToast('Write your feedback first', 'error');
+                return;
+            }
+            if (!currentUserEmail) {
+                showToast('Sign in to send feedback', 'error');
+                setAuthOverlayOpen(true);
+                return;
+            }
+            try {
+                const { error } = await supabaseClient.from('site_feedback').insert([{
+                    author_name: currentUserProfile.name || currentUser,
+                    author_email: currentUserEmail,
+                    message: text
+                }]);
+                if (error) throw error;
+                input.value = '';
+                showToast('Thank you — feedback received!', 'success');
+            } catch (err) {
+                console.warn('Feedback save failed:', err.message);
+                showToast('Could not send feedback. Run supabase/tier1-features.sql in Supabase.', 'error');
+            }
+        };
 
         window.handleAuthSubmit = async function(event) {
             event.preventDefault();
@@ -1692,6 +1839,7 @@
             await fetchCurrentUserProfile();
             await uploadPendingAvatarIfAny();
             await fetchConnections();
+            await fetchEventRsvpCounts();
             await fetchEventResponses();
             await fetchPendingInvites();
             await fetchMetrics();
@@ -2006,6 +2154,25 @@
             renderNetwork();
         }
 
+        function getEventJoinCount(eventId) {
+            return eventRsvpCounts[eventId] || 0;
+        }
+
+        async function fetchEventRsvpCounts() {
+            eventRsvpCounts = {};
+            if (!currentUserEmail) return;
+            try {
+                const { data, error } = await supabaseClient.from('event_rsvps').select('event_id').eq('response', 'yes');
+                if (!error && data) {
+                    data.forEach(row => {
+                        eventRsvpCounts[row.event_id] = (eventRsvpCounts[row.event_id] || 0) + 1;
+                    });
+                }
+            } catch (err) {
+                console.warn('Could not load RSVP counts:', err.message);
+            }
+        }
+
         async function fetchEvents() {
             try {
                 const { data, error } = await supabaseClient.from('events').select('id, title, date, time, location, description').order('date', { ascending: true });
@@ -2057,6 +2224,7 @@
                 }, { onConflict: ['event_id', 'user_email'] });
                 if (error) throw error;
                 rsvpResponses[eventId] = response;
+                await fetchEventRsvpCounts();
             } catch (err) {
                 console.warn('Could not save RSVP:', err.message);
             }
@@ -2198,6 +2366,8 @@
             } else {
                 yearEl.classList.add('hidden');
             }
+
+            renderSocialLinks(profile, 'memberProfileSocial');
 
             const skillsEl = document.getElementById('memberProfileSkills');
             skillsEl.innerText = profile.skills ? `Skills: ${profile.skills}` : '';
@@ -2388,7 +2558,7 @@
                 card.innerHTML = `
                     <div class="flex items-center justify-between gap-2">
                         <div>
-                            <p class="font-bold text-gray-800">${item.author_name}</p>
+                            <p class="font-bold text-gray-800">${item.author_name}${item.featured ? ' <span class="text-amber-600">★</span>' : ''}</p>
                             <p class="text-[10px] text-gray-500">${item.category || 'General'} • ${new Date(item.created_at).toLocaleDateString()}</p>
                         </div>
                         <span class="text-[10px] text-[#800020] font-semibold">${item.likes || 0} likes</span>
@@ -2603,23 +2773,80 @@
                 invitesSection.innerHTML = '<p class="text-[11px] text-red-600">Unable to load invites.</p>';
             }
 
+            const feedbackSection = document.getElementById('adminFeedback');
+            if (feedbackSection) {
+                feedbackSection.innerHTML = '';
+                try {
+                    const { data: feedbackRows, error: fError } = await supabaseClient.from('site_feedback').select('*').order('created_at', { ascending: false }).limit(15);
+                    if (!fError && feedbackRows?.length) {
+                        feedbackRows.forEach(row => {
+                            const item = document.createElement('div');
+                            item.className = 'bg-amber-50 p-3 rounded-xl border border-amber-100 text-xs';
+                            const when = row.created_at ? new Date(row.created_at).toLocaleString() : '';
+                            item.innerHTML = `
+                                <p class="font-semibold text-gray-800">${escapeHtml(row.author_name)} <span class="text-[10px] text-gray-500 font-normal">${escapeHtml(row.author_email)}</span></p>
+                                <p class="text-gray-600 mt-1">${escapeHtml(row.message)}</p>
+                                <p class="text-[9px] text-gray-400 mt-1">${when}</p>
+                            `;
+                            feedbackSection.appendChild(item);
+                        });
+                    } else {
+                        feedbackSection.innerHTML = '<p class="text-[11px] text-gray-400 italic">No feedback yet.</p>';
+                    }
+                } catch (err) {
+                    feedbackSection.innerHTML = '<p class="text-[11px] text-red-600">Run supabase/tier1-features.sql to enable feedback.</p>';
+                }
+            }
+
+            const featuredSection = document.getElementById('adminFeaturedTestimonials');
+            if (featuredSection) {
+                featuredSection.innerHTML = '';
+                try {
+                    const { data: approvedRows, error: aError } = await supabaseClient.from('testimonials').select('*').eq('approved', true).order('created_at', { ascending: false }).limit(12);
+                    if (!aError && approvedRows?.length) {
+                        approvedRows.forEach(item => {
+                            const row = document.createElement('div');
+                            row.className = 'bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs';
+                            row.innerHTML = `
+                                <p class="font-semibold text-gray-700 line-clamp-1">${escapeHtml(item.author_name)}</p>
+                                <p class="text-gray-600 mt-1 line-clamp-2">${escapeHtml(item.message_content)}</p>
+                                <div class="flex flex-wrap gap-2 mt-2">
+                                    <button type="button" onclick="toggleTestimonialFeatured(${item.id}, ${!item.featured})" class="px-2 py-1 rounded-full text-[10px] ${item.featured ? 'bg-amber-200 text-amber-900' : 'bg-gray-200 text-gray-700'}">${item.featured ? '★ Featured' : 'Mark featured'}</button>
+                                    <button type="button" onclick="deleteTestimonial(${item.id})" class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-[10px]">Delete</button>
+                                </div>
+                            `;
+                            featuredSection.appendChild(row);
+                        });
+                    } else {
+                        featuredSection.innerHTML = '<p class="text-[11px] text-gray-400 italic">No approved testimonials yet.</p>';
+                    }
+                } catch (err) {
+                    featuredSection.innerHTML = '<p class="text-[11px] text-red-600">Unable to load testimonials.</p>';
+                }
+            }
+
                 await fetchAdminOverviewAds();
             }
 
             if (!canManageEvents() || !eventsSection) return;
 
             try {
-                const { data: eventRows, error: eError } = await supabaseClient.from('events').select('*').order('date', { ascending: true }).limit(5);
+                const { data: eventRows, error: eError } = await supabaseClient.from('events').select('*').order('date', { ascending: true });
                 if (!eError && eventRows.length) {
                     eventRows.forEach(event => {
+                        const joins = getEventJoinCount(event.id);
                         const row = document.createElement('div');
                         row.className = 'bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs';
                         row.innerHTML = `
                             <div class="flex items-center justify-between gap-2 mb-1">
-                                <span class="font-semibold text-gray-700">${event.title}</span>
-                                <span class="text-[10px] text-gray-500">${event.date}</span>
+                                <span class="font-semibold text-gray-700">${escapeHtml(event.title)}</span>
+                                <span class="text-[10px] text-gray-500">${escapeHtml(event.date)}</span>
                             </div>
-                            <p class="text-[10px] text-gray-500">${event.location}</p>
+                            <p class="text-[10px] text-gray-500">${escapeHtml(event.location || '')} · ${joins} joined</p>
+                            <div class="flex flex-wrap gap-2 mt-2">
+                                <button type="button" onclick="editAdminEvent(${event.id})" class="px-2 py-1 bg-amber-100 text-amber-900 rounded-full text-[10px]">Edit</button>
+                                <button type="button" onclick="deleteAdminEvent(${event.id})" class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-[10px]">Delete</button>
+                            </div>
                         `;
                         eventsSection.appendChild(row);
                     });
@@ -2653,10 +2880,54 @@
             }
         }
 
-        window.createAdminEvent = async function(event) {
+        function resetAdminEventForm() {
+            document.getElementById('adminEventEditId').value = '';
+            document.getElementById('adminEventForm')?.reset();
+            const submitBtn = document.getElementById('adminEventSubmitBtn');
+            if (submitBtn) submitBtn.innerText = 'Add Event';
+            document.getElementById('adminEventCancelEditBtn')?.classList.add('hidden');
+        }
+
+        window.cancelEventEdit = function() {
+            resetAdminEventForm();
+        };
+
+        window.editAdminEvent = function(eventId) {
+            const event = events.find(item => item.id === eventId);
+            if (!event) return;
+            document.getElementById('adminEventEditId').value = String(eventId);
+            document.getElementById('adminEventTitle').value = event.title;
+            document.getElementById('adminEventDate').value = event.date;
+            document.getElementById('adminEventTime').value = event.time || '';
+            document.getElementById('adminEventLocation').value = event.location || '';
+            document.getElementById('adminEventDescription').value = event.description || '';
+            document.getElementById('adminEventSubmitBtn').innerText = 'Update Event';
+            document.getElementById('adminEventCancelEditBtn')?.classList.remove('hidden');
+            navigateDashboard('admin');
+            document.getElementById('adminEventForm')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        };
+
+        window.deleteAdminEvent = async function(eventId) {
+            if (!canManageEvents()) return;
+            if (!confirm('Delete this event? RSVPs for it will also be removed.')) return;
+            try {
+                const { error } = await supabaseClient.from('events').delete().eq('id', eventId);
+                if (error) throw error;
+                if (document.getElementById('adminEventEditId')?.value === String(eventId)) resetAdminEventForm();
+                await fetchEvents();
+                await fetchEventRsvpCounts();
+                await renderAdminPanel();
+                showToast('Event deleted', 'success');
+            } catch (err) {
+                console.warn('Could not delete event:', err.message);
+                showToast('Could not delete event. Run supabase/tier1-features.sql.', 'error');
+            }
+        };
+
+        window.saveAdminEvent = async function(event) {
             event.preventDefault();
             if (!canManageEvents()) {
-                showToast('Officer or admin access required to add events', 'error');
+                showToast('Officer or admin access required', 'error');
                 return;
             }
 
@@ -2665,25 +2936,49 @@
             const time = document.getElementById('adminEventTime').value.trim();
             const location = document.getElementById('adminEventLocation').value.trim();
             const description = document.getElementById('adminEventDescription').value.trim();
+            const editId = document.getElementById('adminEventEditId').value.trim();
 
             if (!title || !date) {
                 showToast('Title and date are required', 'error');
                 return;
             }
 
+            const payload = { title, date, time, location, description };
+
             try {
-                const { error } = await supabaseClient.from('events').insert([{ title, date, time, location, description }]);
-                if (error) throw error;
-                document.getElementById('adminEventForm').reset();
+                if (editId) {
+                    const { error } = await supabaseClient.from('events').update(payload).eq('id', editId);
+                    if (error) throw error;
+                    showToast('Event updated', 'success');
+                } else {
+                    const { error } = await supabaseClient.from('events').insert([payload]);
+                    if (error) throw error;
+                    showToast('Event added', 'success');
+                }
+                resetAdminEventForm();
                 await fetchEvents();
+                await fetchEventRsvpCounts();
                 await fetchMetrics();
                 await renderAdminPanel();
-                showToast('Event added', 'success');
             } catch (err) {
-                console.warn('Could not create event:', err.message);
-                showToast('Could not save event. Check Supabase setup.', 'error');
+                console.warn('Could not save event:', err.message);
+                showToast('Could not save event. Run supabase/tier1-features.sql in Supabase.', 'error');
             }
-        }
+        };
+
+        window.toggleTestimonialFeatured = async function(id, makeFeatured) {
+            if (!isAdminUser()) return;
+            try {
+                const { error } = await supabaseClient.from('testimonials').update({ featured: makeFeatured }).eq('id', id);
+                if (error) throw error;
+                await fetchTestimonials();
+                await renderAdminPanel();
+                showToast(makeFeatured ? 'Marked as featured' : 'Removed from featured', 'success');
+            } catch (err) {
+                console.warn('Could not update testimonial:', err.message);
+                showToast('Could not update testimonial', 'error');
+            }
+        };
 
         function renderBatchDirectory() {
             const list = document.getElementById('batchDirectoryList');
@@ -2882,6 +3177,8 @@
             document.getElementById('eventModalMeta').innerText = `${event.date}${event.time ? ' · ' + event.time : ''}`;
             document.getElementById('eventModalLocation').innerText = event.location ? `Location: ${event.location}` : '';
             document.getElementById('eventModalDescription').innerText = event.description || 'No additional details for this announcement.';
+            const countEl = document.getElementById('eventModalRsvpCount');
+            if (countEl) countEl.innerText = formatEventJoinCount(eventId);
             document.getElementById('eventModalRsvpStatus').innerText = getEventRsvpLabel(eventId);
             const joinBtn = document.getElementById('eventModalJoinBtn');
             if (joinBtn) {
@@ -2902,6 +3199,9 @@
                 return;
             }
             await rsvpEvent(activeEventId, 'yes');
+            await fetchEventRsvpCounts();
+            const countEl = document.getElementById('eventModalRsvpCount');
+            if (countEl) countEl.innerText = formatEventJoinCount(activeEventId);
             document.getElementById('eventModalRsvpStatus').innerText = getEventRsvpLabel(activeEventId);
             const joinBtn = document.getElementById('eventModalJoinBtn');
             if (joinBtn) {
@@ -2964,6 +3264,7 @@
                         <button type="button" onclick="showEventDetail(${event.id})" class="px-3 py-1.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-semibold hover:bg-amber-200">Details</button>
                         <button type="button" onclick="rsvpEvent(${event.id}, 'no')" class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-[10px] font-semibold hover:bg-gray-200">Can't attend</button>
                     </div>
+                    <p class="text-[10px] font-semibold text-[#800020]">${formatEventJoinCount(event.id)}</p>
                     <p class="text-[10px] text-gray-500 italic">${status}</p>
                 `;
                 board.appendChild(card);
@@ -2979,9 +3280,16 @@
             }
             activeEventId = eventId;
             await rsvpEvent(eventId, 'yes');
+            await fetchEventRsvpCounts();
             showToast('You joined this event!', 'success');
             renderEvents();
         };
+
+        function formatEventJoinCount(eventId) {
+            const n = getEventJoinCount(eventId);
+            if (!n) return 'No alumni joined yet — be the first!';
+            return `${n} alumni joined`;
+        }
 
         window.viewBatchmate = async function(id) {
             viewingOtherProfileId = id;
@@ -3163,6 +3471,9 @@
                 const fileInput = document.getElementById('inputAvatarFile');
                 if (fileInput) fileInput.value = '';
                 document.getElementById('inputBadges').value = currentUserProfile.badges.join(', ');
+                document.getElementById('inputLinkedin').value = currentUserProfile.linkedin || '';
+                document.getElementById('inputFacebook').value = currentUserProfile.facebook || '';
+                document.getElementById('inputPhone').value = currentUserProfile.phone || '';
             } else {
                 modal.classList.add('hidden');
             }
@@ -3177,6 +3488,9 @@
             let newDesignation = document.getElementById('inputDesignation')?.value.trim() || '';
             const newSkills = document.getElementById('inputSkills').value.trim();
             const newBadges = document.getElementById('inputBadges').value.split(',').map(b => b.trim()).filter(Boolean);
+            const newLinkedin = document.getElementById('inputLinkedin')?.value.trim() || '';
+            const newFacebook = document.getElementById('inputFacebook')?.value.trim() || '';
+            const newPhone = document.getElementById('inputPhone')?.value.trim() || '';
 
             if (newRole === 'Officer' && !newDesignation) {
                 showToast('Enter your officer designation', 'error');
@@ -3192,6 +3506,9 @@
             currentUserProfile.designation = newDesignation;
             if (newSkills) currentUserProfile.skills = newSkills;
             if (newBadges.length) currentUserProfile.badges = newBadges;
+            currentUserProfile.linkedin = newLinkedin;
+            currentUserProfile.facebook = newFacebook;
+            currentUserProfile.phone = newPhone;
 
             document.getElementById('displayAvatar').src = currentUserProfile.avatar;
             document.getElementById('profileName').innerText = currentUserProfile.name;
@@ -3209,6 +3526,7 @@
                 chip.innerText = badge;
                 badgesEl.appendChild(chip);
             });
+            renderSocialLinks(currentUserProfile, 'displaySocialLinks');
 
             if (currentUserEmail) {
                 try {
@@ -3217,7 +3535,7 @@
                         selectedProfileAvatarFile = null;
                     }
 
-                    const { error } = await supabaseClient.from('alumni_profiles').upsert([{
+                    const profileRow = {
                         email: currentUserEmail,
                         name: currentUser,
                         avatar: currentUserProfile.avatar,
@@ -3230,8 +3548,20 @@
                         skills: currentUserProfile.skills,
                         badges: currentUserProfile.badges.join(', '),
                         status: currentUserProfile.status,
+                        linkedin: currentUserProfile.linkedin || null,
+                        facebook: currentUserProfile.facebook || null,
+                        phone: currentUserProfile.phone || null,
                         updated_at: new Date().toISOString()
-                    }], { onConflict: ['email'] });
+                    };
+                    let { error } = await supabaseClient.from('alumni_profiles').upsert([profileRow], { onConflict: ['email'] });
+                    if (error && /linkedin|facebook|phone|column/i.test(error.message || '')) {
+                        const fallback = { ...profileRow };
+                        delete fallback.linkedin;
+                        delete fallback.facebook;
+                        delete fallback.phone;
+                        ({ error } = await supabaseClient.from('alumni_profiles').upsert([fallback], { onConflict: ['email'] }));
+                        if (!error) showToast('Profile saved (run tier1-features.sql for social links)', 'info');
+                    }
                     if (error) throw error;
                 } catch (err) {
                     console.warn('Could not save profile:', err.message);
@@ -3298,8 +3628,14 @@
                 if (error) throw error;
                 await fetchPendingInvites();
                 await fetchMetrics();
-                message.innerText = 'Invite sent successfully!';
+                message.innerText = 'Invite saved. Opening your email app…';
                 message.classList.remove('hidden');
+                const inviterName = currentUserProfile.name || currentUser;
+                const subject = encodeURIComponent('Join MSU-UTC Connect — alumni network');
+                const body = encodeURIComponent(
+                    `Hi,\n\n${inviterName} invited you to join MSU-UTC Connect, our batch alumni platform.\n\nSign up here:\n${inviteLink}\n\nHope to see you online!`
+                );
+                window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
                 document.getElementById('inviteEmail').value = '';
             } catch (err) {
                 console.warn('Invite save failed:', err.message);
