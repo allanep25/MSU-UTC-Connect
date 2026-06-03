@@ -1,0 +1,276 @@
+    <!-- ================= DASHBOARD (MENU LAYOUT) ================= -->
+    <div id="sidebarBackdrop" class="hidden fixed inset-0 bg-black/40 z-40 lg:hidden" onclick="closeDashboardSidebar()"></div>
+
+    <div id="dashboardApp" class="flex min-h-screen">
+        <aside id="dashboardSidebar" class="shrink-0 bg-[#800020] text-white flex flex-col z-45">
+            <div class="p-4 border-b border-white/10">
+                <div class="flex items-center gap-3">
+                    <img src="assets/logo.png" alt="" class="site-logo shrink-0" onerror="this.onerror=null;this.src='assets/logo.svg';">
+                    <div class="min-w-0">
+                        <p class="font-bold text-sm leading-tight">MSU-UTC Connect</p>
+                        <p class="text-[10px] text-white/70">Alumni Dashboard</p>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="flex-1 overflow-y-auto py-2 text-sm">
+                <p class="px-4 py-1 text-[10px] uppercase tracking-wider text-white/50 font-bold">Main</p>
+                <button type="button" data-panel="overview" class="dash-nav-item active w-full text-left px-4 py-2.5 hover:bg-white/10">Overview</button>
+                <button type="button" data-panel="profile" class="dash-nav-item w-full text-left px-4 py-2.5 hover:bg-white/10">My Profile</button>
+
+                <p class="px-4 py-2 mt-1 text-[10px] uppercase tracking-wider text-white/50 font-bold">Community</p>
+                <button type="button" data-panel="directory" class="dash-nav-item w-full text-left px-4 py-2.5 hover:bg-white/10">Batch Directory</button>
+                <button type="button" data-panel="officers" class="dash-nav-item w-full text-left px-4 py-2.5 hover:bg-white/10">Alumni Officers</button>
+                <button type="button" data-panel="network" class="dash-nav-item w-full text-left px-4 py-2.5 hover:bg-white/10">My Network</button>
+                <button type="button" data-panel="events" class="dash-nav-item w-full text-left px-4 py-2.5 hover:bg-white/10">Events</button>
+                <button type="button" data-panel="testimonials" class="dash-nav-item w-full text-left px-4 py-2.5 hover:bg-white/10">Testimonials</button>
+                <button type="button" data-panel="messages" class="dash-nav-item w-full text-left px-4 py-2.5 hover:bg-white/10 flex items-center gap-2">
+                    <span>Messages</span>
+                    <span id="navMessagesBadge" class="hidden ml-auto bg-amber-400 text-black text-[9px] font-bold px-1.5 rounded-full min-w-[18px] text-center">0</span>
+                </button>
+
+                <p class="px-4 py-2 mt-1 text-[10px] uppercase tracking-wider text-white/50 font-bold">Tools</p>
+                <button type="button" data-panel="invites" class="dash-nav-item w-full text-left px-4 py-2.5 hover:bg-white/10">Invites</button>
+                <button type="button" data-panel="admin" id="navItemAdmin" class="dash-nav-item hidden w-full text-left px-4 py-2.5 hover:bg-white/10 text-amber-100">Admin / Events</button>
+            </nav>
+
+            <div class="p-4 border-t border-white/10 shrink-0">
+                <div class="flex items-center gap-2 mb-2">
+                    <div id="userBadge" class="w-9 h-9 rounded-full bg-red-900 border border-white/30 flex items-center justify-center text-[10px] font-bold hidden shrink-0">AS</div>
+                    <div class="min-w-0 flex-1">
+                        <p id="sidebarUserName" class="text-xs font-semibold truncate">Alumni Member</p>
+                        <p id="sidebarUserBatch" class="text-[10px] text-white/60 truncate">—</p>
+                    </div>
+                </div>
+                <div id="signedInMeta" class="hidden mb-2">
+                    <span id="accountRoleBadge" class="text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border border-white/30 bg-white/10 text-white">Member</span>
+                    <span id="signedInEmail" class="hidden"></span>
+                </div>
+                <button type="button" onclick="logout()" class="w-full text-[11px] py-1.5 rounded border border-white/20 hover:bg-white/10">Sign out</button>
+            </div>
+        </aside>
+
+        <div class="flex-1 flex flex-col min-w-0 min-h-screen">
+            <header class="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3 shrink-0 sticky top-0 z-30">
+                <button type="button" id="dashboardMenuToggle" class="lg:hidden p-2 rounded-lg border border-gray-200 text-sm" aria-label="Open menu">☰</button>
+                <div class="flex-1 min-w-0">
+                    <h1 id="pageTitle" class="text-lg font-bold text-[#800020] truncate">Overview</h1>
+                    <p id="pageSubtitle" class="text-[11px] text-gray-500 truncate">Stats and quick actions</p>
+                </div>
+                <div class="relative shrink-0">
+                    <button id="notificationButton" type="button" onclick="resetNotifications()" class="relative p-2 rounded-full border border-gray-200 text-sm hover:bg-gray-50">🔔</button>
+                    <span id="notificationBadge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-4 rounded-full bg-amber-400 text-[9px] text-black font-bold flex items-center justify-center px-1">0</span>
+                </div>
+                <span id="topbarRoleBadge" class="hidden sm:inline text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">Member</span>
+            </header>
+
+            <div id="dashboardMain" class="flex-1 overflow-y-auto p-4 md:p-6 max-w-5xl w-full mx-auto">
+
+                <section id="dashboard-panel-overview" class="dashboard-panel active space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <button type="button" onclick="showStatsDetail('members')" class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm text-left w-full hover:border-[#800020]/30 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-[#800020]/25 cursor-pointer">
+                            <p class="text-[10px] uppercase tracking-wider text-gray-500">Alumni Members</p>
+                            <p id="membersCount" class="mt-4 text-3xl font-bold text-gray-900">0</p>
+                            <p class="text-[9px] text-[#800020] font-semibold mt-2">Tap to view roster →</p>
+                        </button>
+                        <button type="button" onclick="showStatsDetail('testimonials')" class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm text-left w-full hover:border-[#800020]/30 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-[#800020]/25 cursor-pointer">
+                            <p class="text-[10px] uppercase tracking-wider text-gray-500">Testimonials</p>
+                            <p id="testimonialsCount" class="mt-4 text-3xl font-bold text-gray-900">0</p>
+                            <p class="text-[9px] text-[#800020] font-semibold mt-2">Tap to read posts →</p>
+                        </button>
+                        <button type="button" onclick="showStatsDetail('invites')" class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm text-left w-full hover:border-[#800020]/30 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-[#800020]/25 cursor-pointer">
+                            <p class="text-[10px] uppercase tracking-wider text-gray-500">Pending Invites</p>
+                            <p id="pendingInvitesCount" class="mt-4 text-3xl font-bold text-gray-900">0</p>
+                            <p class="text-[9px] text-[#800020] font-semibold mt-2">Tap to view invites →</p>
+                        </button>
+                    </div>
+                    <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
+                        <p class="text-[10px] uppercase tracking-wider text-gray-500">Welcome</p>
+                        <h2 class="text-lg font-bold text-gray-900 mt-1">Find batchmates, share stories, and grow your network.</h2>
+                        <p class="text-[11px] text-gray-600 mt-2">Use the menu on the left to open Directory, Events, Messages, and more — one section at a time.</p>
+                    </section>
+                </section>
+
+                <section id="dashboard-panel-profile" class="dashboard-panel max-w-lg">
+                    <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-4">
+                        <div class="flex items-start gap-3">
+                            <img id="displayAvatar" class="w-16 h-16 rounded-full object-cover border-2 border-[#800020] bg-gray-200" src="" alt="Profile pic">
+                            <div class="flex-1">
+                                <h2 id="profileName" class="font-bold text-gray-800 text-lg">Alumni Member</h2>
+                                <p id="displayRole" class="text-xs text-gray-500 font-semibold uppercase">Member</p>
+                                <p id="displayBatchName" class="text-[11px] text-gray-500 mt-1">—</p>
+                                <p id="displayCompany" class="text-[11px] text-gray-600 mt-1">UTC Alumni Network</p>
+                                <p id="displayYear" class="text-[10px] text-gray-500 mt-1">2006</p>
+                            </div>
+                        </div>
+                        <div id="displayBadges" class="flex flex-wrap gap-2 text-[10px]"></div>
+                        <p id="displayJobTitle" class="text-[10px] text-gray-600 font-semibold hidden"></p>
+                        <p id="displayEmail" class="text-[10px] text-gray-500 hidden"></p>
+                        <p id="displaySummary" class="text-[11px] text-gray-600 hidden"></p>
+                        <p id="displayStatus" class="text-xs text-gray-600 italic mt-1 bg-amber-50/50 px-2 py-1 rounded">"—"</p>
+                        <p id="displaySkills" class="text-[10px] text-gray-500">Skills: —</p>
+                        <button id="personalizeProfileBtn" type="button" onclick="toggleProfileModal(true)" class="w-full text-[11px] font-bold bg-[#800020] text-white px-3 py-2 rounded-lg hover:bg-red-900 transition-colors">Personalize Profile</button>
+                        <button id="backToMyProfileBtn" type="button" onclick="restoreMyProfile()" class="hidden w-full text-[11px] font-bold bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors">← Back to My Profile</button>
+                    </section>
+                </section>
+
+                <section id="dashboard-panel-directory" class="dashboard-panel">
+                    <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold text-[#800020] uppercase tracking-wider">Batch Directory</span>
+                                <span class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full">Roster</span>
+                            </div>
+                            <button type="button" onclick="showInviteModal(true)" class="text-[10px] font-semibold bg-[#800020] text-white px-2 py-1 rounded-md hover:bg-red-900 transition-colors">Invite</button>
+                        </div>
+                        <div class="space-y-3">
+                            <div>
+                                <label for="batchFilter" class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Select batch</label>
+                                <select id="batchFilter" class="w-full p-2.5 border-2 border-[#800020]/40 rounded-lg text-xs font-semibold text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#800020]/30 focus:border-[#800020]">
+                                    <option value="">All Batches — full roster</option>
+                                </select>
+                            </div>
+                            <p id="batchDirectoryActiveLabel" class="text-[10px] text-[#800020] font-semibold hidden"></p>
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                                <input id="batchSearch" type="search" placeholder="Search within results..." class="flex-1 w-full p-2.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
+                                <select id="batchYearFilter" class="w-full sm:w-auto p-2.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
+                                    <option value="">All Years</option>
+                                </select>
+                            </div>
+                            <input id="skillFilter" type="search" placeholder="Filter by skill..." class="w-full p-2.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
+                            <div id="batchDirectoryList" class="grid gap-3"></div>
+                        </div>
+                    </section>
+                </section>
+
+                <section id="dashboard-panel-network" class="dashboard-panel max-w-lg">
+                    <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Your Network</h3>
+                            <span class="text-[10px] text-gray-500">Connected batchmates</span>
+                        </div>
+                        <div id="networkList" class="space-y-3 text-xs text-gray-700"></div>
+                    </section>
+                </section>
+
+                <section id="dashboard-panel-officers" class="dashboard-panel max-w-lg">
+                    <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Alumni Officers</h3>
+                            <span class="text-[10px] text-gray-500">UTC leadership roster</span>
+                        </div>
+                        <div id="officersBoard" class="space-y-3 text-xs text-gray-700"></div>
+                    </section>
+                </section>
+
+                <section id="dashboard-panel-invites" class="dashboard-panel max-w-lg">
+                    <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Pending Invites</h3>
+                            <span id="pendingInvitesCountInline" class="text-[10px] text-gray-500">0 pending</span>
+                        </div>
+                        <div id="pendingInvitesList" class="space-y-3 text-xs text-gray-700"></div>
+                    </section>
+                </section>
+
+                <section id="dashboard-panel-testimonials" class="dashboard-panel space-y-4">
+                    <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Post a Testimonial</h3>
+                            <select id="testimonialCategory" class="text-[10px] border border-gray-200 rounded-lg px-2 py-1 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#800020]/20">
+                                <option value="professional">Professional</option>
+                                <option value="academic">Academic</option>
+                                <option value="social">Social</option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <textarea id="testimonialInput" placeholder="Say something awesome about a batchmate..." rows="3" class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020] resize-none"></textarea>
+                            <div class="flex justify-between items-center">
+                                <button id="testimonialSubmitBtn" class="bg-[#800020] text-white px-4 py-1.5 rounded-lg text-xs font-semibold shadow-sm hover:bg-red-900 transition-colors">Submit Testimonial</button>
+                                <span class="text-[10px] text-gray-500">Moderated before publishing.</span>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-4">
+                        <div id="testimonialFilters" class="flex flex-wrap items-center gap-2 text-[10px] font-semibold text-gray-600 relative z-10">
+                            <span class="px-2 py-1 rounded-full bg-gray-200 text-gray-600 uppercase tracking-wide text-[9px]">Feed</span>
+                            <button type="button" data-testimonial-filter="all" onclick="setTestimonialFilter('all')" class="testimonial-tab cursor-pointer px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">All</button>
+                            <button type="button" data-testimonial-filter="featured" onclick="setTestimonialFilter('featured')" class="testimonial-tab cursor-pointer px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">Featured</button>
+                            <button type="button" data-testimonial-filter="professional" onclick="setTestimonialFilter('professional')" class="testimonial-tab cursor-pointer px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">Professional</button>
+                            <button type="button" data-testimonial-filter="academic" onclick="setTestimonialFilter('academic')" class="testimonial-tab cursor-pointer px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">Academic</button>
+                            <button type="button" data-testimonial-filter="social" onclick="setTestimonialFilter('social')" class="testimonial-tab cursor-pointer px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">Social</button>
+                        </div>
+                        <div id="testimonialList" class="space-y-3"></div>
+                    </section>
+                </section>
+
+                <section id="dashboard-panel-events" class="dashboard-panel">
+                    <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Upcoming Batch Events</h3>
+                                <p class="text-[10px] text-gray-500">Tap an event for the full announcement. Use Join to RSVP.</p>
+                            </div>
+                            <span id="upcomingEventsCount" class="text-[10px] bg-amber-100 text-amber-800 px-2 py-1 rounded-full">0 Events</span>
+                        </div>
+                        <div id="eventCalendar" class="grid grid-cols-3 gap-2 mb-4"></div>
+                        <div id="eventsBoard" class="space-y-3"></div>
+                    </section>
+                </section>
+
+                <section id="dashboard-panel-messages" class="dashboard-panel">
+                    <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-3">
+                        <div>
+                            <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Community Message Board</h3>
+                            <p class="text-[10px] text-gray-500">A simple group chat for alumni coordination.</p>
+                        </div>
+                        <div class="space-y-3">
+                            <textarea id="messageInput" rows="3" placeholder="Share an update or ask the batch..." class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020] resize-none"></textarea>
+                            <div class="flex justify-between items-center">
+                                <button id="messageSendBtn" class="bg-[#800020] text-white px-4 py-1.5 rounded-lg text-xs font-semibold shadow-sm hover:bg-red-900 transition-colors">Send Message</button>
+                                <span class="text-[10px] text-gray-500">Live alumni chat.</span>
+                            </div>
+                        </div>
+                        <div id="messagesList" class="space-y-3 max-h-[28rem] overflow-y-auto"></div>
+                    </section>
+                </section>
+
+                <section id="dashboard-panel-admin" class="dashboard-panel">
+                    <section id="adminPanel" class="bg-white rounded-xl p-4 border border-red-100 shadow-sm space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 id="moderationPanelTitle" class="text-xs font-bold text-red-700 uppercase tracking-wider">Admin & Moderation</h3>
+                            <span id="moderationPanelSubtitle" class="text-[10px] text-red-600">Community control center</span>
+                        </div>
+                        <div class="grid gap-3">
+                            <div id="adminOnlyModeration" class="hidden space-y-3">
+                                <div>
+                                    <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Pending Testimonials</h4>
+                                    <div id="adminTestimonials" class="space-y-3 text-xs text-gray-700"></div>
+                                </div>
+                                <div>
+                                    <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Invite Requests</h4>
+                                    <div id="adminInvites" class="space-y-3 text-xs text-gray-700"></div>
+                                </div>
+                            </div>
+                            <div id="eventManagementSection">
+                                <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Event Management</h4>
+                                <p id="eventManagementHint" class="text-[10px] text-gray-500 mb-2 hidden">Officers can add and update batch events for all alumni.</p>
+                                <form id="adminEventForm" class="space-y-2 mb-3 p-3 bg-gray-50 rounded-xl border border-gray-200" onsubmit="createAdminEvent(event)">
+                                    <input id="adminEventTitle" type="text" required placeholder="Event title" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input id="adminEventDate" type="text" required placeholder="June 15" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                                        <input id="adminEventTime" type="text" placeholder="7:00 pm" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                                    </div>
+                                    <input id="adminEventLocation" type="text" placeholder="Alumni Hall" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                                    <textarea id="adminEventDescription" rows="2" placeholder="Short description..." class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none resize-none"></textarea>
+                                    <button type="submit" class="w-full px-3 py-1.5 bg-[#800020] text-white rounded-lg text-[10px] font-semibold hover:bg-red-900">Add Event</button>
+                                </form>
+                                <div id="adminEvents" class="space-y-3 text-xs text-gray-700"></div>
+                            </div>
+                        </div>
+                    </section>
+                </section>
+
+            </div>
+        </div>
+    </div>

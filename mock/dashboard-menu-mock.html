@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MSU-UTC Connect — Dashboard Menu Mock</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root { --maroon: #800020; --maroon-dark: #5c0018; }
+    body { font-family: system-ui, sans-serif; }
+    .nav-item.active { background: rgba(255,255,255,0.14); border-left: 3px solid #fbbf24; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .mock-badge { font-size: 9px; letter-spacing: 0.06em; }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen text-gray-900">
+
+  <!-- MOCK LABEL -->
+  <div class="bg-amber-100 border-b border-amber-300 px-4 py-2 text-center text-xs text-amber-900 font-semibold">
+    DESIGN MOCK ONLY — not connected to Supabase. Open this file to preview the proposed dashboard menu layout.
+  </div>
+
+  <div class="flex min-h-[calc(100vh-36px)]">
+
+    <!-- SIDEBAR MENU -->
+    <aside id="sidebar" class="w-64 shrink-0 bg-[#800020] text-white flex flex-col">
+      <div class="p-4 border-b border-white/10">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-xs font-bold">UTC</div>
+          <div>
+            <p class="font-bold text-sm leading-tight">MSU-UTC Connect</p>
+            <p class="text-[10px] text-white/70">Alumni Dashboard</p>
+          </div>
+        </div>
+      </div>
+
+      <nav class="flex-1 overflow-y-auto py-3 text-sm">
+        <p class="px-4 py-1 text-[10px] uppercase tracking-wider text-white/50 font-bold">Main</p>
+        <button type="button" data-panel="overview" class="nav-item active w-full text-left px-4 py-2.5 hover:bg-white/10 flex items-center gap-2">
+          <span class="w-5 text-center opacity-80">⌂</span> Overview
+        </button>
+        <button type="button" data-panel="profile" class="nav-item w-full text-left px-4 py-2.5 hover:bg-white/10 flex items-center gap-2">
+          <span class="w-5 text-center opacity-80">◎</span> My Profile
+        </button>
+
+        <p class="px-4 py-2 mt-2 text-[10px] uppercase tracking-wider text-white/50 font-bold">Community</p>
+        <button type="button" data-panel="directory" class="nav-item w-full text-left px-4 py-2.5 hover:bg-white/10 flex items-center gap-2">
+          <span class="w-5 text-center opacity-80">☰</span> Batch Directory
+        </button>
+        <button type="button" data-panel="officers" class="nav-item w-full text-left px-4 py-2.5 hover:bg-white/10 flex items-center gap-2">
+          <span class="w-5 text-center opacity-80">★</span> Alumni Officers
+        </button>
+        <button type="button" data-panel="network" class="nav-item w-full text-left px-4 py-2.5 hover:bg-white/10 flex items-center gap-2">
+          <span class="w-5 text-center opacity-80">◉</span> My Network
+        </button>
+        <button type="button" data-panel="events" class="nav-item w-full text-left px-4 py-2.5 hover:bg-white/10 flex items-center gap-2">
+          <span class="w-5 text-center opacity-80">◷</span> Events
+        </button>
+        <button type="button" data-panel="testimonials" class="nav-item w-full text-left px-4 py-2.5 hover:bg-white/10 flex items-center gap-2">
+          <span class="w-5 text-center opacity-80">✦</span> Testimonials
+        </button>
+        <button type="button" data-panel="messages" class="nav-item w-full text-left px-4 py-2.5 hover:bg-white/10 flex items-center gap-2">
+          <span class="w-5 text-center opacity-80">✉</span> Messages
+          <span class="ml-auto bg-amber-400 text-black text-[9px] font-bold px-1.5 rounded-full">3</span>
+        </button>
+
+        <p class="px-4 py-2 mt-2 text-[10px] uppercase tracking-wider text-white/50 font-bold">Tools</p>
+        <button type="button" data-panel="invites" class="nav-item w-full text-left px-4 py-2.5 hover:bg-white/10 flex items-center gap-2">
+          <span class="w-5 text-center opacity-80">+</span> Invites
+        </button>
+        <button type="button" data-panel="admin" class="nav-item w-full text-left px-4 py-2.5 hover:bg-white/10 flex items-center gap-2 text-amber-200">
+          <span class="w-5 text-center opacity-80">⚙</span> Admin
+        </button>
+      </nav>
+
+      <div class="p-4 border-t border-white/10">
+        <div class="flex items-center gap-2 mb-2">
+          <div class="w-9 h-9 rounded-full bg-red-900 border border-white/30 flex items-center justify-center text-[10px] font-bold">AS</div>
+          <div class="min-w-0 flex-1">
+            <p class="text-xs font-semibold truncate">Alex Santos</p>
+            <p class="text-[10px] text-white/60 truncate">2005 INVADER</p>
+          </div>
+        </div>
+        <button type="button" class="w-full text-[11px] py-1.5 rounded border border-white/20 hover:bg-white/10">Sign out</button>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="flex-1 flex flex-col min-w-0">
+
+      <!-- TOP BAR (mobile menu + page title) -->
+      <header class="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3 shrink-0">
+        <button type="button" id="menuToggle" class="lg:hidden p-2 rounded-lg border border-gray-200 text-sm" aria-label="Menu">☰</button>
+        <div class="flex-1 min-w-0">
+          <h1 id="pageTitle" class="text-lg font-bold text-[#800020] truncate">Overview</h1>
+          <p id="pageSubtitle" class="text-[11px] text-gray-500 truncate">Stats and quick actions</p>
+        </div>
+        <button type="button" class="relative p-2 rounded-full border border-gray-200 text-sm">🔔</button>
+        <span class="mock-badge bg-amber-100 text-amber-900 px-2 py-1 rounded-full hidden sm:inline">Member</span>
+      </header>
+
+      <!-- CONTENT -->
+      <main class="flex-1 overflow-y-auto p-4 md:p-6">
+
+        <!-- OVERVIEW -->
+        <section id="panel-overview" class="panel active space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white rounded-xl p-4 border border-amber-100">
+              <p class="text-[10px] uppercase text-gray-500">Alumni Members</p>
+              <p class="text-3xl font-bold mt-2">42</p>
+            </div>
+            <div class="bg-white rounded-xl p-4 border border-amber-100">
+              <p class="text-[10px] uppercase text-gray-500">Testimonials</p>
+              <p class="text-3xl font-bold mt-2">6</p>
+            </div>
+            <div class="bg-white rounded-xl p-4 border border-amber-100">
+              <p class="text-[10px] uppercase text-gray-500">Pending Invites</p>
+              <p class="text-3xl font-bold mt-2">2</p>
+            </div>
+          </div>
+          <div class="bg-white rounded-xl p-4 border border-gray-200">
+            <h2 class="text-sm font-bold text-[#800020] uppercase">Welcome back</h2>
+            <p class="text-sm text-gray-600 mt-2">Use the menu on the left to jump to Directory, Events, Messages, and more — one section at a time instead of one long scroll.</p>
+          </div>
+        </section>
+
+        <!-- PROFILE (placeholder) -->
+        <section id="panel-profile" class="panel">
+          <div class="bg-white rounded-xl p-6 border border-gray-200 max-w-md">
+            <div class="flex gap-4 items-start">
+              <div class="w-20 h-20 rounded-full bg-gray-200 border-2 border-[#800020]"></div>
+              <div>
+                <h2 class="text-xl font-bold">Alex Santos</h2>
+                <p class="text-sm text-[#800020] font-semibold">Member</p>
+                <p class="text-xs text-gray-500 mt-1">2005 INVADER · Class of 2005</p>
+              </div>
+            </div>
+            <button type="button" class="mt-4 w-full py-2 bg-[#800020] text-white rounded-lg text-sm font-bold">Personalize Profile</button>
+          </div>
+        </section>
+
+        <!-- DIRECTORY -->
+        <section id="panel-directory" class="panel">
+          <div class="bg-white rounded-xl p-4 border border-gray-200">
+            <h2 class="text-sm font-bold text-[#800020] uppercase mb-3">Batch Directory</h2>
+            <select class="w-full p-2 border-2 border-[#800020]/30 rounded-lg text-sm mb-3">
+              <option>2005 INVADER</option>
+            </select>
+            <div class="space-y-2">
+              <div class="p-3 bg-gray-50 rounded-lg border text-sm flex justify-between">
+                <span class="font-semibold">Fahad Abantas</span>
+                <span class="text-[#800020] text-xs">View</span>
+              </div>
+              <div class="p-3 bg-gray-50 rounded-lg border text-sm flex justify-between">
+                <span class="font-semibold">Maria Cruz</span>
+                <span class="text-[#800020] text-xs">View</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- OFFICERS -->
+        <section id="panel-officers" class="panel">
+          <div class="bg-white rounded-xl p-4 border border-gray-200 space-y-2">
+            <h2 class="text-sm font-bold text-[#800020] uppercase">Alumni Officers</h2>
+            <div class="p-3 bg-gray-50 rounded-lg border text-sm">
+              <p class="font-bold text-[#800020]">President</p>
+              <p class="font-semibold">Dr. Arsalan Diamaoden</p>
+              <p class="text-xs text-gray-500">Batch '10 Synchronic</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Other panels: compact placeholders -->
+        <section id="panel-network" class="panel"><div class="bg-white rounded-xl p-6 border text-sm text-gray-500">My Network — connected batchmates list</div></section>
+        <section id="panel-events" class="panel"><div class="bg-white rounded-xl p-6 border text-sm text-gray-500">Upcoming Batch Events + calendar</div></section>
+        <section id="panel-testimonials" class="panel"><div class="bg-white rounded-xl p-6 border text-sm text-gray-500">Testimonials feed + post form</div></section>
+        <section id="panel-messages" class="panel"><div class="bg-white rounded-xl p-6 border text-sm text-gray-500">Community message board</div></section>
+        <section id="panel-invites" class="panel"><div class="bg-white rounded-xl p-6 border text-sm text-gray-500">Pending invites + invite button</div></section>
+        <section id="panel-admin" class="panel"><div class="bg-white rounded-xl p-6 border text-sm text-gray-500">Admin moderation (officers/admins only)</div></section>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const titles = {
+      overview: ['Overview', 'Stats and quick actions'],
+      profile: ['My Profile', 'Your alumni card'],
+      directory: ['Batch Directory', 'Search and connect with batchmates'],
+      officers: ['Alumni Officers', 'UTC leadership roster'],
+      network: ['My Network', 'Connected batchmates'],
+      events: ['Events', 'Upcoming batch announcements'],
+      testimonials: ['Testimonials', 'Stories from the community'],
+      messages: ['Messages', 'Community message board'],
+      invites: ['Invites', 'Pending and sent invites'],
+      admin: ['Admin', 'Moderation tools']
+    };
+
+    document.querySelectorAll('.nav-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.panel;
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('panel-' + id)?.classList.add('active');
+        const t = titles[id] || ['MSU-UTC Connect', ''];
+        document.getElementById('pageTitle').textContent = t[0];
+        document.getElementById('pageSubtitle').textContent = t[1];
+        if (window.innerWidth < 1024) {
+          document.getElementById('sidebar').classList.add('hidden');
+        }
+      });
+    });
+
+    document.getElementById('menuToggle')?.addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('hidden');
+    });
+  </script>
+</body>
+</html>
