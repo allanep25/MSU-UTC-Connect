@@ -286,18 +286,20 @@
                     <button type="button" onclick="showInviteModal(true)" class="text-[10px] font-semibold bg-[#800020] text-white px-2 py-1 rounded-md hover:bg-red-900 transition-colors">Invite</button>
                 </div>
                 <div class="space-y-3">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-                        <input id="batchSearch" type="search" placeholder="Search by name, company, role..." class="flex-1 w-full p-2.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
-                        <select id="batchFilter" class="w-full sm:w-auto p-2.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
-                            <option value="">All Batches</option>
+                    <div>
+                        <label for="batchFilter" class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Select batch</label>
+                        <select id="batchFilter" class="w-full p-2.5 border-2 border-[#800020]/40 rounded-lg text-xs font-semibold text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#800020]/30 focus:border-[#800020]">
+                            <option value="">All Batches — full roster</option>
                         </select>
                     </div>
+                    <p id="batchDirectoryActiveLabel" class="text-[10px] text-[#800020] font-semibold hidden"></p>
                     <div class="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                        <input id="batchSearch" type="search" placeholder="Search within results..." class="flex-1 w-full p-2.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
                         <select id="batchYearFilter" class="w-full sm:w-auto p-2.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
                             <option value="">All Years</option>
                         </select>
-                        <input id="skillFilter" type="search" placeholder="Filter by skill..." class="w-full p-2.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
                     </div>
+                    <input id="skillFilter" type="search" placeholder="Filter by skill..." class="w-full p-2.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
                     <div id="batchDirectoryList" class="grid gap-3"></div>
                 </div>
             </section>
@@ -634,11 +636,61 @@
             return match ? match[1] : '';
         }
 
+        function normalizeBatchKey(value) {
+            return (value || '').trim().toLowerCase();
+        }
+
+        function batchesMatch(stored, selected) {
+            if (!selected) return true;
+            if (!stored) return false;
+            return normalizeBatchKey(stored) === normalizeBatchKey(selected);
+        }
+
+        function updateBatchDirectoryLabel(count, selectedBatch) {
+            const label = document.getElementById('batchDirectoryActiveLabel');
+            if (!label) return;
+            if (!selectedBatch) {
+                label.classList.add('hidden');
+                label.innerText = '';
+                return;
+            }
+            label.classList.remove('hidden');
+            const memberWord = count === 1 ? 'member' : 'members';
+            label.innerText = count
+                ? `${count} ${memberWord} in ${selectedBatch}`
+                : `No members in ${selectedBatch} yet — invite your batchmates`;
+        }
+
+        function onBatchFilterChange() {
+            const batchEl = document.getElementById('batchFilter');
+            const yearEl = document.getElementById('batchYearFilter');
+            const selectedBatch = batchEl?.value || '';
+            if (selectedBatch && yearEl) {
+                const year = batchLabelToYear(selectedBatch);
+                if (year) yearEl.value = year;
+            } else if (yearEl && !selectedBatch) {
+                yearEl.value = '';
+            }
+            filterBatchDirectory(document.getElementById('batchSearch')?.value || '');
+            const list = document.getElementById('batchDirectoryList');
+            if (list && selectedBatch) {
+                list.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function applyDefaultBatchFilter() {
+            if (!currentUserProfile.batchName) return;
+            const batchEl = document.getElementById('batchFilter');
+            if (!batchEl || batchEl.value) return;
+            setBatchSelectValue('batchFilter', currentUserProfile.batchName);
+            onBatchFilterChange();
+        }
+
         function populateBatchSelects() {
             const configs = [
                 { id: 'regBatchName', placeholder: 'Select batch' },
                 { id: 'inputBatchName', placeholder: 'Select batch' },
-                { id: 'batchFilter', placeholder: 'All Batches' }
+                { id: 'batchFilter', placeholder: 'All Batches — full roster' }
             ];
             configs.forEach(({ id, placeholder }) => {
                 const select = document.getElementById(id);
@@ -699,7 +751,7 @@
             document.getElementById('testimonialSubmitBtn').addEventListener('click', submitTestimonial);
             document.getElementById('messageSendBtn').addEventListener('click', submitMessage);
             document.getElementById('batchSearch').addEventListener('input', e => filterBatchDirectory(e.target.value));
-            document.getElementById('batchFilter').addEventListener('change', () => filterBatchDirectory(document.getElementById('batchSearch').value));
+            document.getElementById('batchFilter').addEventListener('change', onBatchFilterChange);
             document.getElementById('batchYearFilter').addEventListener('change', () => filterBatchDirectory(document.getElementById('batchSearch').value));
             document.getElementById('skillFilter').addEventListener('input', () => filterBatchDirectory(document.getElementById('batchSearch').value));
 
@@ -811,6 +863,7 @@
                         renderCurrentUserProfile();
                     }
                     updateAccountRoleBadge();
+                    applyDefaultBatchFilter();
                 }
             } catch (err) {
                 console.warn('Could not fetch current user profile:', err.message);
@@ -1223,6 +1276,7 @@
             renderBatchDirectory();
             populateYearFilterOptions();
             renderOfficersBoard();
+            applyDefaultBatchFilter();
         }
 
         async function fetchConnections() {
@@ -1788,13 +1842,20 @@
                 const searchText = `${batchmate.name} ${batchmate.title} ${batchmate.company} ${batchmate.summary} ${batchmate.batchName}`.toLowerCase();
                 const skillsText = (batchmate.skills || '').toLowerCase();
                 const matchesSearch = !query || searchText.includes(query);
-                const matchesBatch = !selectedBatch || batchmate.batchName === selectedBatch;
-                const matchesYear = !selectedYear || batchmate.gradYear === selectedYear;
+                const matchesBatch = batchesMatch(batchmate.batchName, selectedBatch);
+                const matchesYear = !selectedYear || String(batchmate.gradYear) === String(selectedYear) || batchLabelToYear(batchmate.batchName) === selectedYear;
                 const matchesSkill = !skillQuery || skillsText.includes(skillQuery) || searchText.includes(skillQuery);
                 return matchesSearch && matchesBatch && matchesYear && matchesSkill;
             });
+            updateBatchDirectoryLabel(filtered.length, selectedBatch);
             if (filtered.length === 0) {
-                list.innerHTML = '<p class="text-[11px] text-gray-400 italic">' + (batchmates.length === 0 ? 'No alumni registered yet. Invite batchmates to join!' : 'No batchmates match your search, filters, or selected year.') + '</p>';
+                let emptyMsg = 'No batchmates match your search or filters.';
+                if (batchmates.length === 0) {
+                    emptyMsg = 'No alumni registered yet. Invite batchmates to join!';
+                } else if (selectedBatch) {
+                    emptyMsg = `No profiles in ${selectedBatch} yet. Share the Invite link so batchmates can register with this batch.`;
+                }
+                list.innerHTML = `<p class="text-[11px] text-gray-400 italic">${emptyMsg}</p>`;
                 return;
             }
             filtered.forEach(batchmate => {
