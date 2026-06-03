@@ -24,7 +24,8 @@ The `avatars` Storage bucket in Supabase is **optional** (only for larger teams 
 
 | Issue | Fix |
 |-------|-----|
-| Can't sign in | Confirm email OFF in Supabase Auth |
+| Can't sign in / registration seems to fail | **Authentication** → **Providers** → **Email** → turn **Confirm email** **OFF** → Save, then register or sign in again |
+| Email already registered | Use **Sign In** instead of Create Account |
 | Photo won't save | Sign in first, then Personalize Profile → Save |
 | Registration error | Run `finish-setup.sql` |
 | Officer designation or Message fails | Run **`supabase/run-pending-migrations.sql`** once in SQL Editor (copies both fixes) |

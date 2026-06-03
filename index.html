@@ -43,7 +43,8 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Password</label>
-                        <input id="authPassword" type="password" required placeholder="••••••••" class="w-full p-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
+                        <input id="authPassword" type="password" required minlength="6" placeholder="At least 6 characters" class="w-full p-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
+                        <p class="text-[10px] text-gray-400 mt-1">Use 6+ characters. If sign-in fails after signup, turn off Confirm email in Supabase Auth settings.</p>
                     </div>
 
                     <div id="regFields" class="space-y-2">
@@ -871,10 +872,59 @@
             }
         }
 
+        async function upsertAlumniProfile(payload, preferUpsert = true) {
+            const row = { ...payload, updated_at: new Date().toISOString() };
+            if (preferUpsert) {
+                let { error } = await supabaseClient.from('alumni_profiles').upsert([row], { onConflict: 'email' });
+                if (!error) return { error: null };
+                if (!/designation|role|column/i.test(error.message || '')) return { error };
+                const fallback = { ...row };
+                delete fallback.designation;
+                delete fallback.role;
+                ({ error } = await supabaseClient.from('alumni_profiles').upsert([fallback], { onConflict: 'email' }));
+                return { error };
+            }
+            return await supabaseClient.from('alumni_profiles').insert([row]);
+        }
+
+        async function ensureAlumniProfileForUser(user) {
+            if (!user?.email) return { error: null };
+            try {
+                const email = user.email.trim();
+                const { data: existing, error: lookupError } = await supabaseClient
+                    .from('alumni_profiles')
+                    .select('id')
+                    .eq('email', email)
+                    .maybeSingle();
+                if (lookupError) console.warn('Profile lookup:', lookupError.message);
+                if (existing?.id) return { error: null };
+
+                const meta = user.user_metadata || {};
+                const role = normalizeMemberRole(meta.title || meta.role || 'Member');
+                return await upsertAlumniProfile({
+                    email,
+                    name: meta.full_name || email,
+                    batch_name: meta.batch_name || null,
+                    grad_year: meta.grad_year || batchLabelToYear(meta.batch_name) || null,
+                    company: meta.company || null,
+                    title: role,
+                    role,
+                    skills: meta.skills || null,
+                    avatar: null,
+                    status: 'Joined — complete your profile',
+                    badges: null
+                }, true);
+            } catch (err) {
+                console.warn('ensureAlumniProfileForUser:', err.message);
+                return { error: err };
+            }
+        }
+
         async function handleExistingSession(user) {
             currentUser = user.user_metadata?.full_name || user.email || 'Alumni Member';
             currentUserEmail = (user.email || '').trim();
             currentUserId = user.id;
+            await ensureAlumniProfileForUser(user);
             updateAccountRoleBadge();
             await loginSuccess(currentUser);
         }
@@ -984,6 +1034,10 @@
                     alert('Please enter your full name.');
                     return;
                 }
+                if (passwordInput.length < 6) {
+                    alert('Password must be at least 6 characters.');
+                    return;
+                }
 
                 const regBatchName = document.getElementById('regBatchName')?.value || '';
                 const regBatchYear = document.getElementById('regBatchYear')?.value || batchLabelToYear(regBatchName) || '';
@@ -992,58 +1046,105 @@
                 const regDesignation = document.getElementById('regDesignation')?.value.trim() || '';
                 const regSkills = document.getElementById('regSkills')?.value || '';
 
+                if (!regBatchName) {
+                    alert('Please select your batch from the list.');
+                    return;
+                }
                 if (regRole === 'Officer' && !regDesignation) {
                     alert('Please enter your officer designation (e.g. Batch President).');
                     return;
+                }
+
+                const authBtn = document.getElementById('authBtn');
+                const prevBtnText = authBtn?.innerText || 'Get Connected';
+                if (authBtn) {
+                    authBtn.disabled = true;
+                    authBtn.innerText = 'Creating account…';
                 }
 
                 try {
                     const { data, error } = await supabaseClient.auth.signUp({
                         email: emailInput,
                         password: passwordInput,
-                        options: { data: { full_name: nameInput, batch_name: regBatchName, grad_year: regBatchYear, company: regCompany, title: regRole, skills: regSkills } }
+                        options: {
+                            emailRedirectTo: window.location.origin + window.location.pathname,
+                            data: {
+                                full_name: nameInput,
+                                batch_name: regBatchName,
+                                grad_year: regBatchYear,
+                                company: regCompany,
+                                title: regRole,
+                                role: regRole,
+                                skills: regSkills,
+                                designation: regRole === 'Officer' ? regDesignation : ''
+                            }
+                        }
                     });
 
                     if (error) {
-                        alert('Registration Error: ' + error.message);
+                        const msg = (error.message || '').toLowerCase();
+                        if (msg.includes('already') || msg.includes('registered') || msg.includes('exists')) {
+                            alert('This email already has an account. Use Sign In instead.');
+                            switchAuthTab('login');
+                        } else {
+                            alert('Registration Error: ' + error.message);
+                        }
                         return;
                     }
 
-                    // Try to create a minimal profile record so the directory shows pending members
+                    let avatarUrl = null;
                     try {
-                        let avatarUrl = null;
                         const regFile = document.getElementById('regAvatar')?.files?.[0];
-                        if (regFile) {
-                            avatarUrl = await fileToAvatarDataUrl(regFile);
-                        }
-
-                        const profilePayload = {
-                            email: emailInput,
-                            name: nameInput,
-                            batch_name: regBatchName || null,
-                            grad_year: regBatchYear || null,
-                            company: regCompany || null,
-                            title: regRole || null,
-                            role: regRole || null,
-                            designation: regRole === 'Officer' ? regDesignation : null,
-                            skills: regSkills || null,
-                            avatar: avatarUrl || null,
-                            status: 'Joined — complete your profile',
-                            badges: null,
-                            updated_at: new Date().toISOString()
-                        };
-                        const { error: pError } = await supabaseClient.from('alumni_profiles').insert([profilePayload]);
-                        if (pError) console.warn('Profile insert warning:', pError.message);
-                    } catch (profileErr) {
-                        console.warn('Could not insert initial profile:', profileErr.message);
+                        if (regFile) avatarUrl = await fileToAvatarDataUrl(regFile);
+                    } catch (avatarErr) {
+                        console.warn('Avatar skipped during signup:', avatarErr.message);
                     }
 
-                    alert('Account created! Check your email for verification, then sign in. A starter profile was created.');
+                    const profilePayload = {
+                        email: emailInput,
+                        name: nameInput,
+                        batch_name: regBatchName,
+                        grad_year: regBatchYear || null,
+                        company: regCompany || null,
+                        title: regRole,
+                        role: regRole,
+                        designation: regRole === 'Officer' ? regDesignation : null,
+                        skills: regSkills || null,
+                        avatar: avatarUrl || null,
+                        status: 'Joined — complete your profile',
+                        badges: null
+                    };
+
+                    const hasSession = !!(data?.session?.user);
+                    const { error: pError } = await upsertAlumniProfile(profilePayload, hasSession);
+                    if (pError) {
+                        console.warn('Profile save warning:', pError.message);
+                        if (hasSession) {
+                            await ensureAlumniProfileForUser(data.session.user);
+                        }
+                    }
+
+                    if (data?.session?.user) {
+                        showToast('Account created — welcome!', 'success');
+                        await handleExistingSession(data.session.user);
+                        return;
+                    }
+
+                    if (data?.user && !data.user.confirmed_at) {
+                        alert('Account created! Check your email for a confirmation link, then use Sign In.\n\nIf you do not receive email: in Supabase go to Authentication → Providers → Email and turn OFF "Confirm email".');
+                    } else {
+                        alert('Account created! You can Sign In now with your email and password.');
+                    }
                     switchAuthTab('login');
                     return;
                 } catch (err) {
                     alert('Registration Error: ' + (err.message || err));
                     return;
+                } finally {
+                    if (authBtn) {
+                        authBtn.disabled = false;
+                        authBtn.innerText = prevBtnText;
+                    }
                 }
             }
 
@@ -1053,7 +1154,14 @@
             });
 
             if (error) {
-                alert('Login Error: ' + error.message);
+                const msg = (error.message || '').toLowerCase();
+                if (msg.includes('confirm') || msg.includes('verified') || msg.includes('not confirmed')) {
+                    alert('Please confirm your email first (check your inbox), or ask the admin to turn OFF "Confirm email" in Supabase Authentication settings.');
+                } else if (msg.includes('invalid') && msg.includes('credential')) {
+                    alert('Wrong email or password. If you just registered, confirm your email or try again in a minute.');
+                } else {
+                    alert('Login Error: ' + error.message);
+                }
                 return;
             }
 
