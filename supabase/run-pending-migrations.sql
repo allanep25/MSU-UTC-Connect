@@ -5,3 +5,5 @@ alter table public.alumni_profiles add column if not exists designation text;
 
 alter table public.messages add column if not exists recipient_name text;
 alter table public.messages add column if not exists recipient_email text;
+
+-- Overview advertisement board — or run supabase/overview-ads.sql for policies + seed
