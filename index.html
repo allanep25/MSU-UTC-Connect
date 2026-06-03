@@ -50,9 +50,9 @@
                     <div id="regFields" class="space-y-2">
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Batch Name</label>
-                                <select id="regBatchName" class="w-full p-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
-                                    <option value="">Select batch</option>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Batch Name <span class="text-[#800020]">*</span></label>
+                                <select id="regBatchName" class="w-full p-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020] invalid:border-red-400">
+                                    <option value="">Select batch (required)</option>
                                 </select>
                             </div>
                             <div>
@@ -750,7 +750,7 @@
 
         function populateBatchSelects() {
             const configs = [
-                { id: 'regBatchName', placeholder: 'Select batch' },
+                { id: 'regBatchName', placeholder: 'Select batch (required)' },
                 { id: 'inputBatchName', placeholder: 'Select batch' },
                 { id: 'batchFilter', placeholder: 'All Batches — full roster' }
             ];
@@ -808,6 +808,7 @@
             syncGradYearFromBatch('regBatchName', 'regBatchYear');
             syncGradYearFromBatch('inputBatchName', 'inputBatchYear');
             bindOfficerDesignationToggles();
+            document.getElementById('regBatchName')?.setAttribute('required', 'required');
 
             authForm.addEventListener('submit', handleAuthSubmit);
             document.getElementById('testimonialSubmitBtn').addEventListener('click', submitTestimonial);
@@ -1003,17 +1004,20 @@
             const regFields = document.getElementById('regFields');
             const authBtn = document.getElementById('authBtn');
 
+            const regBatch = document.getElementById('regBatchName');
             if (mode === 'login') {
                 tabLog.className = 'flex-1 pb-3 border-b-2 border-[#800020] text-[#800020]';
                 tabReg.className = 'flex-1 pb-3 text-gray-400 hover:text-gray-600';
                 nameField.classList.add('hidden');
                 if (regFields) regFields.classList.add('hidden');
+                if (regBatch) regBatch.removeAttribute('required');
                 authBtn.innerText = 'Sign In';
             } else {
                 tabReg.className = 'flex-1 pb-3 border-b-2 border-[#800020] text-[#800020]';
                 tabLog.className = 'flex-1 pb-3 text-gray-400 hover:text-gray-600';
                 nameField.classList.remove('hidden');
                 if (regFields) regFields.classList.remove('hidden');
+                if (regBatch) regBatch.setAttribute('required', 'required');
                 authBtn.innerText = 'Get Connected';
             }
         }
@@ -1047,7 +1051,8 @@
                 const regSkills = document.getElementById('regSkills')?.value || '';
 
                 if (!regBatchName) {
-                    alert('Please select your batch from the list.');
+                    alert('Batch name is required. Please select your batch from the list before creating an account.');
+                    document.getElementById('regBatchName')?.focus();
                     return;
                 }
                 if (regRole === 'Officer' && !regDesignation) {
