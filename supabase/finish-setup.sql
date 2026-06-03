@@ -52,6 +52,8 @@ create table if not exists public.messages (
   author_name text not null,
   author_email text not null,
   content text not null,
+  recipient_name text,
+  recipient_email text,
   created_at timestamptz default now()
 );
 
