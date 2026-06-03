@@ -38,6 +38,44 @@
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Password</label>
                         <input id="authPassword" type="password" required placeholder="••••••••" class="w-full p-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
                     </div>
+
+                    <div id="regFields" class="space-y-2">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Batch Name</label>
+                                <select id="regBatchName" class="w-full p-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
+                                    <option value="">Select batch</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Graduation Year</label>
+                                <input id="regBatchYear" type="text" placeholder="2006" class="w-full p-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Company / Org</label>
+                                <input id="regCompany" type="text" placeholder="UTC Alumni Network" class="w-full p-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Role / Title</label>
+                                <select id="regRole" class="w-full p-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
+                                    <option value="Member">Member</option>
+                                    <option value="Officer">Officer</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Skills (comma separated)</label>
+                            <input id="regSkills" type="text" placeholder="Mentoring, Networking" class="w-full p-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Upload Profile Picture</label>
+                            <input id="regAvatar" type="file" accept="image/*" class="w-full text-sm" onchange="handleRegAvatarSelect(event)">
+                            <img id="regAvatarPreview" src="" class="w-16 h-16 rounded-full mt-2 hidden object-cover">
+                        </div>
+                    </div>
+
                     <button type="submit" id="authBtn" class="w-full bg-[#800020] text-white p-2.5 rounded-lg text-sm font-bold shadow-md hover:bg-red-900 transition-colors mt-2">Get Connected</button>
                 </form>
             </div>
@@ -59,16 +97,16 @@
                 </div>
                 <div>
                     <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Role / Title</label>
-                    <input id="inputRole" type="text" placeholder="Alumni Mentor" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                    <select id="inputRole" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                        <option value="Member">Member</option>
+                        <option value="Officer">Officer</option>
+                    </select>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Batch Name</label>
                         <select id="inputBatchName" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
                             <option value="">Select batch</option>
-                            <option value="Batch A">Batch A</option>
-                            <option value="Batch B">Batch B</option>
-                            <option value="Batch C">Batch C</option>
                         </select>
                     </div>
                     <div>
@@ -81,8 +119,9 @@
                     <input id="inputSkills" type="text" placeholder="Mentoring, Networking" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Profile Picture URL</label>
-                    <input id="inputAvatar" type="text" placeholder="Paste an image web link..." class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                    <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Profile Picture</label>
+                    <input id="inputAvatarFile" type="file" accept="image/*" class="w-full text-xs" onchange="handleProfileAvatarSelect(event)">
+                    <p class="text-[10px] text-gray-400 mt-1">Choose a photo from your computer, then click Save Profile.</p>
                 </div>
                 <div>
                     <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Badges</label>
@@ -122,7 +161,15 @@
         <div class="flex justify-between items-center mb-1">
             <h1 class="text-xl md:text-2xl font-bold tracking-tight">MSU-UTC Connect</h1>
             <div class="flex items-center space-x-3">
+                <div class="relative">
+                    <button id="notificationButton" onclick="resetNotifications()" class="relative w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-xs text-white hover:bg-white/20">🔔</button>
+                    <span id="notificationBadge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-4 rounded-full bg-amber-400 text-[9px] text-black font-bold flex items-center justify-center px-1">0</span>
+                </div>
                 <div id="userBadge" class="w-8 h-8 rounded-full bg-red-900 border border-white/50 flex items-center justify-center text-xs font-bold hidden">AS</div>
+                <div class="hidden flex-col items-end gap-0.5" id="signedInMeta">
+                    <span id="accountRoleBadge" class="text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border border-white/30 bg-white/10 text-white">Member</span>
+                    <span id="signedInEmail" class="text-[9px] text-gray-300 max-w-[160px] truncate"></span>
+                </div>
                 <button onclick="logout()" class="text-xs bg-white/10 hover:bg-white/20 border border-white/20 px-2.5 py-1 rounded-md transition-all">Logout</button>
             </div>
         </div>
@@ -152,17 +199,17 @@
         <div class="space-y-6 lg:col-span-1">
             <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-4">
                 <div class="flex items-start gap-3">
-                    <img id="displayAvatar" class="w-16 h-16 rounded-full object-cover border-2 border-[#800020]" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop" alt="Profile pic">
+                    <img id="displayAvatar" class="w-16 h-16 rounded-full object-cover border-2 border-[#800020] bg-gray-200" src="" alt="Profile pic">
                     <div class="flex-1">
                         <h2 id="profileName" class="font-bold text-gray-800 text-lg">Alumni Member</h2>
-                        <p id="displayRole" class="text-xs text-gray-500 font-semibold uppercase">Batchmate</p>
-                        <p id="displayBatchName" class="text-[11px] text-gray-500 mt-1">Batch A</p>
+                        <p id="displayRole" class="text-xs text-gray-500 font-semibold uppercase">Member</p>
+                        <p id="displayBatchName" class="text-[11px] text-gray-500 mt-1">—</p>
                         <p id="displayCompany" class="text-[11px] text-gray-600 mt-1">UTC Alumni Network</p>
                         <p id="displayYear" class="text-[10px] text-gray-500 mt-1">2006</p>
                     </div>
                 </div>
                 <div id="displayBadges" class="flex flex-wrap gap-2 text-[10px]"></div>
-                <p id="displayStatus" class="text-xs text-gray-600 italic mt-1 bg-amber-50/50 px-2 py-1 rounded">"Connected to the cloud!"</p>
+                <p id="displayStatus" class="text-xs text-gray-600 italic mt-1 bg-amber-50/50 px-2 py-1 rounded">"—"</p>
                 <p id="displaySkills" class="text-[10px] text-gray-500">Skills: Mentoring, Networking</p>
                 <button onclick="toggleProfileModal(true)" class="w-full text-[11px] font-bold bg-[#800020] text-white px-3 py-2 rounded-lg hover:bg-red-900 transition-colors">Personalize Profile</button>
             </section>
@@ -180,10 +227,13 @@
                         <input id="batchSearch" type="search" placeholder="Search by name, company, role..." class="flex-1 w-full p-2.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
                         <select id="batchFilter" class="w-full sm:w-auto p-2.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
                             <option value="">All Batches</option>
-                            <option value="Batch A">Batch A</option>
-                            <option value="Batch B">Batch B</option>
-                            <option value="Batch C">Batch C</option>
                         </select>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                        <select id="batchYearFilter" class="w-full sm:w-auto p-2.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
+                            <option value="">All Years</option>
+                        </select>
+                        <input id="skillFilter" type="search" placeholder="Filter by skill..." class="w-full p-2.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
                     </div>
                     <div id="batchDirectoryList" class="grid gap-3"></div>
                 </div>
@@ -195,6 +245,14 @@
                     <span class="text-[10px] text-gray-500">Connected batchmates</span>
                 </div>
                 <div id="networkList" class="space-y-3 text-xs text-gray-700"></div>
+            </section>
+
+            <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Batch Officers</h3>
+                    <span class="text-[10px] text-gray-500">Current leadership</span>
+                </div>
+                <div id="officersBoard" class="space-y-3 text-xs text-gray-700"></div>
             </section>
 
             <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm">
@@ -234,13 +292,13 @@
             </section>
 
             <section class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-4">
-                <div class="flex flex-wrap items-center gap-2 text-[10px] font-semibold text-gray-600">
-                    <span class="px-2 py-1 rounded-full bg-[#800020] text-white">Testimonials Feed</span>
-                    <button type="button" data-testimonial-filter="all" class="testimonial-tab px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">All</button>
-                    <button type="button" data-testimonial-filter="featured" class="testimonial-tab px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">Featured</button>
-                    <button type="button" data-testimonial-filter="professional" class="testimonial-tab px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">Professional</button>
-                    <button type="button" data-testimonial-filter="academic" class="testimonial-tab px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">Academic</button>
-                    <button type="button" data-testimonial-filter="social" class="testimonial-tab px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">Social</button>
+                <div id="testimonialFilters" class="flex flex-wrap items-center gap-2 text-[10px] font-semibold text-gray-600 relative z-10">
+                    <span class="px-2 py-1 rounded-full bg-gray-200 text-gray-600 uppercase tracking-wide text-[9px]">Testimonials Feed</span>
+                    <button type="button" data-testimonial-filter="all" onclick="setTestimonialFilter('all')" class="testimonial-tab cursor-pointer px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">All</button>
+                    <button type="button" data-testimonial-filter="featured" onclick="setTestimonialFilter('featured')" class="testimonial-tab cursor-pointer px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">Featured</button>
+                    <button type="button" data-testimonial-filter="professional" onclick="setTestimonialFilter('professional')" class="testimonial-tab cursor-pointer px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">Professional</button>
+                    <button type="button" data-testimonial-filter="academic" onclick="setTestimonialFilter('academic')" class="testimonial-tab cursor-pointer px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">Academic</button>
+                    <button type="button" data-testimonial-filter="social" onclick="setTestimonialFilter('social')" class="testimonial-tab cursor-pointer px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">Social</button>
                 </div>
                 <div id="testimonialList" class="space-y-3"></div>
             </section>
@@ -255,6 +313,7 @@
                     </div>
                     <span id="upcomingEventsCount" class="text-[10px] bg-amber-100 text-amber-800 px-2 py-1 rounded-full">0 Events</span>
                 </div>
+                <div id="eventCalendar" class="grid grid-cols-3 gap-2 mb-4"></div>
                 <div id="eventsBoard" class="space-y-3"></div>
             </section>
 
@@ -291,6 +350,16 @@
                     </div>
                     <div>
                         <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Event Management</h4>
+                        <form id="adminEventForm" class="space-y-2 mb-3 p-3 bg-gray-50 rounded-xl border border-gray-200" onsubmit="createAdminEvent(event)">
+                            <input id="adminEventTitle" type="text" required placeholder="Event title" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                            <div class="grid grid-cols-2 gap-2">
+                                <input id="adminEventDate" type="text" required placeholder="June 15" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                                <input id="adminEventTime" type="text" placeholder="7:00 pm" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                            </div>
+                            <input id="adminEventLocation" type="text" placeholder="Alumni Hall" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                            <textarea id="adminEventDescription" rows="2" placeholder="Short description..." class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none resize-none"></textarea>
+                            <button type="submit" class="w-full px-3 py-1.5 bg-[#800020] text-white rounded-lg text-[10px] font-semibold hover:bg-red-900">Add Event</button>
+                        </form>
                         <div id="adminEvents" class="space-y-3 text-xs text-gray-700"></div>
                     </div>
                 </div>
@@ -299,6 +368,7 @@
     </main>
 
     <!-- ================= JAVASCRIPT & CLOUD INFRASTRUCTURE ================= -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
     <script>
         const SUPABASE_URL = "https://ouwuhzttjnvdivsfbefe.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_IFeDdN_0oFEy5SR-qUwY3w_6PDUeFyi";
@@ -326,60 +396,132 @@
         let currentUser = null;
         let currentUserEmail = null;
         let currentUserId = null;
+        const DEFAULT_AVATAR = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="#e5e7eb" width="100" height="100"/><circle cx="50" cy="38" r="18" fill="#9ca3af"/><ellipse cx="50" cy="78" rx="28" ry="20" fill="#9ca3af"/></svg>');
+
         let currentUserProfile = {
-            avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop',
+            avatar: DEFAULT_AVATAR,
             name: 'Alumni Member',
-            role: 'Batchmate',
-            batchName: 'Batch A',
-            company: 'UTC Alumni Network',
-            gradYear: '2006',
-            skills: 'Mentoring, Networking',
-            badges: ['Mentor', 'Volunteer'],
-            status: 'Connected to the cloud!'
+            role: 'Member',
+            batchName: '',
+            company: '',
+            gradYear: '',
+            skills: '',
+            badges: [],
+            status: ''
         };
 
-        let batchmates = [
-            { id: 1, name: 'Dave', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&auto=format&fit=crop', batchName: 'Batch A', title: 'BS Computer Science - Class of 2006', company: 'UTC Tech', summary: 'Software engineering alum with product leadership experience.', role: 'Engineering Manager', gradYear: '2006', skills: 'Product, Cloud', badges: ['Mentor'] },
-            { id: 2, name: 'Sarah', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop', batchName: 'Batch B', title: 'MBA Alumni - Class of 2008', company: 'Connections Inc.', summary: 'Business development expert focusing on alumni partnerships.', role: 'Partnership Director', gradYear: '2008', skills: 'Business Strategy', badges: ['Speaker'] },
-            { id: 3, name: 'Ava', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop', batchName: 'Batch C', title: 'Civil Engineering - Class of 2009', company: 'BridgeWorks', summary: 'Infrastructure alum working on sustainable campus designs.', role: 'Project Lead', gradYear: '2009', skills: 'Sustainability', badges: ['Volunteer'] }
-        ];
-
-        let events = [
-            { id: 1, title: 'End of Term Party', date: 'June 5', time: '7:30 pm', location: 'Alumni Hall', description: 'Celebrate the end of term with your batchmates and mentors.' },
-            { id: 2, title: 'Career Networking Breakfast', date: 'June 12', time: '9:00 am', location: 'Campus Bistro', description: 'Share career moves and meet fellow alumni across batches.' },
-            { id: 3, title: 'Virtual Mentoring Session', date: 'June 20', time: '6:00 pm', location: 'Zoom', description: 'Join an online discussion with alumni mentors and students.' }
-        ];
-
+        let batchmates = [];
+        let events = [];
         let connectedBatchmates = new Set();
         let rsvpResponses = {};
         let messages = [];
         let pendingInvites = [];
         let allTestimonials = [];
-        let appMetrics = { members: batchmates.length, testimonials: 0, invites: 0, events: events.length };
+        let batchOfficers = [];
+        let appMetrics = { members: 0, testimonials: 0, invites: 0, events: 0 };
+        let unreadMessages = 0;
+        let selectedProfileAvatarFile = null;
+        let selectedRegAvatarFile = null;
         let testimonialFilter = 'all';
-        const adminEmails = ['admin@msu.edu', 'founder@msu.edu'];
+        const adminEmails = ['admin@msu.edu', 'founder@msu.edu', 'realtytrail@gmail.com'].map(email => email.trim().toLowerCase());
+
+        function normalizeMemberRole(value) {
+            const v = (value || '').trim().toLowerCase();
+            return v === 'officer' ? 'Officer' : 'Member';
+        }
+
+        const BATCH_OPTIONS = [
+            '1976 BORDERLINE', '1977 CONVERGENCE', '1978 PICO DE LORO', '1979 KALIMUDAN', '1980 VIBRANT',
+            '1981 PIONEER', '1982 DREAMERS', '1983 FELDSPAR', '1984 SINDAW', '1985 MARVELOUS',
+            '1986 PIONEER ACHIEVERS', '1987 ZENITH', '1988 POWERCAST', '1989 XANTHRONS', '1990 EXEMPLARY',
+            '1991 KAKAYADUN', '1992 ESCAPADE', '1993 MUSTANG', '1994 CLIFFHANGER', '1995 DYNAMICS',
+            '1996 CASPER', '1997 TAMAGOTCHI', '1998 CENTENNIAL', '1999 MUTANT', '2000 MILLINIUM',
+            '2001 ARGYRUS', '2002 .UNITY', '2003 NEPHILIMS AMICIABLE', '2004 ACHIEVER', '2005 INVADER',
+            '2006 CHALLENGER', '2007 MAGDALO', '2008 GRYFFINDOR', '2009 RAVENCLAW', '2010 SYNCHRONIZE',
+            '2011 COALESCE', '2012 KRIEGER', '2013 EMMINENT', '2014 AVANT GARDE', '2015 INVICTUS',
+            '2016 ATROMITOS', '2017 ANOCHE', '2018 EL PEMNIATORES', '2019 THE LEGIONAIRES', '2020 PROMETHIANS',
+            '2021 LUMINARIES', '2022 ELYSIANS', '2023 ZOSIME', '2024 AURELIUS', '2025 SALIMBAYAN', '2026 TADMAN'
+        ];
+
+        function batchLabelToYear(label) {
+            const match = (label || '').match(/^(\d{4})/);
+            return match ? match[1] : '';
+        }
+
+        function populateBatchSelects() {
+            const configs = [
+                { id: 'regBatchName', placeholder: 'Select batch' },
+                { id: 'inputBatchName', placeholder: 'Select batch' },
+                { id: 'batchFilter', placeholder: 'All Batches' }
+            ];
+            configs.forEach(({ id, placeholder }) => {
+                const select = document.getElementById(id);
+                if (!select) return;
+                select.innerHTML = '';
+                const empty = document.createElement('option');
+                empty.value = '';
+                empty.textContent = placeholder;
+                select.appendChild(empty);
+                BATCH_OPTIONS.forEach(label => {
+                    const option = document.createElement('option');
+                    option.value = label;
+                    option.textContent = label;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        function syncGradYearFromBatch(batchSelectId, yearInputId) {
+            const batchEl = document.getElementById(batchSelectId);
+            const yearEl = document.getElementById(yearInputId);
+            if (!batchEl || !yearEl) return;
+            batchEl.addEventListener('change', () => {
+                const year = batchLabelToYear(batchEl.value);
+                if (year) yearEl.value = year;
+            });
+        }
 
         const authOverlay = document.getElementById('authOverlay');
         const authForm = document.getElementById('authForm');
         const profileNameEl = document.getElementById('profileName');
         const userBadge = document.getElementById('userBadge');
 
+        function setAuthOverlayOpen(open) {
+            if (!authOverlay) return;
+            authOverlay.classList.toggle('hidden', !open);
+            authOverlay.classList.toggle('pointer-events-none', !open);
+        }
+
+        window.setTestimonialFilter = function(filter) {
+            testimonialFilter = filter;
+            renderTestimonials();
+            updateTestimonialTabStyles();
+        };
+
         window.addEventListener('DOMContentLoaded', initApp);
 
         async function initApp() {
+            const displayAvatar = document.getElementById('displayAvatar');
+            if (displayAvatar && !displayAvatar.src) displayAvatar.src = DEFAULT_AVATAR;
+
+            populateBatchSelects();
+            syncGradYearFromBatch('regBatchName', 'regBatchYear');
+            syncGradYearFromBatch('inputBatchName', 'inputBatchYear');
+
             authForm.addEventListener('submit', handleAuthSubmit);
             document.getElementById('testimonialSubmitBtn').addEventListener('click', submitTestimonial);
             document.getElementById('messageSendBtn').addEventListener('click', submitMessage);
             document.getElementById('batchSearch').addEventListener('input', e => filterBatchDirectory(e.target.value));
             document.getElementById('batchFilter').addEventListener('change', () => filterBatchDirectory(document.getElementById('batchSearch').value));
+            document.getElementById('batchYearFilter').addEventListener('change', () => filterBatchDirectory(document.getElementById('batchSearch').value));
+            document.getElementById('skillFilter').addEventListener('input', () => filterBatchDirectory(document.getElementById('batchSearch').value));
 
-            document.querySelectorAll('[data-testimonial-filter]').forEach(button => {
-                button.addEventListener('click', () => {
-                    testimonialFilter = button.dataset.testimonialFilter;
-                    renderTestimonials();
-                    updateTestimonialTabStyles();
-                });
+            document.getElementById('testimonialFilters')?.addEventListener('click', (event) => {
+                const button = event.target.closest('[data-testimonial-filter]');
+                if (!button) return;
+                setTestimonialFilter(button.dataset.testimonialFilter);
             });
+            updateTestimonialTabStyles();
 
             await restoreSession();
             await loadAppData();
@@ -406,6 +548,7 @@
             renderStats();
             renderBatchDirectory();
             renderNetwork();
+            renderOfficersBoard();
             renderEvents();
             renderMessages();
             renderPendingInvites();
@@ -430,8 +573,9 @@
 
         async function handleExistingSession(user) {
             currentUser = user.user_metadata?.full_name || user.email || 'Alumni Member';
-            currentUserEmail = user.email;
+            currentUserEmail = (user.email || '').trim();
             currentUserId = user.id;
+            updateAccountRoleBadge();
             await loginSuccess(currentUser);
         }
 
@@ -441,7 +585,9 @@
             currentUserId = null;
             profileNameEl.innerText = 'Alumni Member';
             userBadge.classList.add('hidden');
-            authOverlay.classList.remove('hidden');
+            document.getElementById('signedInMeta')?.classList.add('hidden');
+            updateAccountRoleBadge();
+            setAuthOverlayOpen(true);
             switchAuthTab('login');
             renderStats();
             renderBatchDirectory();
@@ -458,9 +604,9 @@
                 const { data, error } = await supabaseClient.from('alumni_profiles').select('*').eq('email', currentUserEmail).single();
                 if (!error && data) {
                     currentUserProfile = {
-                        avatar: data.avatar || currentUserProfile.avatar,
+                        avatar: data.avatar || DEFAULT_AVATAR,
                         name: data.name || currentUser,
-                        role: data.title || data.role || currentUserProfile.role,
+                        role: normalizeMemberRole(data.title || data.role || currentUserProfile.role),
                         batchName: data.batch_name || currentUserProfile.batchName,
                         company: data.company || currentUserProfile.company,
                         gradYear: data.grad_year || currentUserProfile.gradYear,
@@ -469,6 +615,7 @@
                         status: data.status || currentUserProfile.status
                     };
                     renderCurrentUserProfile();
+                    updateAccountRoleBadge();
                 }
             } catch (err) {
                 console.warn('Could not fetch current user profile:', err.message);
@@ -479,11 +626,11 @@
             document.getElementById('displayAvatar').src = currentUserProfile.avatar;
             document.getElementById('profileName').innerText = currentUserProfile.name;
             document.getElementById('displayRole').innerText = currentUserProfile.role;
-            document.getElementById('displayBatchName').innerText = currentUserProfile.batchName || 'Batch A';
+            document.getElementById('displayBatchName').innerText = currentUserProfile.batchName || '—';
             document.getElementById('displayCompany').innerText = currentUserProfile.company;
             document.getElementById('displayYear').innerText = currentUserProfile.gradYear;
-            document.getElementById('displayStatus').innerText = `"${currentUserProfile.status}"`;
-            document.getElementById('displaySkills').innerText = `Skills: ${currentUserProfile.skills}`;
+            document.getElementById('displayStatus').innerText = currentUserProfile.status ? `"${currentUserProfile.status}"` : '"—"';
+            document.getElementById('displaySkills').innerText = currentUserProfile.skills ? `Skills: ${currentUserProfile.skills}` : 'Skills: —';
             const badgesEl = document.getElementById('displayBadges');
             badgesEl.innerHTML = '';
             currentUserProfile.badges.forEach(badge => {
@@ -499,17 +646,20 @@
             const tabReg = document.getElementById('tabRegister');
             const tabLog = document.getElementById('tabLogin');
             const nameField = document.getElementById('nameField');
+            const regFields = document.getElementById('regFields');
             const authBtn = document.getElementById('authBtn');
 
             if (mode === 'login') {
                 tabLog.className = 'flex-1 pb-3 border-b-2 border-[#800020] text-[#800020]';
                 tabReg.className = 'flex-1 pb-3 text-gray-400 hover:text-gray-600';
                 nameField.classList.add('hidden');
+                if (regFields) regFields.classList.add('hidden');
                 authBtn.innerText = 'Sign In';
             } else {
                 tabReg.className = 'flex-1 pb-3 border-b-2 border-[#800020] text-[#800020]';
                 tabLog.className = 'flex-1 pb-3 text-gray-400 hover:text-gray-600';
                 nameField.classList.remove('hidden');
+                if (regFields) regFields.classList.remove('hidden');
                 authBtn.innerText = 'Get Connected';
             }
         }
@@ -531,20 +681,58 @@
                     return;
                 }
 
-                const { data, error } = await supabaseClient.auth.signUp({
-                    email: emailInput,
-                    password: passwordInput,
-                    options: { data: { full_name: nameInput } }
-                });
+                const regBatchName = document.getElementById('regBatchName')?.value || '';
+                const regBatchYear = document.getElementById('regBatchYear')?.value || batchLabelToYear(regBatchName) || '';
+                const regCompany = document.getElementById('regCompany')?.value || '';
+                const regRole = normalizeMemberRole(document.getElementById('regRole')?.value || 'Member');
+                const regSkills = document.getElementById('regSkills')?.value || '';
 
-                if (error) {
-                    alert('Registration Error: ' + error.message);
+                try {
+                    const { data, error } = await supabaseClient.auth.signUp({
+                        email: emailInput,
+                        password: passwordInput,
+                        options: { data: { full_name: nameInput, batch_name: regBatchName, grad_year: regBatchYear, company: regCompany, title: regRole, skills: regSkills } }
+                    });
+
+                    if (error) {
+                        alert('Registration Error: ' + error.message);
+                        return;
+                    }
+
+                    // Try to create a minimal profile record so the directory shows pending members
+                    try {
+                        let avatarUrl = null;
+                        const regFile = document.getElementById('regAvatar')?.files?.[0];
+                        if (regFile) {
+                            avatarUrl = await fileToAvatarDataUrl(regFile);
+                        }
+
+                        const profilePayload = {
+                            email: emailInput,
+                            name: nameInput,
+                            batch_name: regBatchName || null,
+                            grad_year: regBatchYear || null,
+                            company: regCompany || null,
+                            title: regRole || null,
+                            skills: regSkills || null,
+                            avatar: avatarUrl || null,
+                            status: 'Joined — complete your profile',
+                            badges: null,
+                            updated_at: new Date().toISOString()
+                        };
+                        const { error: pError } = await supabaseClient.from('alumni_profiles').insert([profilePayload]);
+                        if (pError) console.warn('Profile insert warning:', pError.message);
+                    } catch (profileErr) {
+                        console.warn('Could not insert initial profile:', profileErr.message);
+                    }
+
+                    alert('Account created! Check your email for verification, then sign in. A starter profile was created.');
+                    switchAuthTab('login');
+                    return;
+                } catch (err) {
+                    alert('Registration Error: ' + (err.message || err));
                     return;
                 }
-
-                alert('Account created! Check your email address for verification and then sign in.');
-                switchAuthTab('login');
-                return;
             }
 
             const { data, error } = await supabaseClient.auth.signInWithPassword({
@@ -568,16 +756,18 @@
             userBadge.classList.remove('hidden');
 
             if (hideOverlay) {
-                authOverlay.classList.add('hidden');
+                setAuthOverlayOpen(false);
             }
 
             await fetchCurrentUserProfile();
+            await uploadPendingAvatarIfAny();
             await fetchConnections();
             await fetchEventResponses();
             await fetchPendingInvites();
             await fetchMetrics();
             renderStats();
             renderAdminPanel();
+            updateAccountRoleBadge();
         }
 
         async function fetchMetrics() {
@@ -620,28 +810,106 @@
             document.getElementById('pendingInvitesCountInline').innerText = `${pendingInvites.length} pending`;
         }
 
+        function showToast(message, type = 'info') {
+            const toastContainer = document.getElementById('toastContainer');
+            if (!toastContainer) return;
+            const toast = document.createElement('div');
+            toast.className = `max-w-sm px-4 py-3 rounded-xl text-[12px] shadow-lg border ${type === 'success' ? 'bg-emerald-100 border-emerald-200 text-emerald-900' : type === 'error' ? 'bg-red-100 border-red-200 text-red-900' : 'bg-slate-900 border-slate-800 text-white'}`;
+            toast.innerText = message;
+            toastContainer.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 500);
+            }, 3200);
+        }
+
+        function updateNotificationBadge() {
+            const badge = document.getElementById('notificationBadge');
+            if (!badge) return;
+            if (unreadMessages > 0) {
+                badge.innerText = unreadMessages.toString();
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function resetNotifications() {
+            unreadMessages = 0;
+            updateNotificationBadge();
+            showToast('Message notifications cleared', 'success');
+        }
+
+        function setBatchSelectValue(selectId, value) {
+            const select = document.getElementById(selectId);
+            if (!select || !value) {
+                if (select) select.value = '';
+                return;
+            }
+            if (!Array.from(select.options).some(opt => opt.value === value)) {
+                const extra = document.createElement('option');
+                extra.value = value;
+                extra.textContent = value;
+                select.appendChild(extra);
+            }
+            select.value = value;
+        }
+
+        function populateYearFilterOptions() {
+            const yearSelect = document.getElementById('batchYearFilter');
+            if (!yearSelect) return;
+            const yearSet = new Set(batchmates.map(item => item.gradYear).filter(Boolean));
+            BATCH_OPTIONS.forEach(label => {
+                const y = batchLabelToYear(label);
+                if (y) yearSet.add(y);
+            });
+            const years = Array.from(yearSet).sort();
+            yearSelect.innerHTML = '<option value="">All Years</option>';
+            years.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.innerText = year;
+                yearSelect.appendChild(option);
+            });
+        }
+
         async function fetchBatchmates() {
             try {
                 const { data, error } = await supabaseClient.from('alumni_profiles').select('id, email, name, avatar, title, company, summary, role, grad_year, batch_name, skills, badges');
-                if (!error && data && data.length) {
+                if (!error && data) {
                     batchmates = data.map(item => ({
                         id: item.id,
                         name: item.name,
-                        avatar: item.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop',
-                        batchName: item.batch_name || 'Batch A',
-                        title: item.title || item.role || 'Batchmate',
-                        company: item.company || 'UTC Alumni',
+                        avatar: item.avatar || DEFAULT_AVATAR,
+                        batchName: item.batch_name || '',
+                        title: item.title || item.role || 'Member',
+                        company: item.company || '',
                         summary: item.summary || '',
-                        role: item.role || item.title || 'Alumni',
-                        gradYear: item.grad_year || '2006',
+                        role: normalizeMemberRole(item.role || item.title),
+                        gradYear: item.grad_year || batchLabelToYear(item.batch_name) || '',
                         skills: item.skills || '',
-                        badges: item.badges ? item.badges.split(',').map(b => b.trim()) : []
+                        badges: item.badges ? item.badges.split(',').map(b => b.trim()).filter(Boolean) : []
                     }));
+                    batchOfficers = batchmates
+                        .filter(item => item.role === 'Officer')
+                        .map(item => ({
+                            id: item.id,
+                            name: item.name,
+                            role: 'Officer',
+                            responsibility: item.company || item.batchName || 'Alumni officer',
+                            avatar: item.avatar
+                        }));
+                } else {
+                    batchmates = [];
+                    batchOfficers = [];
                 }
             } catch (err) {
                 console.warn('Could not fetch batchmates from Supabase:', err.message);
+                batchmates = [];
+                batchOfficers = [];
             }
             renderBatchDirectory();
+            populateYearFilterOptions();
         }
 
         async function fetchConnections() {
@@ -664,7 +932,7 @@
 
         async function toggleConnection(id) {
             if (!currentUserEmail) {
-                authOverlay.classList.remove('hidden');
+                setAuthOverlayOpen(true);
                 return;
             }
 
@@ -694,7 +962,7 @@
         async function fetchEvents() {
             try {
                 const { data, error } = await supabaseClient.from('events').select('id, title, date, time, location, description').order('date', { ascending: true });
-                if (!error && data && data.length) {
+                if (!error && data) {
                     events = data.map(event => ({
                         id: event.id,
                         title: event.title,
@@ -703,9 +971,12 @@
                         location: event.location,
                         description: event.description
                     }));
+                } else {
+                    events = [];
                 }
             } catch (err) {
                 console.warn('Could not fetch events:', err.message);
+                events = [];
             }
             renderEvents();
         }
@@ -726,7 +997,7 @@
 
         async function rsvpEvent(eventId, response) {
             if (!currentUserEmail) {
-                authOverlay.classList.remove('hidden');
+                setAuthOverlayOpen(true);
                 return;
             }
 
@@ -784,7 +1055,7 @@
             if (!text) return;
             if (!currentUserEmail) {
                 alert('Please sign in to send a message.');
-                authOverlay.classList.remove('hidden');
+                setAuthOverlayOpen(true);
                 return;
             }
 
@@ -793,8 +1064,10 @@
                 if (error) throw error;
                 input.value = '';
                 await fetchMessages();
+                showToast('Message sent', 'success');
             } catch (err) {
                 console.warn('Could not send message:', err.message);
+                showToast('Unable to send message', 'error');
             }
         }
 
@@ -805,6 +1078,11 @@
                         messages.unshift(payload.new);
                         if (messages.length > 20) messages.pop();
                         renderMessages();
+                        if (payload.new.author_email !== currentUserEmail) {
+                            unreadMessages += 1;
+                            updateNotificationBadge();
+                            showToast('New member message received');
+                        }
                     })
                     .subscribe();
             } catch (err) {
@@ -861,11 +1139,15 @@
                 const { data, error } = await query;
                 if (!error && data) {
                     allTestimonials = data;
+                } else {
+                    allTestimonials = [];
                 }
             } catch (err) {
                 console.warn('Could not fetch testimonials:', err.message);
+                allTestimonials = [];
             }
             renderTestimonials();
+            updateTestimonialTabStyles();
             renderStats();
         }
 
@@ -879,7 +1161,15 @@
             });
 
             if (!filtered.length) {
-                list.innerHTML = '<p class="text-[11px] text-gray-400 italic">No testimonials match this filter.</p>';
+                const filterNames = { all: 'All', featured: 'Featured', professional: 'Professional', academic: 'Academic', social: 'Social' };
+                const name = filterNames[testimonialFilter] || testimonialFilter;
+                let hint = `No ${name} testimonials yet.`;
+                if (testimonialFilter === 'all' && !isAdminUser()) {
+                    hint += ' Only approved posts show here — new posts need officer approval.';
+                } else if (testimonialFilter === 'featured') {
+                    hint += ' Featured posts are highlighted by officers.';
+                }
+                list.innerHTML = `<p class="text-[11px] text-gray-400 italic">${hint}</p>`;
                 return;
             }
 
@@ -913,7 +1203,7 @@
             if (!text) return;
             if (!currentUserEmail) {
                 alert('Please sign in before posting a testimonial.');
-                authOverlay.classList.remove('hidden');
+                setAuthOverlayOpen(true);
                 return;
             }
 
@@ -940,7 +1230,7 @@
         async function likeTestimonial(id) {
             if (!currentUserEmail) {
                 alert('Please sign in to like testimonials.');
-                authOverlay.classList.remove('hidden');
+                setAuthOverlayOpen(true);
                 return;
             }
             const item = allTestimonials.find(test => test.id === id);
@@ -956,13 +1246,48 @@
 
         function updateTestimonialTabStyles() {
             document.querySelectorAll('[data-testimonial-filter]').forEach(button => {
-                button.classList.toggle('bg-[#800020] text-white', button.dataset.testimonialFilter === testimonialFilter);
-                button.classList.toggle('bg-gray-100 text-gray-700', button.dataset.testimonialFilter !== testimonialFilter);
+                const active = button.dataset.testimonialFilter === testimonialFilter;
+                button.classList.toggle('bg-[#800020', active);
+                button.classList.toggle('text-white', active);
+                button.classList.toggle('shadow-sm', active);
+                button.classList.toggle('bg-gray-100', !active);
+                button.classList.toggle('text-gray-700', !active);
+                button.setAttribute('aria-pressed', active ? 'true' : 'false');
             });
         }
 
         function isAdminUser() {
-            return currentUserEmail && adminEmails.includes(currentUserEmail.toLowerCase());
+            const email = (currentUserEmail || '').trim().toLowerCase();
+            return !!email && adminEmails.includes(email);
+        }
+
+        function updateAccountRoleBadge() {
+            const badge = document.getElementById('accountRoleBadge');
+            const meta = document.getElementById('signedInMeta');
+            const emailEl = document.getElementById('signedInEmail');
+            if (!badge) return;
+
+            if (!currentUserEmail) {
+                badge.textContent = '';
+                if (meta) meta.classList.add('hidden');
+                return;
+            }
+
+            const email = currentUserEmail.trim().toLowerCase();
+            let label = 'Member';
+            let classes = 'bg-white/10 text-white border-white/30';
+            if (isAdminUser()) {
+                label = 'Admin';
+                classes = 'bg-amber-400 text-black border-amber-300';
+            } else if (currentUserProfile.role === 'Officer') {
+                label = 'Officer';
+                classes = 'bg-red-900 text-white border-red-800';
+            }
+
+            badge.textContent = label;
+            badge.className = `text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${classes}`;
+            if (emailEl) emailEl.textContent = email;
+            if (meta) meta.classList.remove('hidden');
         }
 
         async function renderAdminPanel() {
@@ -1076,19 +1401,56 @@
             }
         }
 
+        window.createAdminEvent = async function(event) {
+            event.preventDefault();
+            if (!isAdminUser()) {
+                showToast('Admin access required', 'error');
+                return;
+            }
+
+            const title = document.getElementById('adminEventTitle').value.trim();
+            const date = document.getElementById('adminEventDate').value.trim();
+            const time = document.getElementById('adminEventTime').value.trim();
+            const location = document.getElementById('adminEventLocation').value.trim();
+            const description = document.getElementById('adminEventDescription').value.trim();
+
+            if (!title || !date) {
+                showToast('Title and date are required', 'error');
+                return;
+            }
+
+            try {
+                const { error } = await supabaseClient.from('events').insert([{ title, date, time, location, description }]);
+                if (error) throw error;
+                document.getElementById('adminEventForm').reset();
+                await fetchEvents();
+                await fetchMetrics();
+                await renderAdminPanel();
+                showToast('Event added', 'success');
+            } catch (err) {
+                console.warn('Could not create event:', err.message);
+                showToast('Could not save event. Check Supabase setup.', 'error');
+            }
+        }
+
         function renderBatchDirectory() {
             const list = document.getElementById('batchDirectoryList');
             list.innerHTML = '';
             const query = document.getElementById('batchSearch')?.value.trim().toLowerCase() || '';
             const selectedBatch = document.getElementById('batchFilter')?.value || '';
+            const selectedYear = document.getElementById('batchYearFilter')?.value || '';
+            const skillQuery = document.getElementById('skillFilter')?.value.trim().toLowerCase() || '';
             const filtered = batchmates.filter(batchmate => {
                 const searchText = `${batchmate.name} ${batchmate.title} ${batchmate.company} ${batchmate.summary} ${batchmate.batchName}`.toLowerCase();
+                const skillsText = (batchmate.skills || '').toLowerCase();
                 const matchesSearch = !query || searchText.includes(query);
                 const matchesBatch = !selectedBatch || batchmate.batchName === selectedBatch;
-                return matchesSearch && matchesBatch;
+                const matchesYear = !selectedYear || batchmate.gradYear === selectedYear;
+                const matchesSkill = !skillQuery || skillsText.includes(skillQuery) || searchText.includes(skillQuery);
+                return matchesSearch && matchesBatch && matchesYear && matchesSkill;
             });
             if (filtered.length === 0) {
-                list.innerHTML = '<p class="text-[11px] text-gray-400 italic">No batchmates match your search or selected batch.</p>';
+                list.innerHTML = '<p class="text-[11px] text-gray-400 italic">' + (batchmates.length === 0 ? 'No alumni registered yet. Invite batchmates to join!' : 'No batchmates match your search, filters, or selected year.') + '</p>';
                 return;
             }
             filtered.forEach(batchmate => {
@@ -1102,7 +1464,7 @@
                             <div>
                                 <p class="font-bold text-gray-700">${batchmate.name}</p>
                                 <p class="text-[10px] text-gray-500">${batchmate.company}</p>
-                                <p class="text-[10px] text-gray-500">${batchmate.batchName || 'Batch A'}</p>
+                                <p class="text-[10px] text-gray-500">${batchmate.batchName || '—'}</p>
                             </div>
                         </div>
                         <button type="button" onclick="toggleConnection(${batchmate.id})" class="px-3 py-1 rounded-full text-[10px] font-semibold ${connectedBatchmates.has(batchmate.id) ? 'bg-green-100 text-green-800' : 'bg-[#800020] text-white hover:bg-red-900'}">${connectedBatchmates.has(batchmate.id) ? 'Connected' : 'Connect'}</button>
@@ -1146,9 +1508,54 @@
             });
         }
 
-        function renderEvents() {
-            const board = document.getElementById('eventsBoard');
+        function renderOfficersBoard() {
+            const board = document.getElementById('officersBoard');
             board.innerHTML = '';
+            if (!batchOfficers.length) {
+                board.innerHTML = '<p class="text-[11px] italic text-gray-400">No officers listed yet. Alumni with role Officer appear here.</p>';
+                return;
+            }
+            batchOfficers.forEach(officer => {
+                const card = document.createElement('div');
+                card.className = 'flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-200';
+                card.innerHTML = `
+                    <img class="w-12 h-12 rounded-full object-cover" src="${officer.avatar}" alt="${officer.name}">
+                    <div class="flex-1 text-xs">
+                        <p class="font-semibold text-gray-800">${officer.name}</p>
+                        <p class="text-[10px] text-gray-500">${officer.role}</p>
+                        <p class="text-[10px] text-gray-600 mt-1">${officer.responsibility}</p>
+                    </div>
+                `;
+                board.appendChild(card);
+            });
+        }
+
+        function renderEvents() {
+            const calendar = document.getElementById('eventCalendar');
+            const board = document.getElementById('eventsBoard');
+            if (calendar) {
+                calendar.innerHTML = '';
+                if (events.length === 0) {
+                    calendar.innerHTML = '<p class="text-[11px] text-gray-400 italic">No upcoming events planned.</p>';
+                } else {
+                    events.slice(0, 6).forEach(event => {
+                        const tile = document.createElement('div');
+                        tile.className = 'bg-amber-50 p-3 rounded-xl border border-amber-100 text-[10px]';
+                        tile.innerHTML = `
+                            <p class="font-semibold text-amber-900">${event.date}</p>
+                            <p class="text-gray-700 truncate">${event.title}</p>
+                            <p class="text-gray-500">${event.time}</p>
+                        `;
+                        calendar.appendChild(tile);
+                    });
+                }
+            }
+            board.innerHTML = '';
+            if (!events.length) {
+                board.innerHTML = '<p class="text-[11px] text-gray-400 italic">No events yet. Officers can add events in the admin panel.</p>';
+                document.getElementById('upcomingEventsCount').innerText = '0 Events';
+                return;
+            }
             events.forEach(event => {
                 const status = rsvpResponses[event.id] ? `You ${rsvpResponses[event.id] === 'yes' ? 'are attending' : 'declined'} this event` : 'No response yet';
                 const card = document.createElement('div');
@@ -1179,7 +1586,7 @@
             document.getElementById('displayAvatar').src = batchmate.avatar;
             document.getElementById('profileName').innerText = batchmate.name;
             document.getElementById('displayRole').innerText = batchmate.role || batchmate.title;
-            document.getElementById('displayBatchName').innerText = batchmate.batchName || 'Batch A';
+            document.getElementById('displayBatchName').innerText = batchmate.batchName || '—';
             document.getElementById('displayCompany').innerText = batchmate.company;
             document.getElementById('displayYear').innerText = batchmate.gradYear;
             document.getElementById('displayStatus').innerText = `"Viewing ${batchmate.name}'s profile"`;
@@ -1194,17 +1601,158 @@
             });
         }
 
+        function readFileAsDataURL(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function handleRegAvatarSelect(e) {
+            const file = e.target.files && e.target.files[0];
+            selectedRegAvatarFile = file || null;
+            const preview = document.getElementById('regAvatarPreview');
+            if (file && preview) {
+                preview.src = URL.createObjectURL(file);
+                preview.classList.remove('hidden');
+            } else if (preview) {
+                preview.src = '';
+                preview.classList.add('hidden');
+            }
+        }
+
+        function handleProfileAvatarSelect(e) {
+            const file = e.target.files && e.target.files[0];
+            selectedProfileAvatarFile = file || null;
+            if (file) {
+                document.getElementById('displayAvatar').src = URL.createObjectURL(file);
+            }
+        }
+
+        async function uploadProfileImage(file) {
+            if (!file) return null;
+            if (!currentUserEmail) return null;
+            try {
+                const ext = ((file.name || '').split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+                const path = `${currentUserEmail.replace(/[^a-zA-Z0-9@._-]/g, '_')}-${Date.now()}.${ext}`;
+                const { error: uploadError } = await supabaseClient.storage.from('avatars').upload(path, file, {
+                    upsert: true,
+                    contentType: file.type || `image/${ext === 'jpg' ? 'jpeg' : ext}`
+                });
+                if (uploadError) throw uploadError;
+                const { data: publicData } = supabaseClient.storage.from('avatars').getPublicUrl(path);
+                return publicData?.publicUrl || null;
+            } catch (err) {
+                console.warn('Storage upload skipped:', err.message || err);
+                return null;
+            }
+        }
+
+        async function compressImageFile(file, maxWidth, quality) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                const objectUrl = URL.createObjectURL(file);
+                img.onload = () => {
+                    const scale = Math.min(1, maxWidth / img.width);
+                    const w = Math.max(1, Math.round(img.width * scale));
+                    const h = Math.max(1, Math.round(img.height * scale));
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w;
+                    canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    URL.revokeObjectURL(objectUrl);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.onerror = () => {
+                    URL.revokeObjectURL(objectUrl);
+                    reject(new Error('Could not load image'));
+                };
+                img.src = objectUrl;
+            });
+        }
+
+        async function fileToAvatarDataUrl(file) {
+            if (!file) return null;
+            if (file.size > 3 * 1024 * 1024) {
+                showToast('Large photo — compressing automatically…', 'info');
+            }
+            try {
+                let dataUrl = await readFileAsDataURL(file);
+                if (dataUrl.length > 700000) {
+                    dataUrl = await compressImageFile(file, 480, 0.82);
+                }
+                return dataUrl;
+            } catch (err) {
+                showToast('Could not read that image file', 'error');
+                return null;
+            }
+        }
+
+        async function saveAvatarFromFile(file) {
+            if (!file) return false;
+            if (!currentUserEmail) {
+                showToast('Sign in first, then upload your photo', 'error');
+                return false;
+            }
+            let avatarUrl = await uploadProfileImage(file);
+            if (!avatarUrl) {
+                avatarUrl = await fileToAvatarDataUrl(file);
+            }
+            if (!avatarUrl) return false;
+            const ok = await persistAvatarUrl(avatarUrl);
+            if (ok) showToast('Profile picture saved', 'success');
+            return ok;
+        }
+
+        async function persistAvatarUrl(avatarUrl) {
+            if (!avatarUrl || !currentUserEmail) return false;
+            currentUserProfile.avatar = avatarUrl;
+            renderCurrentUserProfile();
+            try {
+                const { error } = await supabaseClient.from('alumni_profiles').upsert([{
+                    email: currentUserEmail,
+                    name: currentUser,
+                    avatar: avatarUrl,
+                    title: currentUserProfile.role,
+                    company: currentUserProfile.company,
+                    grad_year: currentUserProfile.gradYear,
+                    batch_name: currentUserProfile.batchName,
+                    skills: currentUserProfile.skills,
+                    badges: (currentUserProfile.badges || []).join(', '),
+                    status: currentUserProfile.status,
+                    updated_at: new Date().toISOString()
+                }], { onConflict: 'email' });
+                if (error) throw error;
+                return true;
+            } catch (err) {
+                console.warn('Could not save avatar to profile:', err.message);
+                showToast('Could not save photo. Make sure you are signed in.', 'error');
+                return false;
+            }
+        }
+
+        async function uploadPendingAvatarIfAny() {
+            const file = selectedProfileAvatarFile || selectedRegAvatarFile || document.getElementById('regAvatar')?.files?.[0];
+            if (!file || !currentUserEmail) return;
+            await saveAvatarFromFile(file);
+            selectedRegAvatarFile = null;
+            selectedProfileAvatarFile = null;
+        }
+
         window.toggleProfileModal = function(show) {
             const modal = document.getElementById('profileModal');
             if (show) {
                 modal.classList.remove('hidden');
                 document.getElementById('inputStatus').value = currentUserProfile.status;
-                document.getElementById('inputBatchName').value = currentUserProfile.batchName || '';
-                document.getElementById('inputBatchYear').value = currentUserProfile.gradYear;
+                setBatchSelectValue('inputBatchName', currentUserProfile.batchName || '');
+                document.getElementById('inputBatchYear').value = currentUserProfile.gradYear || batchLabelToYear(currentUserProfile.batchName);
                 document.getElementById('inputCompany').value = currentUserProfile.company;
-                document.getElementById('inputRole').value = currentUserProfile.role;
+                document.getElementById('inputRole').value = normalizeMemberRole(currentUserProfile.role);
                 document.getElementById('inputSkills').value = currentUserProfile.skills;
-                document.getElementById('inputAvatar').value = currentUserProfile.avatar;
+                const fileInput = document.getElementById('inputAvatarFile');
+                if (fileInput) fileInput.value = '';
                 document.getElementById('inputBadges').value = currentUserProfile.badges.join(', ');
             } else {
                 modal.classList.add('hidden');
@@ -1216,28 +1764,26 @@
             const newBatchName = document.getElementById('inputBatchName').value.trim();
             const newYear = document.getElementById('inputBatchYear').value.trim();
             const newCompany = document.getElementById('inputCompany').value.trim();
-            const newRole = document.getElementById('inputRole').value.trim();
+            const newRole = normalizeMemberRole(document.getElementById('inputRole').value);
             const newSkills = document.getElementById('inputSkills').value.trim();
-            const newAvatar = document.getElementById('inputAvatar').value.trim();
             const newBadges = document.getElementById('inputBadges').value.split(',').map(b => b.trim()).filter(Boolean);
 
             if (newStatus) currentUserProfile.status = newStatus;
             if (newBatchName) currentUserProfile.batchName = newBatchName;
-            if (newYear) currentUserProfile.gradYear = newYear;
+            currentUserProfile.gradYear = newYear || batchLabelToYear(newBatchName) || currentUserProfile.gradYear;
             if (newCompany) currentUserProfile.company = newCompany;
-            if (newRole) currentUserProfile.role = newRole;
+            currentUserProfile.role = newRole;
             if (newSkills) currentUserProfile.skills = newSkills;
-            if (newAvatar) currentUserProfile.avatar = newAvatar;
             if (newBadges.length) currentUserProfile.badges = newBadges;
 
             document.getElementById('displayAvatar').src = currentUserProfile.avatar;
             document.getElementById('profileName').innerText = currentUserProfile.name;
             document.getElementById('displayRole').innerText = currentUserProfile.role;
-            document.getElementById('displayBatchName').innerText = currentUserProfile.batchName || 'Batch A';
+            document.getElementById('displayBatchName').innerText = currentUserProfile.batchName || '—';
             document.getElementById('displayCompany').innerText = currentUserProfile.company;
             document.getElementById('displayYear').innerText = currentUserProfile.gradYear;
-            document.getElementById('displayStatus').innerText = `"${currentUserProfile.status}"`;
-            document.getElementById('displaySkills').innerText = `Skills: ${currentUserProfile.skills}`;
+            document.getElementById('displayStatus').innerText = currentUserProfile.status ? `"${currentUserProfile.status}"` : '"—"';
+            document.getElementById('displaySkills').innerText = currentUserProfile.skills ? `Skills: ${currentUserProfile.skills}` : 'Skills: —';
             const badgesEl = document.getElementById('displayBadges');
             badgesEl.innerHTML = '';
             currentUserProfile.badges.forEach(badge => {
@@ -1249,6 +1795,11 @@
 
             if (currentUserEmail) {
                 try {
+                    if (selectedProfileAvatarFile) {
+                        await saveAvatarFromFile(selectedProfileAvatarFile);
+                        selectedProfileAvatarFile = null;
+                    }
+
                     const { error } = await supabaseClient.from('alumni_profiles').upsert([{
                         email: currentUserEmail,
                         name: currentUser,
@@ -1268,6 +1819,7 @@
                 }
             }
 
+            updateAccountRoleBadge();
             toggleProfileModal(false);
         }
 
@@ -1314,7 +1866,7 @@
 
             if (!currentUserEmail) {
                 alert('Please sign in to send invites.');
-                authOverlay.classList.remove('hidden');
+                setAuthOverlayOpen(true);
                 showInviteModal(false);
                 return;
             }
