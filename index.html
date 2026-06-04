@@ -451,8 +451,14 @@
             <div id="eventModalPhotos" class="grid grid-cols-2 gap-2 hidden"></div>
             <p id="eventModalRsvpCount" class="text-[10px] font-semibold text-[#800020]"></p>
             <p id="eventModalRsvpStatus" class="text-[10px] text-gray-500 italic"></p>
+            <div id="eventModalAttendeesWrap" class="hidden space-y-1">
+                <p class="text-[10px] font-bold text-gray-500 uppercase">Who's going</p>
+                <ul id="eventModalAttendees" class="text-[11px] text-gray-700 max-h-32 overflow-y-auto space-y-1 list-disc list-inside"></ul>
+            </div>
             <div class="flex flex-wrap gap-2 pt-1">
                 <button type="button" id="eventModalJoinBtn" onclick="joinEventFromModal()" class="flex-1 min-w-[120px] bg-[#800020] text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-red-900 transition-colors">Join Event</button>
+                <button type="button" id="eventModalIcsBtn" onclick="downloadActiveEventIcs()" class="px-3 py-2 rounded-lg bg-amber-100 text-amber-900 text-xs font-semibold hover:bg-amber-200">Add to calendar</button>
+                <button type="button" id="eventModalReminderBtn" onclick="setActiveEventReminder()" class="px-3 py-2 rounded-lg bg-gray-100 text-gray-700 text-xs font-semibold hover:bg-gray-200">Remind me</button>
                 <button type="button" onclick="showEventDetail(null)" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-600 text-xs font-semibold hover:bg-gray-200">Close</button>
             </div>
         </div>
@@ -603,6 +609,23 @@
                             <p class="text-[9px] text-[#800020] font-semibold mt-2">Tap to view invites →</p>
                         </button>
                     </div>
+
+                    <section id="utcMemorySpotlight" class="hidden bg-white rounded-xl border border-amber-200/80 shadow-sm overflow-hidden">
+                        <div class="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-amber-50 to-white">
+                            <p class="text-[10px] uppercase tracking-wider text-[#800020] font-bold">UTC Memory</p>
+                            <p class="text-[10px] text-gray-500 mt-0.5">Throwback — photo & story from alumni officers</p>
+                        </div>
+                        <div class="p-4 flex flex-col sm:flex-row gap-4">
+                            <button type="button" id="utcMemoryImageBtn" class="shrink-0 w-full sm:w-40 aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 border border-gray-200 cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-[#800020]/30">
+                                <img id="utcMemoryImage" src="" alt="" class="w-full h-full object-cover" loading="eager">
+                            </button>
+                            <div class="min-w-0 flex-1">
+                                <p id="utcMemoryCaption" class="text-sm font-bold text-gray-800"></p>
+                                <p id="utcMemoryStory" class="text-xs text-gray-600 mt-2 leading-relaxed whitespace-pre-wrap"></p>
+                                <p id="utcMemoryMeta" class="text-[10px] text-gray-400 mt-2"></p>
+                            </div>
+                        </div>
+                    </section>
 
                     <section id="communityPhotoSlideshowSection" class="bg-white rounded-xl border border-amber-100/50 shadow-sm overflow-hidden">
                         <div class="flex items-center justify-between gap-2 px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-[#800020]/5 to-transparent">
@@ -838,6 +861,7 @@
                     <div class="flex flex-wrap gap-2 border-b border-gray-200 pb-2">
                         <button type="button" id="messagesTabInbox" data-messages-tab="inbox" onclick="setMessagesTab('inbox')" class="messages-tab px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#800020] text-white">My Inbox <span id="inboxTabBadge" class="hidden ml-1 bg-amber-400 text-black text-[9px] font-bold px-1.5 rounded-full">0</span></button>
                         <button type="button" id="messagesTabCommunity" data-messages-tab="community" onclick="setMessagesTab('community')" class="messages-tab px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200">Community Board <span id="communityTabBadge" class="hidden ml-1 bg-amber-400 text-black text-[9px] font-bold px-1.5 rounded-full">0</span></button>
+                        <button type="button" id="messagesTabBatch" data-messages-tab="batch" onclick="setMessagesTab('batch')" class="messages-tab px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200">Batch Channel <span id="batchTabBadge" class="hidden ml-1 bg-amber-400 text-black text-[9px] font-bold px-1.5 rounded-full">0</span></button>
                     </div>
 
                     <section id="messagesPanelInbox" class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-3">
@@ -874,6 +898,25 @@
                         </div>
                         <div id="communityMessagesList" class="space-y-3 max-h-[28rem] overflow-y-auto"></div>
                     </section>
+
+                    <section id="messagesPanelBatch" class="hidden bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-3">
+                        <div>
+                            <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Batch Channel</h3>
+                            <p id="batchChannelSubtitle" class="text-[10px] text-gray-500">Posts visible only to your batch — set your batch in My Profile.</p>
+                        </div>
+                        <div id="batchChannelNoBatch" class="hidden text-center py-6 px-3 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                            <p class="text-xs text-gray-600">Add your batch name under <strong>Personalize Profile</strong> to use your batch channel.</p>
+                            <button type="button" onclick="navigateDashboard('profile')" class="mt-2 text-[11px] font-bold text-[#800020] hover:text-red-900">Go to My Profile →</button>
+                        </div>
+                        <div id="batchChannelCompose" class="hidden space-y-3">
+                            <textarea id="batchMessageInput" rows="3" placeholder="Share with your batch only…" class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020]/20 resize-none"></textarea>
+                            <div class="flex justify-between items-center">
+                                <button type="button" onclick="submitBatchMessage()" class="bg-[#800020] text-white px-4 py-1.5 rounded-lg text-xs font-semibold shadow-sm hover:bg-red-900">Post to batch</button>
+                                <span class="text-[10px] text-gray-500">Only your batchmates see this.</span>
+                            </div>
+                        </div>
+                        <div id="batchMessagesList" class="space-y-3 max-h-[28rem] overflow-y-auto"></div>
+                    </section>
                 </section>
 
                 <section id="dashboard-panel-admin" class="dashboard-panel">
@@ -884,6 +927,29 @@
                         </div>
                         <div class="grid gap-3">
                             <div id="adminOnlyModeration" class="hidden space-y-3">
+                                <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-200/60 space-y-2">
+                                    <h4 class="text-[11px] font-semibold text-gray-700">Edit member profile</h4>
+                                    <p class="text-[10px] text-gray-500">Fix batch spelling, role, or verification without SQL.</p>
+                                    <input id="adminMemberSearch" type="search" placeholder="Search name or email…" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none" oninput="filterAdminMemberSearch(this.value)">
+                                    <div id="adminMemberSearchResults" class="max-h-28 overflow-y-auto space-y-1 text-xs"></div>
+                                    <form id="adminMemberForm" class="hidden space-y-2 pt-2 border-t border-amber-200/50" onsubmit="saveAdminMemberProfile(event)">
+                                        <input type="hidden" id="adminMemberId" value="">
+                                        <p id="adminMemberLabel" class="text-[10px] font-bold text-[#800020]"></p>
+                                        <input id="adminMemberEmail" type="email" readonly class="w-full p-2 border border-gray-200 rounded-lg text-xs bg-gray-100">
+                                        <input id="adminMemberName" type="text" placeholder="Display name" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                                        <select id="adminMemberBatch" class="w-full p-2 border border-gray-200 rounded-lg text-xs bg-white focus:ring-2 focus:ring-[#800020]/20 focus:outline-none"></select>
+                                        <select id="adminMemberRole" class="w-full p-2 border border-gray-200 rounded-lg text-xs bg-white">
+                                            <option value="Member">Member</option>
+                                            <option value="Officer">Officer</option>
+                                        </select>
+                                        <select id="adminMemberVerification" class="w-full p-2 border border-gray-200 rounded-lg text-xs bg-white">
+                                            <option value="approved">Approved</option>
+                                            <option value="pending">Pending</option>
+                                            <option value="rejected">Rejected</option>
+                                        </select>
+                                        <button type="submit" class="w-full px-3 py-1.5 bg-[#800020] text-white rounded-lg text-[10px] font-semibold hover:bg-red-900">Save member</button>
+                                    </form>
+                                </div>
                                 <div>
                                     <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Pending Testimonials</h4>
                                     <div id="adminTestimonials" class="space-y-3 text-xs text-gray-700"></div>
@@ -978,6 +1044,22 @@
                                 </form>
                                 <div id="adminEvents" class="space-y-3 text-xs text-gray-700"></div>
                             </div>
+                            <div id="utcMemoryAdminSection" class="hidden p-3 bg-gray-50 rounded-xl border border-gray-200 space-y-2">
+                                <h4 class="text-[11px] font-semibold text-gray-700">UTC Memory (throwback)</h4>
+                                <p class="text-[10px] text-gray-500">Pinned memory appears on Overview.</p>
+                                <form id="adminMemoryForm" class="space-y-2" onsubmit="saveUtcMemory(event)">
+                                    <input type="hidden" id="adminMemoryEditId" value="">
+                                    <input id="adminMemoryImageUrl" type="text" required placeholder="Image URL or assets/photo.jpg" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                                    <input id="adminMemoryCaption" type="text" required placeholder="Caption / title" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                                    <textarea id="adminMemoryStory" rows="2" placeholder="Short story (optional)" class="w-full p-2 border border-gray-200 rounded-lg text-xs resize-none focus:ring-2 focus:ring-[#800020]/20 focus:outline-none"></textarea>
+                                    <label class="flex items-center gap-2 text-[10px] text-gray-600">
+                                        <input id="adminMemoryPinned" type="checkbox" class="rounded border-gray-300">
+                                        <span>Pin on Overview (UTC Memory)</span>
+                                    </label>
+                                    <button type="submit" class="w-full px-3 py-1.5 bg-[#800020] text-white rounded-lg text-[10px] font-semibold hover:bg-red-900">Save memory</button>
+                                </form>
+                                <div id="adminMemoriesList" class="space-y-2 text-xs max-h-36 overflow-y-auto"></div>
+                            </div>
                         </div>
                     </section>
                 </section>
@@ -1019,6 +1101,8 @@
          - alumni_profiles also: verification_status (approved|pending|rejected)
          - content_reports: id, content_type, content_id, reporter_email, reason, status
          - messages/testimonials also: hidden
+         - messages also: batch_name (null = community board; set = batch channel)
+         - utc_memories: image_url, caption, story, pinned, active
         */
 
         let currentMode = 'register';
@@ -1055,9 +1139,15 @@
         let rsvpResponses = {};
         let inboxMessages = [];
         let communityMessages = [];
+        let batchMessages = [];
         let activeMessagesTab = 'inbox';
         let unreadInbox = 0;
         let unreadCommunity = 0;
+        let unreadBatch = 0;
+        let eventAttendeesCache = {};
+        let utcMemories = [];
+        let pinnedUtcMemory = null;
+        const EVENT_REMINDER_STORAGE_KEY = 'utc_event_reminders_v1';
         let messageLikeCounts = {};
         let myMessageLikes = new Set();
         let batchAnnouncements = [];
@@ -2057,14 +2147,21 @@
             return match ? match[1] : '';
         }
 
+        const BATCH_NAME_ALIASES = { '2013 emminent': '2013 eminent' };
+
         function normalizeBatchKey(value) {
             return (value || '').trim().toLowerCase();
+        }
+
+        function canonicalBatchKey(value) {
+            const k = normalizeBatchKey(value);
+            return BATCH_NAME_ALIASES[k] || k;
         }
 
         function batchesMatch(stored, selected) {
             if (!selected) return true;
             if (!stored) return false;
-            return normalizeBatchKey(stored) === normalizeBatchKey(selected);
+            return canonicalBatchKey(stored) === canonicalBatchKey(selected);
         }
 
         function updateBatchDirectoryLabel(count, selectedBatch) {
@@ -2158,7 +2255,7 @@
             opportunities: ['Opportunities', 'Jobs, mentorship, and internships'],
             locations: ['Where We Are', 'Alumni locations on the map'],
             testimonials: ['Testimonials', 'Stories from the community'],
-            messages: ['Messages', 'Private inbox & community board'],
+            messages: ['Messages', 'Inbox, community board & batch channel'],
             invites: ['Invites', 'Pending and sent invites'],
             admin: ['Admin', 'Moderation & events']
         };
@@ -2329,6 +2426,7 @@
             await fetchPendingInvites();
             await fetchOverviewAds();
             await fetchCommunityPhotos();
+            await fetchUtcMemories();
             await fetchBatchAnnouncements();
             await fetchJobPosts();
             await fetchMetrics();
@@ -2344,6 +2442,8 @@
             updateTier2Ui();
             updateNotificationBadge();
             updateTestimonialTabStyles();
+            checkEventReminders();
+            renderUtcMemorySpotlight();
         }
 
         async function restoreSession() {
@@ -3106,7 +3206,7 @@
         function updateNotificationBadge() {
             const badge = document.getElementById('notificationBadge');
             const navBadge = document.getElementById('navMessagesBadge');
-            const count = rebuildNotificationItems().length + unreadCommunity;
+            const count = rebuildNotificationItems().length + unreadCommunity + unreadBatch;
             const label = count > 99 ? '99+' : String(count);
             [badge, navBadge].forEach(el => {
                 if (!el) return;
@@ -3544,7 +3644,6 @@
 
         async function fetchEventRsvpCounts() {
             eventRsvpCounts = {};
-            if (!currentUserEmail) return;
             try {
                 const { data, error } = await supabaseClient.from('event_rsvps').select('event_id').eq('response', 'yes');
                 if (!error && data) {
@@ -3618,6 +3717,7 @@
                 }, { onConflict: ['event_id', 'user_email'] });
                 if (error) throw error;
                 rsvpResponses[eventId] = response;
+                delete eventAttendeesCache[String(eventId)];
                 await fetchEventRsvpCounts();
             } catch (err) {
                 console.warn('Could not save RSVP:', err.message);
@@ -3630,11 +3730,13 @@
         }
 
         window.setMessagesTab = function(tab) {
-            activeMessagesTab = tab === 'community' ? 'community' : 'inbox';
+            activeMessagesTab = (tab === 'community' || tab === 'batch') ? tab : 'inbox';
             const inboxPanel = document.getElementById('messagesPanelInbox');
             const communityPanel = document.getElementById('messagesPanelCommunity');
+            const batchPanel = document.getElementById('messagesPanelBatch');
             if (inboxPanel) inboxPanel.classList.toggle('hidden', activeMessagesTab !== 'inbox');
             if (communityPanel) communityPanel.classList.toggle('hidden', activeMessagesTab !== 'community');
+            if (batchPanel) batchPanel.classList.toggle('hidden', activeMessagesTab !== 'batch');
             document.querySelectorAll('.messages-tab').forEach(btn => {
                 const active = btn.dataset.messagesTab === activeMessagesTab;
                 btn.classList.toggle('bg-[#800020]', active);
@@ -3643,47 +3745,62 @@
                 btn.classList.toggle('text-gray-700', !active);
                 btn.classList.toggle('hover:bg-gray-200', !active);
             });
-            if (activeMessagesTab === 'inbox') {
-                unreadInbox = 0;
-                updateMessagesTabBadges();
-            } else {
-                unreadCommunity = 0;
-                updateMessagesTabBadges();
-            }
+            if (activeMessagesTab === 'inbox') unreadInbox = 0;
+            else if (activeMessagesTab === 'community') unreadCommunity = 0;
+            else if (activeMessagesTab === 'batch') unreadBatch = 0;
+            updateMessagesTabBadges();
             updateNotificationBadge();
+            if (activeMessagesTab === 'batch') renderBatchChannelUi();
         };
 
         function updateMessagesTabBadges() {
-            const inboxBadge = document.getElementById('inboxTabBadge');
-            const communityBadge = document.getElementById('communityTabBadge');
-            if (inboxBadge) {
-                if (unreadInbox > 0) {
-                    inboxBadge.textContent = unreadInbox > 99 ? '99+' : String(unreadInbox);
-                    inboxBadge.classList.remove('hidden');
+            const setBadge = (el, count) => {
+                if (!el) return;
+                if (count > 0) {
+                    el.textContent = count > 99 ? '99+' : String(count);
+                    el.classList.remove('hidden');
                 } else {
-                    inboxBadge.classList.add('hidden');
+                    el.classList.add('hidden');
                 }
+            };
+            setBadge(document.getElementById('inboxTabBadge'), unreadInbox);
+            setBadge(document.getElementById('communityTabBadge'), unreadCommunity);
+            setBadge(document.getElementById('batchTabBadge'), unreadBatch);
+        }
+
+        function isPublicBoardMessage(msg) {
+            return !isPrivateMessage(msg) && !(msg?.batch_name && String(msg.batch_name).trim());
+        }
+
+        function isBatchChannelMessage(msg) {
+            return !isPrivateMessage(msg) && !!(msg?.batch_name && String(msg.batch_name).trim());
+        }
+
+        function renderBatchChannelUi() {
+            const batchName = (currentUserProfile.batchName || '').trim();
+            const noBatch = document.getElementById('batchChannelNoBatch');
+            const compose = document.getElementById('batchChannelCompose');
+            const subtitle = document.getElementById('batchChannelSubtitle');
+            if (subtitle && batchName) {
+                subtitle.textContent = `Posts for ${batchName} only — visible to your batchmates.`;
             }
-            if (communityBadge) {
-                if (unreadCommunity > 0) {
-                    communityBadge.textContent = unreadCommunity > 99 ? '99+' : String(unreadCommunity);
-                    communityBadge.classList.remove('hidden');
-                } else {
-                    communityBadge.classList.add('hidden');
-                }
-            }
+            if (noBatch) noBatch.classList.toggle('hidden', !!batchName);
+            if (compose) compose.classList.toggle('hidden', !batchName);
         }
 
         async function fetchMessages() {
             inboxMessages = [];
             communityMessages = [];
+            batchMessages = [];
             if (!currentUserEmail) {
                 renderInboxMessages();
                 renderCommunityMessages();
+                renderBatchMessages();
                 updateNotificationBadge();
                 return;
             }
-            const selectCols = 'id, author_name, author_email, content, recipient_name, recipient_email, hidden, created_at';
+            const selectCols = 'id, author_name, author_email, content, recipient_name, recipient_email, batch_name, hidden, created_at';
+            const selectFallback = 'id, author_name, author_email, content, recipient_name, recipient_email, hidden, created_at';
             try {
                 let { data: inboxData, error: inboxErr } = await supabaseClient
                     .from('messages')
@@ -3691,33 +3808,50 @@
                     .not('recipient_email', 'is', null)
                     .order('created_at', { ascending: false })
                     .limit(50);
-                if (inboxErr && /recipient_email/i.test(inboxErr.message || '')) {
-                    const { data: allData } = await supabaseClient.from('messages').select(selectCols).order('created_at', { ascending: false }).limit(80);
+                if (inboxErr && /recipient_email|batch_name/i.test(inboxErr.message || '')) {
+                    const { data: allData } = await supabaseClient.from('messages').select(selectFallback).order('created_at', { ascending: false }).limit(80);
                     inboxData = (allData || []).filter(isPrivateMessage);
+                    inboxErr = null;
                 }
                 if (!inboxErr || inboxData) {
                     inboxMessages = (inboxData || []).map(row => ({ ...row, hidden: !!row.hidden }));
                 }
 
-                let { data: communityData, error: communityErr } = await supabaseClient
+                let { data: boardData, error: boardErr } = await supabaseClient
                     .from('messages')
                     .select(selectCols)
                     .is('recipient_email', null)
                     .order('created_at', { ascending: false })
-                    .limit(30);
-                if (communityErr && /recipient_email/i.test(communityErr.message || '')) {
-                    const { data: allData } = await supabaseClient.from('messages').select(selectCols).order('created_at', { ascending: false }).limit(80);
-                    communityData = (allData || []).filter(msg => !isPrivateMessage(msg));
+                    .limit(60);
+                if (boardErr && /batch_name/i.test(boardErr.message || '')) {
+                    ({ data: boardData, error: boardErr } = await supabaseClient
+                        .from('messages')
+                        .select(selectFallback)
+                        .is('recipient_email', null)
+                        .order('created_at', { ascending: false })
+                        .limit(60));
                 }
-                if (!communityErr || communityData) {
-                    communityMessages = (communityData || []).map(row => ({ ...row, hidden: !!row.hidden }));
+                if (boardErr && /recipient_email/i.test(boardErr.message || '')) {
+                    const { data: allData } = await supabaseClient.from('messages').select(selectFallback).order('created_at', { ascending: false }).limit(80);
+                    boardData = (allData || []).filter(msg => !isPrivateMessage(msg));
+                    boardErr = null;
                 }
+                const rows = (boardData || []).map(row => ({ ...row, hidden: !!row.hidden }));
+                communityMessages = rows.filter(isPublicBoardMessage);
+                const myBatch = (currentUserProfile.batchName || '').trim();
+                batchMessages = rows.filter(msg => {
+                    if (!isBatchChannelMessage(msg)) return false;
+                    if (!myBatch) return false;
+                    return batchesMatch(msg.batch_name, myBatch);
+                });
             } catch (err) {
                 console.warn('Could not fetch messages:', err.message);
             }
             await fetchMessageLikes();
             renderInboxMessages();
             renderCommunityMessages();
+            renderBatchMessages();
+            renderBatchChannelUi();
             updateMessagesTabBadges();
             updateNotificationBadge();
         }
@@ -3726,7 +3860,7 @@
             messageLikeCounts = {};
             myMessageLikes = new Set();
             if (!currentUserEmail) return;
-            const ids = [...inboxMessages, ...communityMessages].map(m => m.id).filter(Boolean);
+            const ids = [...inboxMessages, ...communityMessages, ...batchMessages].map(m => m.id).filter(Boolean);
             if (!ids.length) return;
             try {
                 const { data, error } = await supabaseClient
@@ -3931,36 +4065,93 @@
                 list.innerHTML = '<p class="text-[11px] text-gray-400 italic">No community posts yet. Share an update with all alumni.</p>';
                 return;
             }
-            visible.forEach(message => {
-                const item = document.createElement('div');
-                item.className = 'bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs';
-                item.innerHTML = `
-                    <div class="flex items-center justify-between gap-2 mb-1">
-                        <span class="font-semibold text-gray-700">${escapeHtml(message.author_name)}</span>
-                        <span class="text-[10px] text-gray-400">${new Date(message.created_at).toLocaleString()}</span>
-                    </div>
-                    <p class="text-gray-600">${escapeHtml(message.content)}</p>
-                `;
-                const actions = document.createElement('div');
-                actions.className = 'flex justify-end gap-3 mt-2 flex-wrap';
-                appendMessageLikeButton(actions, message.id);
-                if (currentUserEmail) {
-                    const reportBtn = document.createElement('button');
-                    reportBtn.type = 'button';
-                    reportBtn.className = 'text-[10px] font-semibold text-gray-500 hover:text-red-700';
-                    reportBtn.textContent = 'Report';
-                    reportBtn.onclick = () => reportContent('message', message.id);
-                    actions.appendChild(reportBtn);
-                }
-                item.appendChild(actions);
-                list.appendChild(item);
-            });
+            visible.forEach(message => renderMessageCard(message, list));
+        }
+
+        function renderMessageCard(message, list, options = {}) {
+            const item = document.createElement('div');
+            item.className = 'bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs';
+            const batchTag = options.showBatch && message.batch_name
+                ? `<span class="text-[9px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded-full">${escapeHtml(message.batch_name)}</span>`
+                : '';
+            item.innerHTML = `
+                <div class="flex items-center justify-between gap-2 mb-1 flex-wrap">
+                    <span class="font-semibold text-gray-700">${escapeHtml(message.author_name)}</span>
+                    ${batchTag}
+                    <span class="text-[10px] text-gray-400">${new Date(message.created_at).toLocaleString()}</span>
+                </div>
+                <p class="text-gray-600">${escapeHtml(message.content)}</p>
+            `;
+            const actions = document.createElement('div');
+            actions.className = 'flex justify-end gap-3 mt-2 flex-wrap';
+            appendMessageLikeButton(actions, message.id);
+            if (currentUserEmail) {
+                const reportBtn = document.createElement('button');
+                reportBtn.type = 'button';
+                reportBtn.className = 'text-[10px] font-semibold text-gray-500 hover:text-red-700';
+                reportBtn.textContent = 'Report';
+                reportBtn.onclick = () => reportContent('message', message.id);
+                actions.appendChild(reportBtn);
+            }
+            item.appendChild(actions);
+            list.appendChild(item);
+        }
+
+        function renderBatchMessages() {
+            const list = document.getElementById('batchMessagesList');
+            if (!list) return;
+            list.innerHTML = '';
+            renderBatchChannelUi();
+            const visible = batchMessages.filter(isContentVisible);
+            if (!(currentUserProfile.batchName || '').trim()) return;
+            if (!visible.length) {
+                list.innerHTML = '<p class="text-[11px] text-gray-400 italic">No batch posts yet. Start the conversation for your batch.</p>';
+                return;
+            }
+            visible.forEach(message => renderMessageCard(message, list, { showBatch: false }));
         }
 
         function renderMessages() {
             renderInboxMessages();
             renderCommunityMessages();
+            renderBatchMessages();
         }
+
+        window.submitBatchMessage = async function() {
+            const input = document.getElementById('batchMessageInput');
+            const text = input?.value.trim() || '';
+            const batchName = (currentUserProfile.batchName || '').trim();
+            if (!text) return;
+            if (!currentUserEmail) {
+                showToast('Sign in to post', 'error');
+                setAuthOverlayOpen(true);
+                return;
+            }
+            if (!batchName) {
+                showToast('Set your batch in Personalize Profile first', 'error');
+                return;
+            }
+            try {
+                const { error } = await supabaseClient.from('messages').insert([{
+                    author_name: currentUser,
+                    author_email: currentUserEmail,
+                    content: text,
+                    recipient_name: null,
+                    recipient_email: null,
+                    batch_name: batchName,
+                    created_at: new Date().toISOString()
+                }]);
+                if (error) throw error;
+                input.value = '';
+                await fetchMessages();
+                showToast(`Posted to ${batchName}`, 'success');
+            } catch (err) {
+                const msg = (err.message || '').includes('batch_name')
+                    ? 'Run supabase/features-round2.sql in Supabase first.'
+                    : 'Unable to post to batch channel';
+                showToast(msg, 'error');
+            }
+        };
 
         async function sendDirectedMessage(recipient, text) {
             if (!currentUserEmail) {
@@ -4009,6 +4200,7 @@
                     content: text,
                     recipient_name: null,
                     recipient_email: null,
+                    batch_name: null,
                     created_at: new Date().toISOString()
                 }]);
                 if (error) throw error;
@@ -4177,10 +4369,20 @@
                                     showToast('New private message received');
                                 }
                             }
-                        } else {
+                        } else if (isBatchChannelMessage(row)) {
+                            const myBatch = (currentUserProfile.batchName || '').trim();
+                            if (myBatch && batchesMatch(row.batch_name, myBatch)) {
+                                batchMessages.unshift(row);
+                                if (batchMessages.length > 30) batchMessages.pop();
+                                if ((row.author_email || '').toLowerCase() !== (currentUserEmail || '').toLowerCase()) {
+                                    unreadBatch += 1;
+                                    showToast('New post in your batch channel');
+                                }
+                            }
+                        } else if (isPublicBoardMessage(row)) {
                             communityMessages.unshift(row);
                             if (communityMessages.length > 30) communityMessages.pop();
-                            if (row.author_email !== currentUserEmail) {
+                            if ((row.author_email || '').toLowerCase() !== (currentUserEmail || '').toLowerCase()) {
                                 unreadCommunity += 1;
                                 showToast('New community post');
                             }
@@ -4522,6 +4724,9 @@
             navAdmin?.classList.remove('hidden');
             const officerOnly = isOfficerUser() && !isAdminUser();
             if (adminOnly) adminOnly.classList.toggle('hidden', !isAdminUser());
+            const memorySection = document.getElementById('utcMemoryAdminSection');
+            if (memorySection) memorySection.classList.toggle('hidden', !canManageEvents());
+            if (isAdminUser()) populateAdminMemberBatchSelect();
             if (eventHint) eventHint.classList.toggle('hidden', !officerOnly);
             if (titleEl) {
                 titleEl.innerText = isAdminUser() ? 'Admin & Moderation' : 'Officer — Event Management';
@@ -5060,6 +5265,401 @@
             }
         }
 
+        function parseEventStartDate(event) {
+            if (!event?.date) return null;
+            const raw = String(event.date).trim();
+            let d = null;
+            if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
+                d = new Date(raw + 'T09:00:00');
+            } else {
+                const year = batchLabelToYear(event.title) || new Date().getFullYear();
+                d = new Date(`${raw} ${year}`);
+            }
+            if (Number.isNaN(d.getTime())) return null;
+            const timeStr = (event.time || '').trim();
+            const m = timeStr.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+            if (m) {
+                let h = parseInt(m[1], 10);
+                const min = parseInt(m[2] || '0', 10);
+                const ap = (m[3] || '').toLowerCase();
+                if (ap === 'pm' && h < 12) h += 12;
+                if (ap === 'am' && h === 12) h = 0;
+                d.setHours(h, min, 0, 0);
+            }
+            return d;
+        }
+
+        function formatIcsUtc(date) {
+            const p = n => String(n).padStart(2, '0');
+            return `${date.getUTCFullYear()}${p(date.getUTCMonth() + 1)}${p(date.getUTCDate())}T${p(date.getUTCHours())}${p(date.getUTCMinutes())}${p(date.getUTCSeconds())}Z`;
+        }
+
+        function buildIcsContent(event) {
+            const start = parseEventStartDate(event);
+            if (!start) return null;
+            const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+            const uid = `utc-event-${event.id}@marawionline.com`;
+            const desc = (event.description || '').replace(/\r?\n/g, '\\n').replace(/,/g, '\\,');
+            const loc = (event.location || '').replace(/,/g, '\\,');
+            return [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//MSU-UTC Connect//EN',
+                'CALSCALE:GREGORIAN',
+                'METHOD:PUBLISH',
+                'BEGIN:VEVENT',
+                `UID:${uid}`,
+                `DTSTAMP:${formatIcsUtc(new Date())}`,
+                `DTSTART:${formatIcsUtc(start)}`,
+                `DTEND:${formatIcsUtc(end)}`,
+                `SUMMARY:${(event.title || 'UTC Event').replace(/,/g, '\\,')}`,
+                loc ? `LOCATION:${loc}` : '',
+                desc ? `DESCRIPTION:${desc}` : '',
+                'END:VEVENT',
+                'END:VCALENDAR'
+            ].filter(Boolean).join('\r\n');
+        }
+
+        window.downloadActiveEventIcs = function() {
+            if (!activeEventId) return;
+            const event = events.find(item => String(item.id) === String(activeEventId));
+            if (!event) return;
+            const ics = buildIcsContent(event);
+            if (!ics) {
+                showToast('Could not build calendar file for this date', 'error');
+                return;
+            }
+            const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `${(event.title || 'event').replace(/[^\w]+/g, '-').slice(0, 40)}.ics`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+            showToast('Calendar file downloaded', 'success');
+        };
+
+        function getStoredEventReminders() {
+            try {
+                return JSON.parse(localStorage.getItem(EVENT_REMINDER_STORAGE_KEY) || '{}');
+            } catch {
+                return {};
+            }
+        }
+
+        function saveStoredEventReminders(map) {
+            localStorage.setItem(EVENT_REMINDER_STORAGE_KEY, JSON.stringify(map));
+        }
+
+        window.setActiveEventReminder = function() {
+            if (!activeEventId || isBuiltinEventId(activeEventId)) {
+                showToast('Save this event in Admin first to set a reminder', 'info');
+                return;
+            }
+            const event = events.find(item => String(item.id) === String(activeEventId));
+            const start = event ? parseEventStartDate(event) : null;
+            if (!start) {
+                showToast('Event date not recognized for reminder', 'error');
+                return;
+            }
+            const remindAt = new Date(start.getTime() - 24 * 60 * 60 * 1000);
+            const map = getStoredEventReminders();
+            map[String(activeEventId)] = {
+                eventId: activeEventId,
+                title: event.title,
+                remindAt: remindAt.toISOString(),
+                fired: false
+            };
+            saveStoredEventReminders(map);
+            const btn = document.getElementById('eventModalReminderBtn');
+            if (btn) btn.textContent = 'Reminder set ✓';
+            showToast(`Reminder set for ${remindAt.toLocaleString()}`, 'success');
+        };
+
+        function checkEventReminders() {
+            const map = getStoredEventReminders();
+            const now = Date.now();
+            let changed = false;
+            Object.keys(map).forEach(key => {
+                const entry = map[key];
+                if (!entry || entry.fired) return;
+                const at = new Date(entry.remindAt).getTime();
+                if (Number.isNaN(at) || now < at) return;
+                showToast(`Reminder: ${entry.title || 'UTC event'} is coming up!`, 'info');
+                entry.fired = true;
+                changed = true;
+            });
+            if (changed) saveStoredEventReminders(map);
+        }
+
+        function canShowAttendeeName(profile) {
+            if (!profile) return false;
+            if (isAdminUser()) return true;
+            if ((profile.email || '').toLowerCase() === (currentUserEmail || '').toLowerCase()) return true;
+            if (connectedBatchmates.has(profile.id)) return true;
+            return !profile.hideContact;
+        }
+
+        async function fetchEventAttendees(eventId) {
+            if (isBuiltinEventId(eventId)) return [];
+            const key = String(eventId);
+            if (eventAttendeesCache[key]) return eventAttendeesCache[key];
+            try {
+                const { data, error } = await supabaseClient
+                    .from('event_rsvps')
+                    .select('user_email')
+                    .eq('event_id', eventId)
+                    .eq('response', 'yes');
+                if (error) throw error;
+                const list = (data || []).map(row => {
+                    const email = (row.user_email || '').toLowerCase();
+                    const profile = batchmates.find(p => (p.email || '').toLowerCase() === email);
+                    const showName = canShowAttendeeName(profile);
+                    return {
+                        email,
+                        name: showName ? (profile?.name || row.user_email) : 'Alumni member',
+                        batchName: profile?.batchName || ''
+                    };
+                });
+                eventAttendeesCache[key] = list;
+                return list;
+            } catch (err) {
+                console.warn('Could not load attendees:', err.message);
+                return [];
+            }
+        }
+
+        async function renderEventAttendeesInModal(eventId) {
+            const wrap = document.getElementById('eventModalAttendeesWrap');
+            const list = document.getElementById('eventModalAttendees');
+            if (!wrap || !list) return;
+            if (isBuiltinEventId(eventId)) {
+                wrap.classList.add('hidden');
+                return;
+            }
+            const attendees = await fetchEventAttendees(eventId);
+            if (!attendees.length) {
+                wrap.classList.add('hidden');
+                list.innerHTML = '';
+                return;
+            }
+            wrap.classList.remove('hidden');
+            list.innerHTML = attendees.slice(0, 25).map(a => {
+                const batch = a.batchName ? ` · ${escapeHtml(a.batchName)}` : '';
+                return `<li>${escapeHtml(a.name)}${batch}</li>`;
+            }).join('');
+            if (attendees.length > 25) {
+                list.innerHTML += `<li class="list-none text-gray-400 italic">+${attendees.length - 25} more</li>`;
+            }
+        }
+
+        function populateAdminMemberBatchSelect() {
+            const sel = document.getElementById('adminMemberBatch');
+            if (!sel) return;
+            const prev = sel.value;
+            sel.innerHTML = '<option value="">— No batch —</option>';
+            BATCH_OPTIONS.forEach(batch => {
+                const opt = document.createElement('option');
+                opt.value = batch;
+                opt.textContent = batch;
+                sel.appendChild(opt);
+            });
+            if (prev) sel.value = prev;
+        }
+
+        window.filterAdminMemberSearch = function(query) {
+            const results = document.getElementById('adminMemberSearchResults');
+            if (!results) return;
+            const q = (query || '').trim().toLowerCase();
+            results.innerHTML = '';
+            if (!q || q.length < 2) return;
+            const matches = batchmates.filter(p =>
+                (p.name || '').toLowerCase().includes(q) || (p.email || '').toLowerCase().includes(q)
+            ).slice(0, 8);
+            matches.forEach(profile => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'w-full text-left px-2 py-1.5 rounded-lg hover:bg-amber-50 border border-transparent hover:border-amber-100';
+                btn.innerHTML = `<span class="font-semibold">${escapeHtml(profile.name)}</span> <span class="text-gray-400">${escapeHtml(profile.email)}</span>`;
+                btn.onclick = () => selectAdminMember(profile.id);
+                results.appendChild(btn);
+            });
+        };
+
+        window.selectAdminMember = function(profileId) {
+            const profile = batchmates.find(p => String(p.id) === String(profileId));
+            const form = document.getElementById('adminMemberForm');
+            if (!profile || !form) return;
+            document.getElementById('adminMemberId').value = profile.id;
+            document.getElementById('adminMemberLabel').textContent = `Editing: ${profile.name}`;
+            document.getElementById('adminMemberEmail').value = profile.email || '';
+            document.getElementById('adminMemberName').value = profile.name || '';
+            const batchSel = document.getElementById('adminMemberBatch');
+            if (batchSel) {
+                const match = BATCH_OPTIONS.find(b => batchesMatch(profile.batchName, b));
+                batchSel.value = match || profile.batchName || '';
+            }
+            document.getElementById('adminMemberRole').value = profile.role === 'Officer' ? 'Officer' : 'Member';
+            const verSel = document.getElementById('adminMemberVerification');
+            if (verSel) verSel.value = profile.verificationStatus || 'approved';
+            form.classList.remove('hidden');
+        };
+
+        window.saveAdminMemberProfile = async function(event) {
+            event.preventDefault();
+            if (!isAdminUser()) return;
+            const id = document.getElementById('adminMemberId')?.value;
+            if (!id) return;
+            const batchVal = document.getElementById('adminMemberBatch')?.value.trim() || null;
+            const row = {
+                name: document.getElementById('adminMemberName')?.value.trim() || null,
+                batch_name: batchVal,
+                grad_year: batchVal ? (batchLabelToYear(batchVal) || null) : null,
+                role: document.getElementById('adminMemberRole')?.value || 'Member',
+                title: document.getElementById('adminMemberRole')?.value || 'Member',
+                verification_status: document.getElementById('adminMemberVerification')?.value || 'approved',
+                updated_at: new Date().toISOString()
+            };
+            try {
+                const { error } = await supabaseClient.from('alumni_profiles').update(row).eq('id', id);
+                if (error) throw error;
+                showToast('Member profile updated', 'success');
+                await fetchBatchmates();
+                document.getElementById('adminMemberForm')?.classList.add('hidden');
+            } catch (err) {
+                showToast(err.message || 'Could not update member', 'error');
+            }
+        };
+
+        async function fetchUtcMemories() {
+            utcMemories = [];
+            pinnedUtcMemory = null;
+            try {
+                const { data, error } = await supabaseClient
+                    .from('utc_memories')
+                    .select('*')
+                    .eq('active', true)
+                    .order('pinned', { ascending: false })
+                    .order('created_at', { ascending: false })
+                    .limit(20);
+                if (error) throw error;
+                utcMemories = data || [];
+                pinnedUtcMemory = utcMemories.find(m => m.pinned) || utcMemories[0] || null;
+            } catch (err) {
+                console.warn('UTC memories unavailable:', err.message);
+            }
+            renderUtcMemorySpotlight();
+            renderAdminMemoriesList();
+        }
+
+        function renderUtcMemorySpotlight() {
+            const section = document.getElementById('utcMemorySpotlight');
+            if (!section) return;
+            if (!pinnedUtcMemory) {
+                section.classList.add('hidden');
+                return;
+            }
+            section.classList.remove('hidden');
+            const img = document.getElementById('utcMemoryImage');
+            const cap = document.getElementById('utcMemoryCaption');
+            const story = document.getElementById('utcMemoryStory');
+            const meta = document.getElementById('utcMemoryMeta');
+            const url = resolveAssetUrl(pinnedUtcMemory.image_url);
+            if (img) {
+                img.src = url;
+                img.alt = pinnedUtcMemory.caption || 'UTC memory';
+            }
+            const btn = document.getElementById('utcMemoryImageBtn');
+            if (btn && img) {
+                btn.onclick = () => showImageLightbox(url, pinnedUtcMemory.caption || '');
+            }
+            if (cap) cap.textContent = pinnedUtcMemory.caption || 'UTC Memory';
+            if (story) {
+                story.textContent = pinnedUtcMemory.story || '';
+                story.classList.toggle('hidden', !pinnedUtcMemory.story);
+            }
+            if (meta) {
+                meta.textContent = pinnedUtcMemory.author_name
+                    ? `Shared by ${pinnedUtcMemory.author_name}`
+                    : '';
+            }
+        }
+
+        function renderAdminMemoriesList() {
+            const list = document.getElementById('adminMemoriesList');
+            if (!list || !canManageEvents()) return;
+            list.innerHTML = '';
+            if (!utcMemories.length) {
+                list.innerHTML = '<p class="text-gray-400 italic">No memories yet.</p>';
+                return;
+            }
+            utcMemories.forEach(mem => {
+                const row = document.createElement('div');
+                row.className = 'flex justify-between gap-2 bg-white p-2 rounded-lg border border-gray-100';
+                row.innerHTML = `
+                    <span class="truncate">${escapeHtml(mem.caption || 'Memory')}${mem.pinned ? ' ★' : ''}</span>
+                    <button type="button" class="text-[10px] text-[#800020] font-semibold shrink-0" onclick="editUtcMemory(${mem.id})">Edit</button>
+                `;
+                list.appendChild(row);
+            });
+        }
+
+        window.editUtcMemory = function(id) {
+            const mem = utcMemories.find(m => String(m.id) === String(id));
+            if (!mem) return;
+            document.getElementById('adminMemoryEditId').value = mem.id;
+            document.getElementById('adminMemoryImageUrl').value = mem.image_url || '';
+            document.getElementById('adminMemoryCaption').value = mem.caption || '';
+            document.getElementById('adminMemoryStory').value = mem.story || '';
+            document.getElementById('adminMemoryPinned').checked = !!mem.pinned;
+        };
+
+        window.saveUtcMemory = async function(event) {
+            event.preventDefault();
+            if (!canManageEvents()) {
+                showToast('Admins and officers only', 'error');
+                return;
+            }
+            const editId = document.getElementById('adminMemoryEditId')?.value;
+            const imageUrl = document.getElementById('adminMemoryImageUrl')?.value.trim();
+            const caption = document.getElementById('adminMemoryCaption')?.value.trim();
+            const story = document.getElementById('adminMemoryStory')?.value.trim();
+            const pinned = !!document.getElementById('adminMemoryPinned')?.checked;
+            if (!imageUrl || !caption) {
+                showToast('Image URL and caption required', 'error');
+                return;
+            }
+            try {
+                if (pinned) {
+                    await supabaseClient.from('utc_memories').update({ pinned: false }).eq('pinned', true);
+                }
+                const payload = {
+                    image_url: imageUrl,
+                    caption,
+                    story: story || null,
+                    pinned,
+                    active: true,
+                    author_name: currentUserProfile.name || currentUser,
+                    author_email: currentUserEmail
+                };
+                if (editId) {
+                    const { error } = await supabaseClient.from('utc_memories').update(payload).eq('id', editId);
+                    if (error) throw error;
+                } else {
+                    const { error } = await supabaseClient.from('utc_memories').insert([payload]);
+                    if (error) throw error;
+                }
+                document.getElementById('adminMemoryEditId').value = '';
+                document.getElementById('adminMemoryForm')?.reset();
+                showToast('UTC memory saved', 'success');
+                await fetchUtcMemories();
+            } catch (err) {
+                const msg = (err.message || '').includes('utc_memories')
+                    ? 'Run supabase/features-round2.sql in Supabase first.'
+                    : 'Could not save memory';
+                showToast(msg, 'error');
+            }
+        };
+
         function getEventRsvpLabel(eventId) {
             if (!rsvpResponses[eventId]) return 'You have not joined yet.';
             if (rsvpResponses[eventId] === 'yes') return 'You joined this event.';
@@ -5120,6 +5720,16 @@
                     joinBtn.classList.toggle('cursor-not-allowed', joined);
                 }
             }
+            const builtin = isBuiltinEventId(eventId);
+            const icsBtn = document.getElementById('eventModalIcsBtn');
+            const remBtn = document.getElementById('eventModalReminderBtn');
+            if (icsBtn) icsBtn.classList.toggle('hidden', builtin);
+            if (remBtn) {
+                remBtn.classList.toggle('hidden', builtin);
+                const stored = getStoredEventReminders()[String(eventId)];
+                remBtn.textContent = stored && !stored.fired ? 'Reminder set ✓' : 'Remind me';
+            }
+            renderEventAttendeesInModal(eventId);
             modal.classList.remove('hidden');
         };
 
@@ -5148,6 +5758,8 @@
                 joinBtn.disabled = true;
                 joinBtn.classList.add('opacity-70', 'cursor-not-allowed');
             }
+            delete eventAttendeesCache[String(activeEventId)];
+            await renderEventAttendeesInModal(activeEventId);
             showToast('You joined this event!', 'success');
         };
 
