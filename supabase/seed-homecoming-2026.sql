@@ -13,7 +13,7 @@ July 11, 12, and 13, 2026
 The MSU-UTC (PHS, UHS) Alumni Association welcomes all batches for the 6th Alumni Homecoming. Full schedule and venue details will be posted here as they are confirmed.
 
 Contact: msuutc.alumni@gmail.com',
-  'assets/ads/homecoming-2026.png'
+  'assets/ads/homecoming-2026.jpg'
 where not exists (
   select 1 from public.events
   where lower(title) like '%homecoming%'

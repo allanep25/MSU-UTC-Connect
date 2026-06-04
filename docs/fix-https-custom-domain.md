@@ -55,7 +55,7 @@ Use the default GitHub Pages URL (valid HTTPS):
 
 Posters still work at:
 
-**https://utc.marawionline.com/assets/ads/homecoming-2026.png**  
+**https://utc.marawionline.com/assets/ads/homecoming-2026.jpg**  
 (some browsers may warn until the main site certificate is fixed)
 
 ## After it works

@@ -1095,7 +1095,7 @@
 
         const LIVE_SITE_ORIGIN = 'https://utc.marawionline.com';
         const COMMUNITY_AD_IMAGE_BASE = 'assets/ads/';
-        const HOMECOMING_POSTER_URL = LIVE_SITE_ORIGIN + '/assets/ads/homecoming-2026.png';
+        const HOMECOMING_POSTER_URL = LIVE_SITE_ORIGIN + '/assets/ads/homecoming-2026.jpg';
         const FUN_RUN_POSTER_URL = LIVE_SITE_ORIGIN + '/assets/ads/fun-run-2026.jpg';
         const BUILTIN_OVERVIEW_ADS = [
             {
@@ -2437,6 +2437,7 @@
         function resolveAssetUrl(path) {
             if (!path) return '';
             const p = String(path).trim();
+            if (p.includes('homecoming-2026.png')) return HOMECOMING_POSTER_URL;
             if (/^https?:\/\//i.test(p) || p.startsWith('data:')) return p;
             if (p.includes('homecoming-2026')) return HOMECOMING_POSTER_URL;
             if (p.includes('fun-run-2026')) return FUN_RUN_POSTER_URL;
