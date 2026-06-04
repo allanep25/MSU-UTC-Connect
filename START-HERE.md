@@ -24,6 +24,7 @@ Run in Supabase SQL Editor, in order:
 7. `supabase/tier3-features.sql` (security, reports, verification, PWA tables)
 8. `supabase/open-registration.sql` (only if tier 3 left alumni as pending — approves everyone)
 9. `supabase/private-inbox.sql` (private inbox + public community board)
+10. `supabase/message-likes.sql` (Like button on inbox & community messages)
 
 Turn off **Confirm email** under Authentication → Email for easier sign-in.
 

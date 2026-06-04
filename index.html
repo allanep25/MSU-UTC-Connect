@@ -1058,6 +1058,8 @@
         let activeMessagesTab = 'inbox';
         let unreadInbox = 0;
         let unreadCommunity = 0;
+        let messageLikeCounts = {};
+        let myMessageLikes = new Set();
         let batchAnnouncements = [];
         let jobPosts = [];
         const NOTIFICATION_STORAGE_KEY = 'utc_notification_seen_v1';
@@ -3713,11 +3715,82 @@
             } catch (err) {
                 console.warn('Could not fetch messages:', err.message);
             }
+            await fetchMessageLikes();
             renderInboxMessages();
             renderCommunityMessages();
             updateMessagesTabBadges();
             updateNotificationBadge();
         }
+
+        async function fetchMessageLikes() {
+            messageLikeCounts = {};
+            myMessageLikes = new Set();
+            if (!currentUserEmail) return;
+            const ids = [...inboxMessages, ...communityMessages].map(m => m.id).filter(Boolean);
+            if (!ids.length) return;
+            try {
+                const { data, error } = await supabaseClient
+                    .from('message_likes')
+                    .select('message_id, user_email')
+                    .in('message_id', ids);
+                if (error) throw error;
+                (data || []).forEach(row => {
+                    const mid = row.message_id;
+                    messageLikeCounts[mid] = (messageLikeCounts[mid] || 0) + 1;
+                    if ((row.user_email || '').toLowerCase() === currentUserEmail.toLowerCase()) {
+                        myMessageLikes.add(String(mid));
+                    }
+                });
+            } catch (err) {
+                console.warn('Message likes unavailable:', err.message);
+            }
+        }
+
+        function getMessageLikeCount(messageId) {
+            return messageLikeCounts[messageId] || 0;
+        }
+
+        function appendMessageLikeButton(actions, messageId) {
+            if (!currentUserEmail) return;
+            const liked = myMessageLikes.has(String(messageId));
+            const count = getMessageLikeCount(messageId);
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = liked
+                ? 'text-[10px] font-semibold text-amber-700'
+                : 'text-[10px] font-semibold text-[#800020] hover:text-red-900';
+            btn.textContent = liked ? `Liked ✓ (${count})` : `Like (${count})`;
+            btn.onclick = () => likeMessage(messageId);
+            actions.appendChild(btn);
+        }
+
+        window.likeMessage = async function(messageId) {
+            if (!currentUserEmail) {
+                showToast('Sign in to like messages', 'error');
+                setAuthOverlayOpen(true);
+                return;
+            }
+            if (myMessageLikes.has(String(messageId))) {
+                showToast('You already liked this message', 'info');
+                return;
+            }
+            try {
+                const { error } = await supabaseClient.from('message_likes').insert({
+                    message_id: messageId,
+                    user_email: currentUserEmail
+                });
+                if (error) throw error;
+                myMessageLikes.add(String(messageId));
+                messageLikeCounts[messageId] = (messageLikeCounts[messageId] || 0) + 1;
+                renderMessages();
+                showToast('Liked', 'success');
+            } catch (err) {
+                const msg = (err.message || '').includes('message_likes')
+                    ? 'Run supabase/message-likes.sql in Supabase first.'
+                    : 'Could not like message';
+                showToast(msg, 'error');
+            }
+        };
 
         function getInboxPeerFromMessage(message) {
             const mine = (message.author_email || '').toLowerCase() === (currentUserEmail || '').toLowerCase();
@@ -3806,6 +3879,7 @@
                 replyBtn.onclick = () => startInboxReply(message.id);
                 actions.appendChild(replyBtn);
             }
+            appendMessageLikeButton(actions, message.id);
             if (currentUserEmail) {
                 const reportBtn = document.createElement('button');
                 reportBtn.type = 'button';
@@ -3860,17 +3934,25 @@
             visible.forEach(message => {
                 const item = document.createElement('div');
                 item.className = 'bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs';
-                const reportBtn = currentUserEmail
-                    ? `<button type="button" onclick="reportContent('message', ${message.id})" class="text-[10px] font-semibold text-gray-500 hover:text-red-700">Report</button>`
-                    : '';
                 item.innerHTML = `
                     <div class="flex items-center justify-between gap-2 mb-1">
                         <span class="font-semibold text-gray-700">${escapeHtml(message.author_name)}</span>
                         <span class="text-[10px] text-gray-400">${new Date(message.created_at).toLocaleString()}</span>
                     </div>
                     <p class="text-gray-600">${escapeHtml(message.content)}</p>
-                    <div class="flex justify-end mt-2">${reportBtn}</div>
                 `;
+                const actions = document.createElement('div');
+                actions.className = 'flex justify-end gap-3 mt-2 flex-wrap';
+                appendMessageLikeButton(actions, message.id);
+                if (currentUserEmail) {
+                    const reportBtn = document.createElement('button');
+                    reportBtn.type = 'button';
+                    reportBtn.className = 'text-[10px] font-semibold text-gray-500 hover:text-red-700';
+                    reportBtn.textContent = 'Report';
+                    reportBtn.onclick = () => reportContent('message', message.id);
+                    actions.appendChild(reportBtn);
+                }
+                item.appendChild(actions);
                 list.appendChild(item);
             });
         }
