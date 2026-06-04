@@ -33,41 +33,57 @@ jobs:
     needs: deploy
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       pages: write
+      administration: write
 
     steps:
-      - name: Set custom domain on GitHub Pages (triggers TLS certificate)
+      - name: Read current Pages settings
+        id: pages
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -e
-          API="https://api.github.com/repos/${{ github.repository }}/pages"
-          BODY='{"cname":"utc.marawionline.com","build_type":"legacy","source":{"branch":"gh-pages","path":"/"}}'
-          curl -fsSL -X PUT \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "${API}" \
-            -d "${BODY}"
-          echo "Custom domain registered. GitHub will provision a certificate for utc.marawionline.com (may take up to 24h)."
+          gh api "repos/${{ github.repository }}/pages" > pages.json 2>/dev/null || echo '{}' > pages.json
+          cat pages.json
 
-      - name: Enable HTTPS enforcement when certificate is ready
+      - name: Register custom domain (triggers TLS certificate)
+        id: domain
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          API="https://api.github.com/repos/${{ github.repository }}/pages"
-          for i in 1 2 3 4 5; do
-            if curl -fsSL -X PUT \
-              -H "Authorization: Bearer ${GH_TOKEN}" \
-              -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              "${API}" \
-              -d '{"cname":"utc.marawionline.com","https_enforced":true,"build_type":"legacy","source":{"branch":"gh-pages","path":"/"}}'; then
-              echo "HTTPS enforcement enabled."
-              exit 0
-            fi
-            echo "Certificate not ready yet (attempt ${i}/5). Waiting 60s..."
-            sleep 60
-          done
-          echo "HTTPS enforcement will apply automatically once GitHub finishes the certificate."
-          exit 0
+          if gh api "repos/${{ github.repository }}/pages" -X PUT --input - <<'JSON'
+          {
+            "cname": "utc.marawionline.com",
+            "build_type": "legacy",
+            "source": {
+              "branch": "gh-pages",
+              "path": "/"
+            }
+          }
+          JSON
+          then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+            echo "Custom domain registered via API."
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Pages API could not set the domain. Use Settings → Pages (see docs/fix-https-custom-domain.md)."
+          fi
+
+      - name: Enable Enforce HTTPS (optional until certificate exists)
+        if: steps.domain.outputs.ok == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api "repos/${{ github.repository }}/pages" -X PUT --input - <<'JSON' || true
+          {
+            "cname": "utc.marawionline.com",
+            "https_enforced": true,
+            "build_type": "legacy",
+            "source": {
+              "branch": "gh-pages",
+              "path": "/"
+            }
+          }
+          JSON
+          echo "If this step failed, wait for the certificate in Settings → Pages, then enable Enforce HTTPS manually."

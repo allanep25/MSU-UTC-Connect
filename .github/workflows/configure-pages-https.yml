@@ -1,5 +1,4 @@
-# Re-run anytime: Actions → Configure Pages HTTPS → Run workflow
-# Registers utc.marawionline.com and requests GitHub's TLS certificate.
+# Actions → Configure Pages HTTPS → Run workflow
 
 name: Configure Pages HTTPS
 
@@ -7,32 +6,42 @@ on:
   workflow_dispatch:
 
 permissions:
+  contents: read
   pages: write
+  administration: write
 
 jobs:
   configure:
     runs-on: ubuntu-latest
     steps:
-      - name: Set custom domain (triggers certificate provisioning)
+      - name: Register custom domain
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          curl -fsSL -X PUT \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/${{ github.repository }}/pages" \
-            -d '{"cname":"utc.marawionline.com","build_type":"legacy","source":{"branch":"gh-pages","path":"/"}}'
-          echo "Done. Check Settings → Pages for DNS and certificate status."
+          gh api "repos/${{ github.repository }}/pages" -X PUT --input - <<'JSON'
+          {
+            "cname": "utc.marawionline.com",
+            "build_type": "legacy",
+            "source": {
+              "branch": "gh-pages",
+              "path": "/"
+            }
+          }
+          JSON
 
-      - name: Try to enable Enforce HTTPS
+      - name: Enable Enforce HTTPS
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          curl -fsSL -X PUT \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/${{ github.repository }}/pages" \
-            -d '{"cname":"utc.marawionline.com","https_enforced":true,"build_type":"legacy","source":{"branch":"gh-pages","path":"/"}}' \
-            || echo "Enforce HTTPS not available yet — retry this workflow in an hour."
+          gh api "repos/${{ github.repository }}/pages" -X PUT --input - <<'JSON' || true
+          {
+            "cname": "utc.marawionline.com",
+            "https_enforced": true,
+            "build_type": "legacy",
+            "source": {
+              "branch": "gh-pages",
+              "path": "/"
+            }
+          }
+          JSON

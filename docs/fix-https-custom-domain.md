@@ -13,7 +13,9 @@ Every push to `master` runs **Configure HTTPS** after deploy. You can also run i
 1. Open **https://github.com/allanep25/MSU-UTC-Connect/actions**
 2. Click **Configure Pages HTTPS** → **Run workflow**
 
-Ensure **Settings → Actions → General → Workflow permissions** is **Read and write** (not read-only).
+Ensure **Settings → Actions → General → Workflow permissions** is **Read and write** (not read-only). Without this, the `configure-https` job cannot call the Pages API.
+
+If **configure-https** still shows a warning (yellow) but the workflow is green, finish the certificate in **Settings → Pages** manually.
 
 ## Manual steps (if Actions cannot enable HTTPS yet)
 
