@@ -3893,22 +3893,30 @@
             btn.className = liked
                 ? 'text-[10px] font-semibold text-amber-700'
                 : 'text-[10px] font-semibold text-[#800020] hover:text-red-900';
-            btn.textContent = liked ? `Liked ✓ (${count})` : `Like (${count})`;
-            btn.onclick = () => likeMessage(messageId);
+            btn.textContent = liked ? `Unlike (${count})` : `Like (${count})`;
+            btn.onclick = () => toggleMessageLike(messageId);
             actions.appendChild(btn);
         }
 
-        window.likeMessage = async function(messageId) {
+        window.toggleMessageLike = async function(messageId) {
             if (!currentUserEmail) {
                 showToast('Sign in to like messages', 'error');
                 setAuthOverlayOpen(true);
                 return;
             }
-            if (myMessageLikes.has(String(messageId))) {
-                showToast('You already liked this message', 'info');
-                return;
-            }
+            const liked = myMessageLikes.has(String(messageId));
             try {
+                if (liked) {
+                    const { error } = await supabaseClient.from('message_likes').delete()
+                        .eq('message_id', messageId)
+                        .eq('user_email', currentUserEmail);
+                    if (error) throw error;
+                    myMessageLikes.delete(String(messageId));
+                    messageLikeCounts[messageId] = Math.max(0, (messageLikeCounts[messageId] || 1) - 1);
+                    renderMessages();
+                    showToast('Like removed', 'success');
+                    return;
+                }
                 const { error } = await supabaseClient.from('message_likes').insert({
                     message_id: messageId,
                     user_email: currentUserEmail
@@ -3921,10 +3929,13 @@
             } catch (err) {
                 const msg = (err.message || '').includes('message_likes')
                     ? 'Run supabase/message-likes.sql in Supabase first.'
-                    : 'Could not like message';
+                    : (liked ? 'Could not remove like' : 'Could not like message');
                 showToast(msg, 'error');
             }
         };
+
+        /** @deprecated use toggleMessageLike */
+        window.likeMessage = window.toggleMessageLike;
 
         function getInboxPeerFromMessage(message) {
             const mine = (message.author_email || '').toLowerCase() === (currentUserEmail || '').toLowerCase();
