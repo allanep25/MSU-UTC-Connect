@@ -21,6 +21,7 @@ Run in Supabase SQL Editor, in order:
 4. `supabase/seed-community-announcements.sql` (optional ads/events)
 5. `supabase/seed-homecoming-2026.sql` (homecoming poster)
 6. `supabase/community-photos.sql` (photo slideshow + alumni uploads)
+7. `supabase/tier3-features.sql` (security, reports, verification, PWA tables)
 
 Turn off **Confirm email** under Authentication → Email for easier sign-in.
 
@@ -31,3 +32,5 @@ Turn off **Confirm email** under Authentication → Email for easier sign-in.
 | Can't sign in | Turn off **Confirm email** in Supabase |
 | Red “Not secure” on the site | **HTTPS-SETUP.md** — check **Enforce HTTPS** |
 | No events or posters | Run the SQL files above |
+| Report button or verification admin empty | Run `tier3-features.sql` |
+| Install app on phone | Browser menu → Add to Home screen (after tier 3 deploy) |

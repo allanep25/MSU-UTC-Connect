@@ -13,6 +13,11 @@
         })();
     </script>
     <link rel="icon" href="assets/logo.png" type="image/png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#800020">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="assets/logo.png">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -545,6 +550,10 @@
             <div id="dashboardMain" class="flex-1 overflow-y-auto p-4 md:p-6 max-w-5xl w-full mx-auto">
 
                 <section id="dashboard-panel-overview" class="dashboard-panel active space-y-4">
+                    <div id="verificationPendingBanner" class="hidden rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-950">
+                        <p class="font-bold text-[#800020]">Profile awaiting verification</p>
+                        <p class="mt-1 text-[11px]">An admin will approve your alumni account soon. You can still update your profile and browse approved content.</p>
+                    </div>
                     <div id="welcomeFlyingBanner" class="welcome-flying-banner relative overflow-hidden rounded-xl border border-amber-300/40 bg-gradient-to-br from-[#800020] via-[#6b0018] to-[#800020] text-white shadow-md shadow-[#800020]/20 pl-3 pr-4 py-3 sm:pl-4 sm:pr-5 sm:py-3.5 md:pl-5 md:pr-6 md:py-4">
                         <div class="welcome-flying-banner__shine pointer-events-none absolute inset-0 w-1/3 bg-gradient-to-r from-transparent via-white/15 to-transparent" aria-hidden="true"></div>
                         <div class="pointer-events-none absolute -top-8 -right-6 w-28 h-28 rounded-full bg-amber-400/20 blur-2xl" aria-hidden="true"></div>
@@ -848,6 +857,15 @@
                                     <div id="adminFeedback" class="space-y-3 text-xs text-gray-700 max-h-48 overflow-y-auto"></div>
                                 </div>
                                 <div>
+                                    <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Content reports</h4>
+                                    <p class="text-[10px] text-gray-500 mb-2">Alumni-reported messages and testimonials.</p>
+                                    <div id="adminContentReports" class="space-y-3 text-xs text-gray-700 max-h-52 overflow-y-auto"></div>
+                                </div>
+                                <div>
+                                    <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Pending alumni verifications</h4>
+                                    <div id="adminPendingVerifications" class="space-y-3 text-xs text-gray-700 max-h-48 overflow-y-auto"></div>
+                                </div>
+                                <div>
                                     <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Published testimonials</h4>
                                     <p class="text-[10px] text-gray-500 mb-2">Mark posts as Featured to highlight them on the feed.</p>
                                     <div id="adminFeaturedTestimonials" class="space-y-3 text-xs text-gray-700 max-h-48 overflow-y-auto"></div>
@@ -958,6 +976,9 @@
          - events also: photo_urls
          - batch_announcements, job_posts (tier 2)
          - community_photos: id, image_url, caption, author_name, author_email, active, created_at
+         - alumni_profiles also: verification_status (approved|pending|rejected)
+         - content_reports: id, content_type, content_id, reporter_email, reason, status
+         - messages/testimonials also: hidden
         */
 
         let currentMode = 'register';
@@ -1071,8 +1092,32 @@
                 phone: (item.phone || '').trim(),
                 city: (item.city || '').trim(),
                 country: (item.country || '').trim(),
-                hideContact: !!item.hide_contact
+                hideContact: !!item.hide_contact,
+                verificationStatus: (item.verification_status || 'approved').toLowerCase()
             };
+        }
+
+        function isProfileApproved(profile) {
+            return (profile?.verificationStatus || 'approved') === 'approved';
+        }
+
+        function isMsuEmail(email) {
+            return /@msu\.edu$/i.test((email || '').trim());
+        }
+
+        function initialVerificationStatus(email) {
+            const e = (email || '').trim().toLowerCase();
+            if (adminEmails.includes(e) || isMsuEmail(e)) return 'approved';
+            return 'pending';
+        }
+
+        function updateVerificationBanner() {
+            const banner = document.getElementById('verificationPendingBanner');
+            if (!banner) return;
+            const pending = currentUserEmail
+                && !isAdminUser()
+                && (currentUserProfile.verificationStatus || 'approved') === 'pending';
+            banner.classList.toggle('hidden', !pending);
         }
 
         function canViewContactInfo(profile, viewingOther) {
@@ -2206,6 +2251,7 @@
             await restoreSession();
             await loadAppData();
             setupRealtimeSubscriptions();
+            registerServiceWorker();
 
             supabaseClient.auth.onAuthStateChange((event, session) => {
                 if (session?.user) {
@@ -2299,7 +2345,8 @@
                     skills: meta.skills || null,
                     avatar: null,
                     status: 'Joined — complete your profile',
-                    badges: null
+                    badges: null,
+                    verification_status: initialVerificationStatus(email)
                 }, true);
             } catch (err) {
                 console.warn('ensureAlumniProfileForUser:', err.message);
@@ -2361,8 +2408,10 @@
                         phone: mapped.phone,
                         city: mapped.city,
                         country: mapped.country,
-                        hideContact: mapped.hideContact
+                        hideContact: mapped.hideContact,
+                        verificationStatus: mapped.verificationStatus
                     };
+                    updateVerificationBanner();
                     updateTier2Ui();
                     if (viewingOtherProfileId) {
                         await viewBatchmate(viewingOtherProfileId);
@@ -3344,7 +3393,7 @@
         }
 
         async function fetchBatchmates() {
-            const fullSelect = 'id, email, name, avatar, title, company, summary, role, designation, grad_year, batch_name, skills, badges, city, country, hide_contact, linkedin, facebook, phone';
+            const fullSelect = 'id, email, name, avatar, title, company, summary, role, designation, grad_year, batch_name, skills, badges, city, country, hide_contact, linkedin, facebook, phone, verification_status';
             const baseSelect = 'id, email, name, avatar, title, company, summary, role, designation, grad_year, batch_name, skills, badges';
             try {
                 let { data, error } = await supabaseClient.from('alumni_profiles').select(fullSelect);
@@ -3520,9 +3569,12 @@
 
         async function fetchMessages() {
             try {
-                const { data, error } = await supabaseClient.from('messages').select('id, author_name, author_email, content, recipient_name, recipient_email, created_at').order('created_at', { ascending: false }).limit(20);
+                let { data, error } = await supabaseClient.from('messages').select('id, author_name, author_email, content, recipient_name, recipient_email, hidden, created_at').order('created_at', { ascending: false }).limit(20);
+                if (error && /hidden/i.test(error.message || '')) {
+                    ({ data, error } = await supabaseClient.from('messages').select('id, author_name, author_email, content, recipient_name, recipient_email, created_at').order('created_at', { ascending: false }).limit(20));
+                }
                 if (!error && data) {
-                    messages = data;
+                    messages = data.map(row => ({ ...row, hidden: !!row.hidden }));
                 }
             } catch (err) {
                 console.warn('Could not fetch messages:', err.message);
@@ -3538,11 +3590,14 @@
                 list.innerHTML = '<p class="text-[11px] text-gray-400 italic">No messages yet. Start the conversation!</p>';
                 return;
             }
-            messages.slice(0, 20).forEach(message => {
+            messages.filter(isContentVisible).slice(0, 20).forEach(message => {
                 const item = document.createElement('div');
                 item.className = 'bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs';
                 const toLine = message.recipient_name
                     ? `<p class="text-[10px] font-semibold text-[#800020] mb-1">To: ${escapeHtml(message.recipient_name)}</p>`
+                    : '';
+                const reportBtn = currentUserEmail
+                    ? `<button type="button" onclick="reportContent('message', ${message.id})" class="text-[10px] font-semibold text-gray-500 hover:text-red-700">Report</button>`
                     : '';
                 item.innerHTML = `
                     <div class="flex items-center justify-between gap-2 mb-1">
@@ -3551,6 +3606,7 @@
                     </div>
                     ${toLine}
                     <p class="text-gray-600">${escapeHtml(message.content)}</p>
+                    <div class="flex justify-end mt-2">${reportBtn}</div>
                 `;
                 list.appendChild(item);
             });
@@ -3799,13 +3855,18 @@
 
         async function fetchTestimonials() {
             try {
-                let query = supabaseClient.from('testimonials').select('id, author_name, author_email, message_content, category, likes, approved, featured, created_at').order('created_at', { ascending: false });
+                let query = supabaseClient.from('testimonials').select('id, author_name, author_email, message_content, category, likes, approved, featured, hidden, created_at').order('created_at', { ascending: false });
                 if (!isAdminUser()) {
                     query = query.eq('approved', true);
                 }
-                const { data, error } = await query;
+                let { data, error } = await query;
+                if (error && /hidden/i.test(error.message || '')) {
+                    query = supabaseClient.from('testimonials').select('id, author_name, author_email, message_content, category, likes, approved, featured, created_at').order('created_at', { ascending: false });
+                    if (!isAdminUser()) query = query.eq('approved', true);
+                    ({ data, error } = await query);
+                }
                 if (!error && data) {
-                    allTestimonials = data;
+                    allTestimonials = data.map(row => ({ ...row, hidden: !!row.hidden }));
                 } else {
                     allTestimonials = [];
                 }
@@ -3822,6 +3883,7 @@
             const list = document.getElementById('testimonialList');
             list.innerHTML = '';
             const filtered = allTestimonials.filter(item => {
+                if (!isContentVisible(item)) return false;
                 if (testimonialFilter === 'all') return item.approved || isAdminUser();
                 if (testimonialFilter === 'featured') return item.featured;
                 return item.category === testimonialFilter;
@@ -3852,9 +3914,11 @@
                         <span class="text-[10px] text-[#800020] font-semibold">${item.likes || 0} likes</span>
                     </div>
                     <p class="text-gray-600">${item.message_content}</p>
-                    <div class="flex items-center gap-2 text-[10px]">
+                    <div class="flex items-center gap-2 text-[10px] flex-wrap">
                         <button type="button" onclick="likeTestimonial(${item.id})" class="font-semibold text-[#800020] hover:text-red-900">Like</button>
+                        ${currentUserEmail ? `<button type="button" onclick="reportContent('testimonial', ${item.id})" class="font-semibold text-gray-500 hover:text-red-700">Report</button>` : ''}
                         ${isAdminUser() && !item.approved ? '<span class="px-2 py-1 rounded-full bg-red-50 text-red-700">Awaiting approval</span>' : ''}
+                        ${isAdminUser() && item.hidden ? '<span class="px-2 py-1 rounded-full bg-gray-200 text-gray-700">Hidden</span>' : ''}
                     </div>
                 `;
                 list.appendChild(card);
@@ -3934,6 +3998,91 @@
 
         function canManageEvents() {
             return isAdminUser() || isOfficerUser();
+        }
+
+        function isContentVisible(item) {
+            if (isAdminUser()) return true;
+            return !item?.hidden;
+        }
+
+        window.reportContent = async function(contentType, contentId) {
+            if (!currentUserEmail) {
+                showToast('Sign in to report content', 'error');
+                setAuthOverlayOpen(true);
+                return;
+            }
+            const reason = window.prompt('Why are you reporting this? (optional)') || '';
+            try {
+                const { error } = await supabaseClient.from('content_reports').insert({
+                    content_type: contentType,
+                    content_id: contentId,
+                    reporter_email: currentUserEmail,
+                    reporter_name: currentUserProfile.name || currentUser,
+                    reason: reason.trim() || null,
+                    status: 'open'
+                });
+                if (error) throw error;
+                showToast('Report submitted. Admins will review it.', 'success');
+            } catch (err) {
+                const msg = (err.message || '').includes('content_reports')
+                    ? 'Run supabase/tier3-features.sql in Supabase first.'
+                    : 'Could not submit report';
+                showToast(msg, 'error');
+            }
+        };
+
+        window.hideReportedContent = async function(reportId, contentType, contentId) {
+            if (!isAdminUser()) return;
+            try {
+                const table = contentType === 'message' ? 'messages' : 'testimonials';
+                const { error: hideErr } = await supabaseClient.from(table).update({ hidden: true }).eq('id', contentId);
+                if (hideErr) throw hideErr;
+                const { error: repErr } = await supabaseClient.from('content_reports').update({ status: 'actioned' }).eq('id', reportId);
+                if (repErr) throw repErr;
+                showToast('Content hidden', 'success');
+                await fetchMessages();
+                await fetchTestimonials();
+                await loadAdminModeration();
+            } catch (err) {
+                showToast('Could not hide content', 'error');
+            }
+        };
+
+        window.dismissContentReport = async function(reportId) {
+            if (!isAdminUser()) return;
+            try {
+                const { error } = await supabaseClient.from('content_reports').update({ status: 'dismissed' }).eq('id', reportId);
+                if (error) throw error;
+                showToast('Report dismissed', 'success');
+                await loadAdminModeration();
+            } catch (err) {
+                showToast('Could not dismiss report', 'error');
+            }
+        };
+
+        window.setAlumniVerification = async function(profileId, status) {
+            if (!isAdminUser()) return;
+            try {
+                const { error } = await supabaseClient.from('alumni_profiles').update({
+                    verification_status: status,
+                    updated_at: new Date().toISOString()
+                }).eq('id', profileId);
+                if (error) throw error;
+                showToast(status === 'approved' ? 'Alumni approved' : 'Verification updated', 'success');
+                await fetchBatchmates();
+                await fetchCurrentUserProfile();
+                await loadAdminModeration();
+            } catch (err) {
+                const msg = (err.message || '').includes('verification_status')
+                    ? 'Run supabase/tier3-features.sql first.'
+                    : 'Could not update verification';
+                showToast(msg, 'error');
+            }
+        };
+
+        function registerServiceWorker() {
+            if (!('serviceWorker' in navigator)) return;
+            navigator.serviceWorker.register('./sw.js').catch(() => {});
         }
 
         function updateAccountRoleBadge() {
@@ -4085,6 +4234,71 @@
                     }
                 } catch (err) {
                     feedbackSection.innerHTML = '<p class="text-[11px] text-red-600">Run supabase/tier1-features.sql to enable feedback.</p>';
+                }
+            }
+
+            const reportsSection = document.getElementById('adminContentReports');
+            if (reportsSection) {
+                reportsSection.innerHTML = '';
+                try {
+                    const { data: reportRows, error: rErr } = await supabaseClient
+                        .from('content_reports')
+                        .select('*')
+                        .eq('status', 'open')
+                        .order('created_at', { ascending: false })
+                        .limit(20);
+                    if (!rErr && reportRows?.length) {
+                        reportRows.forEach(rep => {
+                            const item = document.createElement('div');
+                            item.className = 'bg-red-50 p-3 rounded-xl border border-red-100 text-xs';
+                            item.innerHTML = `
+                                <p class="font-semibold text-gray-800">${escapeHtml(rep.content_type)} #${rep.content_id}</p>
+                                <p class="text-[10px] text-gray-500">By ${escapeHtml(rep.reporter_name)} · ${rep.created_at ? new Date(rep.created_at).toLocaleString() : ''}</p>
+                                <p class="text-gray-600 mt-1">${escapeHtml(rep.reason || 'No reason given')}</p>
+                                <div class="flex flex-wrap gap-2 mt-2">
+                                    <button type="button" onclick="hideReportedContent(${rep.id}, '${rep.content_type === 'testimonial' ? 'testimonial' : 'message'}', ${rep.content_id})" class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-[10px] font-semibold">Hide post</button>
+                                    <button type="button" onclick="dismissContentReport(${rep.id})" class="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-[10px] font-semibold">Dismiss</button>
+                                </div>
+                            `;
+                            reportsSection.appendChild(item);
+                        });
+                    } else if (!rErr) {
+                        reportsSection.innerHTML = '<p class="text-[11px] text-gray-400 italic">No open reports.</p>';
+                    }
+                } catch (err) {
+                    reportsSection.innerHTML = '<p class="text-[11px] text-red-600">Run supabase/tier3-features.sql to enable reports.</p>';
+                }
+            }
+
+            const verifySection = document.getElementById('adminPendingVerifications');
+            if (verifySection) {
+                verifySection.innerHTML = '';
+                try {
+                    const { data: pendingRows, error: vErr } = await supabaseClient
+                        .from('alumni_profiles')
+                        .select('id, name, email, batch_name, verification_status')
+                        .eq('verification_status', 'pending')
+                        .order('updated_at', { ascending: false })
+                        .limit(15);
+                    if (!vErr && pendingRows?.length) {
+                        pendingRows.forEach(row => {
+                            const item = document.createElement('div');
+                            item.className = 'bg-amber-50 p-3 rounded-xl border border-amber-100 text-xs';
+                            item.innerHTML = `
+                                <p class="font-semibold text-gray-800">${escapeHtml(row.name)}</p>
+                                <p class="text-[10px] text-gray-500">${escapeHtml(row.email)} · ${escapeHtml(row.batch_name || '—')}</p>
+                                <div class="flex flex-wrap gap-2 mt-2">
+                                    <button type="button" onclick="setAlumniVerification(${row.id}, 'approved')" class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-[10px] font-semibold">Approve</button>
+                                    <button type="button" onclick="setAlumniVerification(${row.id}, 'rejected')" class="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-[10px] font-semibold">Reject</button>
+                                </div>
+                            `;
+                            verifySection.appendChild(item);
+                        });
+                    } else if (!vErr) {
+                        verifySection.innerHTML = '<p class="text-[11px] text-gray-400 italic">No pending verifications.</p>';
+                    }
+                } catch (err) {
+                    verifySection.innerHTML = '<p class="text-[11px] text-red-600">Run supabase/tier3-features.sql for verification.</p>';
                 }
             }
 
@@ -4292,6 +4506,7 @@
             const selectedYear = document.getElementById('batchYearFilter')?.value || '';
             const skillQuery = document.getElementById('skillFilter')?.value.trim().toLowerCase() || '';
             const filtered = batchmates.filter(batchmate => {
+                if (!isProfileApproved(batchmate) && !isAdminUser()) return false;
                 const searchText = `${batchmate.name} ${batchmate.title} ${batchmate.company} ${batchmate.summary} ${batchmate.batchName}`.toLowerCase();
                 const skillsText = (batchmate.skills || '').toLowerCase();
                 const matchesSearch = !query || searchText.includes(query);
