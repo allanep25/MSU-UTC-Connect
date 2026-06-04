@@ -843,7 +843,15 @@
                     <section id="messagesPanelInbox" class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-3">
                         <div>
                             <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Private Inbox</h3>
-                            <p class="text-[10px] text-gray-500">Only you and the other person can read these. Message alumni from <strong class="font-semibold">Batch Directory → View Profile → Message</strong>.</p>
+                            <p class="text-[10px] text-gray-500">Only you and the other person can read these. Tap <strong class="font-semibold">Reply</strong> on a message, or start from Batch Directory → View Profile → Message.</p>
+                        </div>
+                        <div id="inboxReplyCompose" class="hidden space-y-2 p-3 rounded-xl border border-[#800020]/30 bg-amber-50/50">
+                            <p id="inboxReplyToLabel" class="text-[10px] font-bold text-[#800020]">Reply to …</p>
+                            <textarea id="inboxReplyInput" rows="3" placeholder="Write your reply…" class="w-full p-2.5 text-xs bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020]/20 resize-none"></textarea>
+                            <div class="flex flex-wrap gap-2 justify-end">
+                                <button type="button" onclick="cancelInboxReply()" class="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-[10px] font-semibold hover:bg-gray-200">Cancel</button>
+                                <button type="button" onclick="sendInboxReply()" class="px-3 py-1.5 rounded-lg bg-[#800020] text-white text-[10px] font-semibold hover:bg-red-900">Send reply</button>
+                            </div>
                         </div>
                         <div id="inboxSignInHint" class="hidden text-center py-6 px-3 bg-gray-50 rounded-xl border border-dashed border-gray-200">
                             <p class="text-xs text-gray-600">Sign in to view your private messages.</p>
@@ -1059,6 +1067,7 @@
         let appMetrics = { members: 0, testimonials: 0, invites: 0 };
         let activeStatsDetailType = null;
         let activeMessageRecipient = null;
+        let activeInboxReplyTo = null;
         let activeProfileModalId = null;
         let overviewAds = [];
         let adminOverviewAds = [];
@@ -3710,26 +3719,110 @@
             updateNotificationBadge();
         }
 
+        function getInboxPeerFromMessage(message) {
+            const mine = (message.author_email || '').toLowerCase() === (currentUserEmail || '').toLowerCase();
+            if (mine) {
+                return {
+                    name: message.recipient_name || message.recipient_email || 'Recipient',
+                    email: (message.recipient_email || '').trim()
+                };
+            }
+            return {
+                name: message.author_name || 'Alumni',
+                email: (message.author_email || '').trim()
+            };
+        }
+
+        function showInboxReplyCompose(recipient) {
+            const box = document.getElementById('inboxReplyCompose');
+            const label = document.getElementById('inboxReplyToLabel');
+            const input = document.getElementById('inboxReplyInput');
+            if (!box || !recipient?.email) return;
+            activeInboxReplyTo = recipient;
+            if (label) label.textContent = `Reply to ${recipient.name || recipient.email}`;
+            if (input) {
+                input.value = '';
+                input.placeholder = `Message ${recipient.name || 'alumni'}…`;
+            }
+            box.classList.remove('hidden');
+            input?.focus();
+            box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        window.cancelInboxReply = function() {
+            activeInboxReplyTo = null;
+            const box = document.getElementById('inboxReplyCompose');
+            const input = document.getElementById('inboxReplyInput');
+            if (box) box.classList.add('hidden');
+            if (input) input.value = '';
+        };
+
+        window.startInboxReply = function(messageId) {
+            if (!currentUserEmail) {
+                setAuthOverlayOpen(true);
+                return;
+            }
+            const message = inboxMessages.find(m => String(m.id) === String(messageId));
+            if (!message) return;
+            const peer = getInboxPeerFromMessage(message);
+            if (!peer.email) {
+                showToast('Cannot reply — open their profile in Batch Directory', 'error');
+                return;
+            }
+            setMessagesTab('inbox');
+            showInboxReplyCompose(peer);
+        };
+
+        window.sendInboxReply = async function() {
+            const input = document.getElementById('inboxReplyInput');
+            const text = input?.value.trim() || '';
+            if (!text) {
+                showToast('Write a reply first', 'error');
+                return;
+            }
+            if (!activeInboxReplyTo?.email) {
+                showToast('Choose a message to reply to', 'error');
+                return;
+            }
+            const ok = await sendDirectedMessage(activeInboxReplyTo, text);
+            if (ok) {
+                cancelInboxReply();
+            }
+        };
+
         function renderInboxMessageCard(message, list) {
             const mine = (message.author_email || '').toLowerCase() === (currentUserEmail || '').toLowerCase();
-            const peerName = mine
-                ? (message.recipient_name || message.recipient_email || 'Recipient')
-                : message.author_name;
+            const peer = getInboxPeerFromMessage(message);
             const direction = mine ? 'You sent' : 'To you';
             const item = document.createElement('div');
             item.className = 'bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs';
-            const reportBtn = currentUserEmail
-                ? `<button type="button" onclick="reportContent('message', ${message.id})" class="text-[10px] font-semibold text-gray-500 hover:text-red-700">Report</button>`
-                : '';
+            const actions = document.createElement('div');
+            actions.className = 'flex justify-end gap-3 mt-2 flex-wrap';
+            if (currentUserEmail && peer.email) {
+                const replyBtn = document.createElement('button');
+                replyBtn.type = 'button';
+                replyBtn.className = 'text-[10px] font-semibold text-[#800020] hover:text-red-900';
+                replyBtn.textContent = 'Reply';
+                replyBtn.onclick = () => startInboxReply(message.id);
+                actions.appendChild(replyBtn);
+            }
+            if (currentUserEmail) {
+                const reportBtn = document.createElement('button');
+                reportBtn.type = 'button';
+                reportBtn.className = 'text-[10px] font-semibold text-gray-500 hover:text-red-700';
+                reportBtn.textContent = 'Report';
+                reportBtn.onclick = () => reportContent('message', message.id);
+                actions.appendChild(reportBtn);
+            }
             item.innerHTML = `
                 <div class="flex items-center justify-between gap-2 mb-1 flex-wrap">
                     <span class="text-[10px] font-bold uppercase tracking-wide ${mine ? 'text-gray-500' : 'text-[#800020]'}">${direction}</span>
                     <span class="text-[10px] text-gray-400">${new Date(message.created_at).toLocaleString()}</span>
                 </div>
-                <p class="text-[10px] font-semibold text-gray-700 mb-1">${mine ? 'To' : 'From'}: ${escapeHtml(peerName)}</p>
+                <p class="text-[10px] font-semibold text-gray-700 mb-1">${mine ? 'To' : 'From'}: ${escapeHtml(peer.name)}</p>
                 <p class="text-gray-600">${escapeHtml(message.content)}</p>
-                <div class="flex justify-end mt-2">${reportBtn}</div>
             `;
+            item.appendChild(actions);
             list.appendChild(item);
         }
 
@@ -3745,6 +3838,8 @@
             }
             if (hint) hint.classList.add('hidden');
             list.classList.remove('hidden');
+            const compose = document.getElementById('inboxReplyCompose');
+            if (compose && !activeInboxReplyTo) compose.classList.add('hidden');
             const visible = inboxMessages.filter(isContentVisible);
             if (!visible.length) {
                 list.innerHTML = '<p class="text-[11px] text-gray-400 italic">No private messages yet. Open Batch Directory, view a profile, and tap Message.</p>';
