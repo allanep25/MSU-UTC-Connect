@@ -5,32 +5,11 @@ on:
     branches:
       - master
 
+# Site is published from the master branch (see repo Settings → Pages).
+# This workflow only registers the custom domain and requests HTTPS via the API.
+
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pages: write
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-          fetch-depth: 0
-
-      - name: Deploy static site
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./
-          publish_branch: gh-pages
-          cname: utc.marawionline.com
-          user_name: github-actions
-          user_email: github-actions@github.com
-          commit_message: "Deploy static site to GitHub Pages"
-
   configure-https:
-    needs: deploy
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -39,51 +18,31 @@ jobs:
 
     steps:
       - name: Read current Pages settings
-        id: pages
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh api "repos/${{ github.repository }}/pages" > pages.json 2>/dev/null || echo '{}' > pages.json
-          cat pages.json
+          gh api "repos/${{ github.repository }}/pages" || true
 
-      - name: Register custom domain (triggers TLS certificate)
+      - name: Set custom domain (do not change publish branch)
         id: domain
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if gh api "repos/${{ github.repository }}/pages" -X PUT --input - <<'JSON'
-          {
-            "cname": "utc.marawionline.com",
-            "build_type": "legacy",
-            "source": {
-              "branch": "gh-pages",
-              "path": "/"
-            }
-          }
-          JSON
-          then
+          if gh api "repos/${{ github.repository }}/pages" -X PUT -f cname='utc.marawionline.com'; then
             echo "ok=true" >> "$GITHUB_OUTPUT"
-            echo "Custom domain registered via API."
+            echo "Custom domain set to utc.marawionline.com"
           else
             echo "ok=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Pages API could not set the domain. Use Settings → Pages (see docs/fix-https-custom-domain.md)."
+            echo "::warning::API could not set cname — set it in Settings → Pages if needed."
           fi
 
-      - name: Enable Enforce HTTPS (optional until certificate exists)
+      - name: Request HTTPS enforcement
         if: steps.domain.outputs.ok == 'true'
         continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh api "repos/${{ github.repository }}/pages" -X PUT --input - <<'JSON' || true
-          {
-            "cname": "utc.marawionline.com",
-            "https_enforced": true,
-            "build_type": "legacy",
-            "source": {
-              "branch": "gh-pages",
-              "path": "/"
-            }
-          }
-          JSON
-          echo "If this step failed, wait for the certificate in Settings → Pages, then enable Enforce HTTPS manually."
+          gh api "repos/${{ github.repository }}/pages" -X PUT \
+            -f cname='utc.marawionline.com' \
+            -f https_enforced=true \
+            || echo "::notice::Enable Enforce HTTPS manually in Settings → Pages if the certificate is ready."

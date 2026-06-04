@@ -6,16 +6,19 @@ Your DNS is correct (`utc` → `allanep25.github.io`), but the site is still usi
 
 This is fixed in **GitHub Pages settings**, not in `index.html`.
 
-## Automatic fix (from Git — already set up in this repo)
+## Automatic fix (from Git)
 
-Every push to `master` runs **Configure HTTPS** after deploy. You can also run it manually:
+Every push to `master` runs the **Configure HTTPS** workflow. You can also run **Configure Pages HTTPS** manually from the Actions tab.
 
-1. Open **https://github.com/allanep25/MSU-UTC-Connect/actions**
-2. Click **Configure Pages HTTPS** → **Run workflow**
+**Workflow permissions:** Settings → Actions → General → **Read and write** (you already did this).
 
-Ensure **Settings → Actions → General → Workflow permissions** is **Read and write** (not read-only). Without this, the `configure-https` job cannot call the Pages API.
+**Publish source:** This repo uses the **`master`** branch for Pages (Settings → Pages → Deploy from branch). Pushes to `master` update the live site via GitHub’s **pages build and deployment** workflow.
 
-If **configure-https** still shows a warning (yellow) but the workflow is green, finish the certificate in **Settings → Pages** manually.
+## Fastest fix right now (your DNS is already green)
+
+1. Open **https://github.com/allanep25/MSU-UTC-Connect/settings/pages**
+2. Check **Enforce HTTPS** → **Save**
+3. Visit **https://utc.marawionline.com** (not `http://`)
 
 ## Manual steps (if Actions cannot enable HTTPS yet)
 
