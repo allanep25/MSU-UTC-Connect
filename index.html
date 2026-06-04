@@ -122,6 +122,45 @@
             width: 16rem;
             transition: transform 0.2s ease;
         }
+        #batchChatThread {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-height: 14rem;
+            max-height: min(32rem, 55vh);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+        }
+        .batch-chat-row { display: flex; gap: 0.5rem; max-width: 92%; }
+        .batch-chat-row.mine { align-self: flex-end; flex-direction: row-reverse; }
+        .batch-chat-row.theirs { align-self: flex-start; }
+        .batch-chat-avatar {
+            width: 1.75rem;
+            height: 1.75rem;
+            border-radius: 9999px;
+            object-fit: cover;
+            border: 1px solid rgba(128, 0, 32, 0.2);
+            flex-shrink: 0;
+        }
+        .batch-chat-bubble {
+            padding: 0.5rem 0.65rem;
+            border-radius: 0.75rem;
+            font-size: 0.8125rem;
+            line-height: 1.45;
+            word-break: break-word;
+        }
+        .batch-chat-row.mine .batch-chat-bubble {
+            background: #800020;
+            color: #fff;
+            border-bottom-right-radius: 0.2rem;
+        }
+        .batch-chat-row.theirs .batch-chat-bubble {
+            background: #fff;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+            border-bottom-left-radius: 0.2rem;
+        }
         @media (max-width: 1023px) {
             #dashboardSidebar {
                 position: fixed;
@@ -861,7 +900,7 @@
                     <div class="flex flex-wrap gap-2 border-b border-gray-200 pb-2">
                         <button type="button" id="messagesTabInbox" data-messages-tab="inbox" onclick="setMessagesTab('inbox')" class="messages-tab px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#800020] text-white">My Inbox <span id="inboxTabBadge" class="hidden ml-1 bg-amber-400 text-black text-[9px] font-bold px-1.5 rounded-full">0</span></button>
                         <button type="button" id="messagesTabCommunity" data-messages-tab="community" onclick="setMessagesTab('community')" class="messages-tab px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200">Community Board <span id="communityTabBadge" class="hidden ml-1 bg-amber-400 text-black text-[9px] font-bold px-1.5 rounded-full">0</span></button>
-                        <button type="button" id="messagesTabBatch" data-messages-tab="batch" onclick="setMessagesTab('batch')" class="messages-tab px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200">Batch Channel <span id="batchTabBadge" class="hidden ml-1 bg-amber-400 text-black text-[9px] font-bold px-1.5 rounded-full">0</span></button>
+                        <button type="button" id="messagesTabBatch" data-messages-tab="batch" onclick="setMessagesTab('batch')" class="messages-tab px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200">Batch Group Chat <span id="batchTabBadge" class="hidden ml-1 bg-amber-400 text-black text-[9px] font-bold px-1.5 rounded-full">0</span></button>
                     </div>
 
                     <section id="messagesPanelInbox" class="bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-3">
@@ -899,23 +938,24 @@
                         <div id="communityMessagesList" class="space-y-3 max-h-[28rem] overflow-y-auto"></div>
                     </section>
 
-                    <section id="messagesPanelBatch" class="hidden bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm space-y-3">
+                    <section id="messagesPanelBatch" class="hidden bg-white rounded-xl p-4 border border-amber-100/50 shadow-sm flex flex-col gap-3">
                         <div>
-                            <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Batch Channel</h3>
-                            <p id="batchChannelSubtitle" class="text-[10px] text-gray-500">Posts visible only to your batch — set your batch in My Profile.</p>
+                            <h3 class="text-xs font-bold text-[#800020] uppercase tracking-wider">Batch Group Chat</h3>
+                            <p id="batchChannelSubtitle" class="text-[10px] text-gray-500">Private chat for your batch only — not visible to other batches.</p>
+                            <p id="batchChatMemberHint" class="text-[10px] text-[#800020] font-semibold mt-0.5 hidden"></p>
                         </div>
                         <div id="batchChannelNoBatch" class="hidden text-center py-6 px-3 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                            <p class="text-xs text-gray-600">Add your batch name under <strong>Personalize Profile</strong> to use your batch channel.</p>
+                            <p class="text-xs text-gray-600">Add your batch name under <strong>Personalize Profile</strong> to join your batch group chat.</p>
                             <button type="button" onclick="navigateDashboard('profile')" class="mt-2 text-[11px] font-bold text-[#800020] hover:text-red-900">Go to My Profile →</button>
                         </div>
-                        <div id="batchChannelCompose" class="hidden space-y-3">
-                            <textarea id="batchMessageInput" rows="3" placeholder="Share with your batch only…" class="w-full p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020]/20 resize-none"></textarea>
-                            <div class="flex justify-between items-center">
-                                <button type="button" onclick="submitBatchMessage()" class="bg-[#800020] text-white px-4 py-1.5 rounded-lg text-xs font-semibold shadow-sm hover:bg-red-900">Post to batch</button>
-                                <span class="text-[10px] text-gray-500">Only your batchmates see this.</span>
+                        <div id="batchChatWrap" class="hidden flex flex-col gap-2 min-h-0">
+                            <div id="batchChatThread" class="bg-gray-50 rounded-xl border border-gray-200 p-3"></div>
+                            <div id="batchChannelCompose" class="flex flex-wrap gap-2 items-end border-t border-gray-100 pt-2">
+                                <textarea id="batchMessageInput" rows="2" placeholder="Message your batch…" class="flex-1 min-w-[12rem] p-2.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020]/20 resize-none"></textarea>
+                                <button type="button" onclick="submitBatchMessage()" class="bg-[#800020] text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-sm hover:bg-red-900 shrink-0">Send</button>
                             </div>
+                            <p class="text-[10px] text-gray-400">Enter to send · Shift+Enter for new line · Live updates when batchmates are online</p>
                         </div>
-                        <div id="batchMessagesList" class="space-y-3 max-h-[28rem] overflow-y-auto"></div>
                     </section>
                 </section>
 
@@ -2255,7 +2295,7 @@
             opportunities: ['Opportunities', 'Jobs, mentorship, and internships'],
             locations: ['Where We Are', 'Alumni locations on the map'],
             testimonials: ['Testimonials', 'Stories from the community'],
-            messages: ['Messages', 'Inbox, community board & batch channel'],
+            messages: ['Messages', 'Inbox, community board & batch group chat'],
             invites: ['Invites', 'Pending and sent invites'],
             admin: ['Admin', 'Moderation & events']
         };
@@ -2366,6 +2406,12 @@
             authForm.addEventListener('submit', handleAuthSubmit);
             document.getElementById('testimonialSubmitBtn').addEventListener('click', submitTestimonial);
             document.getElementById('messageSendBtn').addEventListener('click', submitMessage);
+            document.getElementById('batchMessageInput')?.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    submitBatchMessage();
+                }
+            });
             document.getElementById('batchSearch').addEventListener('input', e => filterBatchDirectory(e.target.value));
             document.getElementById('batchFilter').addEventListener('change', onBatchFilterChange);
             document.getElementById('batchYearFilter').addEventListener('change', () => filterBatchDirectory(document.getElementById('batchSearch').value));
@@ -3750,7 +3796,10 @@
             else if (activeMessagesTab === 'batch') unreadBatch = 0;
             updateMessagesTabBadges();
             updateNotificationBadge();
-            if (activeMessagesTab === 'batch') renderBatchChannelUi();
+            if (activeMessagesTab === 'batch') {
+                renderBatchChannelUi();
+                scrollBatchChatToEnd();
+            }
         };
 
         function updateMessagesTabBadges() {
@@ -3776,16 +3825,38 @@
             return !isPrivateMessage(msg) && !!(msg?.batch_name && String(msg.batch_name).trim());
         }
 
+        function getBatchChatMemberCount() {
+            const batchName = (currentUserProfile.batchName || '').trim();
+            if (!batchName) return 0;
+            return batchmates.filter(p => isProfileApproved(p) && batchesMatch(p.batchName, batchName)).length;
+        }
+
+        function scrollBatchChatToEnd() {
+            const thread = document.getElementById('batchChatThread');
+            if (!thread) return;
+            requestAnimationFrame(() => {
+                thread.scrollTop = thread.scrollHeight;
+            });
+        }
+
         function renderBatchChannelUi() {
             const batchName = (currentUserProfile.batchName || '').trim();
             const noBatch = document.getElementById('batchChannelNoBatch');
-            const compose = document.getElementById('batchChannelCompose');
+            const chatWrap = document.getElementById('batchChatWrap');
             const subtitle = document.getElementById('batchChannelSubtitle');
+            const memberHint = document.getElementById('batchChatMemberHint');
             if (subtitle && batchName) {
-                subtitle.textContent = `Posts for ${batchName} only — visible to your batchmates.`;
+                subtitle.textContent = `Private group chat for ${batchName} — other batches cannot see this.`;
+            }
+            if (memberHint && batchName) {
+                const n = getBatchChatMemberCount();
+                memberHint.textContent = n ? `${n} alumni in this chat` : 'Be the first in your batch to chat';
+                memberHint.classList.remove('hidden');
+            } else if (memberHint) {
+                memberHint.classList.add('hidden');
             }
             if (noBatch) noBatch.classList.toggle('hidden', !!batchName);
-            if (compose) compose.classList.toggle('hidden', !batchName);
+            if (chatWrap) chatWrap.classList.toggle('hidden', !batchName);
         }
 
         async function fetchMessages() {
@@ -3838,12 +3909,27 @@
                 }
                 const rows = (boardData || []).map(row => ({ ...row, hidden: !!row.hidden }));
                 communityMessages = rows.filter(isPublicBoardMessage);
+
                 const myBatch = (currentUserProfile.batchName || '').trim();
-                batchMessages = rows.filter(msg => {
-                    if (!isBatchChannelMessage(msg)) return false;
-                    if (!myBatch) return false;
-                    return batchesMatch(msg.batch_name, myBatch);
-                });
+                batchMessages = [];
+                if (myBatch) {
+                    let { data: batchData, error: batchErr } = await supabaseClient
+                        .from('messages')
+                        .select(selectCols)
+                        .is('recipient_email', null)
+                        .not('batch_name', 'is', null)
+                        .order('created_at', { ascending: true })
+                        .limit(120);
+                    if (batchErr && /batch_name/i.test(batchErr.message || '')) {
+                        batchData = rows.filter(isBatchChannelMessage);
+                        batchErr = null;
+                    }
+                    if (!batchErr && batchData) {
+                        batchMessages = (batchData || [])
+                            .map(row => ({ ...row, hidden: !!row.hidden }))
+                            .filter(msg => batchesMatch(msg.batch_name, myBatch));
+                    }
+                }
             } catch (err) {
                 console.warn('Could not fetch messages:', err.message);
             }
@@ -4108,18 +4194,67 @@
             list.appendChild(item);
         }
 
+        function getBatchChatAvatar(email) {
+            const profile = batchmates.find(p => (p.email || '').toLowerCase() === (email || '').toLowerCase());
+            return profile?.avatar || DEFAULT_AVATAR;
+        }
+
+        function appendBatchChatBubble(message, container) {
+            const mine = (message.author_email || '').toLowerCase() === (currentUserEmail || '').toLowerCase();
+            const row = document.createElement('div');
+            row.className = `batch-chat-row ${mine ? 'mine' : 'theirs'}`;
+
+            if (!mine) {
+                const img = document.createElement('img');
+                img.className = 'batch-chat-avatar';
+                img.src = getBatchChatAvatar(message.author_email);
+                img.alt = '';
+                row.appendChild(img);
+            }
+
+            const block = document.createElement('div');
+            block.className = 'min-w-0 max-w-full';
+
+            if (!mine) {
+                const nameEl = document.createElement('p');
+                nameEl.className = 'text-[9px] font-bold text-gray-500 mb-0.5 px-0.5';
+                nameEl.textContent = message.author_name || 'Batchmate';
+                block.appendChild(nameEl);
+            }
+
+            const bubble = document.createElement('div');
+            bubble.className = 'batch-chat-bubble';
+            bubble.textContent = message.content || '';
+
+            const meta = document.createElement('p');
+            meta.className = `text-[9px] mt-0.5 px-0.5 ${mine ? 'text-right text-white/70' : 'text-gray-400'}`;
+            meta.textContent = new Date(message.created_at).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+
+            block.appendChild(bubble);
+            block.appendChild(meta);
+
+            const actions = document.createElement('div');
+            actions.className = `flex gap-2 mt-0.5 px-0.5 ${mine ? 'justify-end' : ''}`;
+            appendMessageLikeButton(actions, message.id);
+            block.appendChild(actions);
+
+            row.appendChild(block);
+            container.appendChild(row);
+        }
+
         function renderBatchMessages() {
-            const list = document.getElementById('batchMessagesList');
-            if (!list) return;
-            list.innerHTML = '';
+            const thread = document.getElementById('batchChatThread');
+            if (!thread) return;
+            thread.innerHTML = '';
             renderBatchChannelUi();
             const visible = batchMessages.filter(isContentVisible);
             if (!(currentUserProfile.batchName || '').trim()) return;
             if (!visible.length) {
-                list.innerHTML = '<p class="text-[11px] text-gray-400 italic">No batch posts yet. Start the conversation for your batch.</p>';
+                thread.innerHTML = '<p class="text-[11px] text-gray-400 italic text-center py-8">No messages yet. Say hello to your batch!</p>';
                 return;
             }
-            visible.forEach(message => renderMessageCard(message, list, { showBatch: false }));
+            visible.forEach(message => appendBatchChatBubble(message, thread));
+            scrollBatchChatToEnd();
         }
 
         function renderMessages() {
@@ -4155,11 +4290,11 @@
                 if (error) throw error;
                 input.value = '';
                 await fetchMessages();
-                showToast(`Posted to ${batchName}`, 'success');
+                if (activeMessagesTab === 'batch') scrollBatchChatToEnd();
             } catch (err) {
                 const msg = (err.message || '').includes('batch_name')
                     ? 'Run supabase/features-round2.sql in Supabase first.'
-                    : 'Unable to post to batch channel';
+                    : 'Unable to send to batch chat';
                 showToast(msg, 'error');
             }
         };
@@ -4383,11 +4518,14 @@
                         } else if (isBatchChannelMessage(row)) {
                             const myBatch = (currentUserProfile.batchName || '').trim();
                             if (myBatch && batchesMatch(row.batch_name, myBatch)) {
-                                batchMessages.unshift(row);
-                                if (batchMessages.length > 30) batchMessages.pop();
+                                batchMessages.push(row);
+                                if (batchMessages.length > 120) batchMessages.shift();
                                 if ((row.author_email || '').toLowerCase() !== (currentUserEmail || '').toLowerCase()) {
                                     unreadBatch += 1;
-                                    showToast('New post in your batch channel');
+                                    showToast('New message in batch group chat');
+                                }
+                                if (activeMessagesTab === 'batch') {
+                                    renderBatchMessages();
                                 }
                             }
                         } else if (isPublicBoardMessage(row)) {

@@ -39,6 +39,6 @@ Turn off **Confirm email** under Authentication → Email for easier sign-in.
 | Report button or verification admin empty | Run `tier3-features.sql` |
 | Install app on phone | Browser menu → Add to Home screen (after tier 3 deploy) |
 | Private message not working | Run `private-inbox.sql`; message from Directory → profile → Message |
-| Batch channel empty / can’t post | Run `features-round2.sql`; set batch in Personalize Profile |
+| Batch group chat empty / can’t post | Run `features-round2.sql`; set batch in Personalize Profile |
 | UTC Memory or admin edit member missing | Run `features-round2.sql` |
 | Fix old batch typo (e.g. EMMINENT) | Run `fix-2013-eminent.sql` or Admin → Edit member profile |
