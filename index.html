@@ -1193,6 +1193,9 @@
         let batchAnnouncements = [];
         let jobPosts = [];
         const NOTIFICATION_STORAGE_KEY = 'utc_notification_seen_v1';
+        const NOTIFICATION_SOUND_KEY = 'utc_notification_sound_v1';
+        let notificationAudioCtx = null;
+        let notificationAudioUnlocked = false;
         let pendingInvites = [];
         let allTestimonials = [];
         let batchOfficers = [];
@@ -2424,6 +2427,10 @@
             });
             updateTestimonialTabStyles();
             initDashboardNav();
+            const unlockOnce = () => unlockNotificationAudio();
+            document.addEventListener('click', unlockOnce, { once: true, passive: true });
+            document.addEventListener('touchstart', unlockOnce, { once: true, passive: true });
+            document.addEventListener('keydown', unlockOnce, { once: true });
             document.addEventListener('click', (e) => {
                 const dd = document.getElementById('notificationDropdown');
                 const btn = document.getElementById('notificationButton');
@@ -3104,9 +3111,148 @@
             }, 3200);
         }
 
+        function isNotificationSoundEnabled() {
+            return localStorage.getItem(NOTIFICATION_SOUND_KEY) !== 'off';
+        }
+
+        function setNotificationSoundEnabled(on) {
+            localStorage.setItem(NOTIFICATION_SOUND_KEY, on ? 'on' : 'off');
+        }
+
+        function unlockNotificationAudio() {
+            if (notificationAudioUnlocked) return;
+            try {
+                const Ctx = window.AudioContext || window.webkitAudioContext;
+                if (!Ctx) return;
+                if (!notificationAudioCtx) notificationAudioCtx = new Ctx();
+                if (notificationAudioCtx.state === 'suspended') {
+                    notificationAudioCtx.resume();
+                }
+                notificationAudioUnlocked = true;
+            } catch (_) { /* autoplay policy */ }
+        }
+
+        function playNotificationSound() {
+            if (!isNotificationSoundEnabled() || !notificationAudioUnlocked || !notificationAudioCtx) return;
+            try {
+                const ctx = notificationAudioCtx;
+                if (ctx.state === 'suspended') ctx.resume();
+                const t = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, t);
+                osc.frequency.setValueAtTime(1318.51, t + 0.07);
+                gain.gain.setValueAtTime(0.0001, t);
+                gain.gain.exponentialRampToValueAtTime(0.2, t + 0.03);
+                gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.38);
+                osc.start(t);
+                osc.stop(t + 0.4);
+            } catch (_) { /* ignore */ }
+        }
+
+        function maybeShowSystemNotification(title, body) {
+            if (!('Notification' in window) || Notification.permission !== 'granted') return;
+            if (document.visibilityState === 'visible' && document.hasFocus()) return;
+            try {
+                const n = new Notification(title, {
+                    body: body || '',
+                    icon: 'assets/logo.png',
+                    badge: 'assets/logo.png',
+                    tag: 'utc-connect-alert',
+                    renotify: true
+                });
+                n.onclick = () => {
+                    window.focus();
+                    n.close();
+                    navigateDashboard('messages');
+                };
+            } catch (_) { /* mobile may block */ }
+        }
+
+        function shouldAlertSoundForKind(kind) {
+            if (!document.hasFocus() || activeDashboardPanel !== 'messages') return true;
+            if (kind === 'inbox') return activeMessagesTab !== 'inbox';
+            if (kind === 'batch') return activeMessagesTab !== 'batch';
+            if (kind === 'community') return activeMessagesTab !== 'community';
+            return true;
+        }
+
+        function alertIncomingMessage({ title, body, toast, kind }) {
+            if (shouldAlertSoundForKind(kind)) playNotificationSound();
+            if (toast) showToast(toast);
+            maybeShowSystemNotification(title, body || toast);
+        }
+
+        window.requestPhoneNotifications = async function() {
+            unlockNotificationAudio();
+            if (!('Notification' in window)) {
+                showToast('This browser does not support phone alerts', 'error');
+                return;
+            }
+            let perm = Notification.permission;
+            if (perm === 'default') {
+                perm = await Notification.requestPermission();
+            }
+            if (perm === 'granted') {
+                showToast('Phone alerts enabled — you may hear a sound when the app is in the background', 'success');
+                playNotificationSound();
+            } else if (perm === 'denied') {
+                showToast('Alerts blocked — enable notifications for this site in phone settings', 'error');
+            }
+            renderNotificationPanelSettings();
+        };
+
+        window.toggleNotificationSound = function() {
+            unlockNotificationAudio();
+            const next = !isNotificationSoundEnabled();
+            setNotificationSoundEnabled(next);
+            if (next) playNotificationSound();
+            renderNotificationPanelSettings();
+            showToast(next ? 'Notification sound on' : 'Notification sound off', 'success');
+        };
+
+        function renderNotificationPanelSettings() {
+            const dd = document.getElementById('notificationDropdown');
+            if (!dd || dd.classList.contains('hidden')) return;
+            const footer = dd.querySelector('[data-notification-settings]');
+            if (footer) footer.remove();
+            appendNotificationPanelSettings(dd);
+        }
+
+        function appendNotificationPanelSettings(dd) {
+            const footer = document.createElement('div');
+            footer.dataset.notificationSettings = '1';
+            footer.className = 'mt-2 pt-2 border-t border-gray-200 space-y-1.5';
+            const soundOn = isNotificationSoundEnabled();
+            const soundBtn = document.createElement('button');
+            soundBtn.type = 'button';
+            soundBtn.className = 'w-full text-left px-2 py-1.5 rounded-lg bg-amber-50 text-[#800020] font-semibold hover:bg-amber-100 text-[11px]';
+            soundBtn.textContent = soundOn ? '🔔 Sound on (tap to mute)' : '🔕 Sound off (tap to enable)';
+            soundBtn.onclick = () => toggleNotificationSound();
+            footer.appendChild(soundBtn);
+            if ('Notification' in window && Notification.permission !== 'granted') {
+                const alertBtn = document.createElement('button');
+                alertBtn.type = 'button';
+                alertBtn.className = 'w-full text-left px-2 py-1.5 rounded-lg bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 text-[11px]';
+                alertBtn.textContent = '📱 Enable phone alerts (background)';
+                alertBtn.onclick = () => requestPhoneNotifications();
+                footer.appendChild(alertBtn);
+            } else if ('Notification' in window') {
+                const ok = document.createElement('p');
+                ok.className = 'text-[10px] text-gray-500 px-2';
+                ok.textContent = 'Phone alerts on. Tap anywhere on the site once so sound can play.';
+                footer.appendChild(ok);
+            }
+            dd.appendChild(footer);
+        }
+
         function resetNotifications() {
             unreadInbox = 0;
             unreadCommunity = 0;
+            unreadBatch = 0;
             const seen = getNotificationSeenSet();
             rebuildNotificationItems().forEach(item => seen.add(item.id));
             if (unreadCommunity > 0) seen.add('live-community');
@@ -3213,6 +3359,22 @@
             if (!opening) return;
 
             const items = rebuildNotificationItems();
+            if (unreadInbox > 0) {
+                items.unshift({
+                    id: 'live-inbox',
+                    label: `${unreadInbox} new private message${unreadInbox === 1 ? '' : 's'}`,
+                    panel: 'messages',
+                    messagesTab: 'inbox'
+                });
+            }
+            if (unreadBatch > 0) {
+                items.unshift({
+                    id: 'live-batch',
+                    label: `${unreadBatch} new batch chat message${unreadBatch === 1 ? '' : 's'}`,
+                    panel: 'messages',
+                    messagesTab: 'batch'
+                });
+            }
             if (unreadCommunity > 0 && !getNotificationSeenSet().has('live-community')) {
                 items.unshift({
                     id: 'live-community',
@@ -3222,8 +3384,11 @@
                 });
             }
 
+            unlockNotificationAudio();
+
             if (!items.length) {
                 dd.innerHTML = '<p class="text-gray-400 p-2 italic">You\'re all caught up.</p>';
+                appendNotificationPanelSettings(dd);
                 return;
             }
 
@@ -3247,12 +3412,13 @@
             clearBtn.innerText = 'Clear all';
             clearBtn.onclick = () => resetNotifications();
             dd.appendChild(clearBtn);
+            appendNotificationPanelSettings(dd);
         };
 
         function updateNotificationBadge() {
             const badge = document.getElementById('notificationBadge');
             const navBadge = document.getElementById('navMessagesBadge');
-            const count = rebuildNotificationItems().length + unreadCommunity + unreadBatch;
+            const count = rebuildNotificationItems().length + unreadInbox + unreadCommunity + unreadBatch;
             const label = count > 99 ? '99+' : String(count);
             [badge, navBadge].forEach(el => {
                 if (!el) return;
@@ -4512,7 +4678,12 @@
                                 if (inboxMessages.length > 50) inboxMessages.pop();
                                 if (recipient === myEmail && author !== myEmail) {
                                     unreadInbox += 1;
-                                    showToast('New private message received');
+                                    alertIncomingMessage({
+                                        kind: 'inbox',
+                                        title: 'MSU-UTC Connect',
+                                        body: `Message from ${row.author_name || 'a batchmate'}`,
+                                        toast: 'New private message received'
+                                    });
                                 }
                             }
                         } else if (isBatchChannelMessage(row)) {
@@ -4522,7 +4693,12 @@
                                 if (batchMessages.length > 120) batchMessages.shift();
                                 if ((row.author_email || '').toLowerCase() !== (currentUserEmail || '').toLowerCase()) {
                                     unreadBatch += 1;
-                                    showToast('New message in batch group chat');
+                                    alertIncomingMessage({
+                                        kind: 'batch',
+                                        title: 'Batch group chat',
+                                        body: `${row.author_name || 'Batchmate'}: ${(row.content || '').slice(0, 80)}`,
+                                        toast: 'New message in batch group chat'
+                                    });
                                 }
                                 if (activeMessagesTab === 'batch') {
                                     renderBatchMessages();
@@ -4533,7 +4709,12 @@
                             if (communityMessages.length > 30) communityMessages.pop();
                             if ((row.author_email || '').toLowerCase() !== (currentUserEmail || '').toLowerCase()) {
                                 unreadCommunity += 1;
-                                showToast('New community post');
+                                alertIncomingMessage({
+                                    kind: 'community',
+                                    title: 'Community board',
+                                    body: `${row.author_name || 'Alumni'} posted an update`,
+                                    toast: 'New community post'
+                                });
                             }
                         }
                         renderMessages();

@@ -38,6 +38,7 @@ Turn off **Confirm email** under Authentication → Email for easier sign-in.
 | No events or posters | Run the SQL files above |
 | Report button or verification admin empty | Run `tier3-features.sql` |
 | Install app on phone | Browser menu → Add to Home screen (after tier 3 deploy) |
+| Notification sound on phone | Open site → tap once → 🔔 → **Sound on**; for background alerts use **Enable phone alerts** |
 | Private message not working | Run `private-inbox.sql`; message from Directory → profile → Message |
 | Batch group chat empty / can’t post | Run `features-round2.sql`; set batch in Personalize Profile |
 | UTC Memory or admin edit member missing | Run `features-round2.sql` |
