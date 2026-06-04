@@ -26,6 +26,19 @@
         @media (min-width: 768px) { .site-logo-header { height: 3.5rem; width: 3.5rem; } }
         #authCard { max-height: min(92vh, 640px); }
         #authFormScroll { scrollbar-width: thin; }
+        #profileModalCard {
+            max-height: min(92vh, calc(100dvh - 2rem));
+            display: flex;
+            flex-direction: column;
+        }
+        #profileModalBody {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+            scrollbar-width: thin;
+            min-height: 0;
+            flex: 1 1 auto;
+        }
         .dashboard-panel { display: none; }
         .dashboard-panel.active { display: block; }
         .dash-nav-item.active { background: rgba(255,255,255,0.14); border-left: 3px solid #fbbf24; }
@@ -282,9 +295,10 @@
     </div>
 
     <!-- ================= EDIT PROFILE MODAL ================= -->
-    <div id="profileModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-xl max-w-sm w-full p-5 shadow-xl border border-gray-100 space-y-4">
-            <h3 class="text-sm font-bold text-[#800020] uppercase tracking-wider border-b pb-2">Personalize Your Profile</h3>
+    <div id="profileModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start sm:items-center justify-center p-4 overflow-y-auto hidden" onclick="if (event.target === this) toggleProfileModal(false)">
+        <div id="profileModalCard" class="bg-white rounded-xl max-w-sm w-full shadow-xl border border-gray-100 my-auto sm:my-0" onclick="event.stopPropagation()">
+            <h3 class="text-sm font-bold text-[#800020] uppercase tracking-wider border-b border-gray-100 px-5 pt-5 pb-3 shrink-0">Personalize Your Profile</h3>
+            <div id="profileModalBody" class="px-5 py-3">
             <div class="space-y-3">
                 <div>
                     <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Status Message</label>
@@ -362,9 +376,10 @@
                     </div>
                 </details>
             </div>
-            <div class="flex space-x-2 justify-end text-xs font-semibold">
-                <button onclick="toggleProfileModal(false)" class="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200">Cancel</button>
-                <button onclick="saveProfileChanges()" class="px-3 py-1.5 rounded-lg bg-[#800020] text-white hover:bg-red-900 shadow-sm">Save Profile</button>
+            </div>
+            <div class="flex space-x-2 justify-end text-xs font-semibold px-5 py-4 border-t border-gray-100 bg-white rounded-b-xl shrink-0">
+                <button type="button" onclick="toggleProfileModal(false)" class="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200">Cancel</button>
+                <button type="button" onclick="saveProfileChanges()" class="px-3 py-1.5 rounded-lg bg-[#800020] text-white hover:bg-red-900 shadow-sm">Save Profile</button>
             </div>
         </div>
     </div>
@@ -5079,6 +5094,7 @@
             const modal = document.getElementById('profileModal');
             if (show) {
                 modal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
                 document.getElementById('inputStatus').value = currentUserProfile.status;
                 setBatchSelectValue('inputBatchName', currentUserProfile.batchName || '');
                 document.getElementById('inputBatchYear').value = currentUserProfile.gradYear || batchLabelToYear(currentUserProfile.batchName);
@@ -5098,6 +5114,7 @@
                 document.getElementById('inputHideContact').checked = !!currentUserProfile.hideContact;
             } else {
                 modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
             }
         }
 
