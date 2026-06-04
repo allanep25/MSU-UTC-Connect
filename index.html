@@ -1123,6 +1123,19 @@
                 panel: 'events',
                 active: true,
                 sortOrder: -1
+            },
+            {
+                id: 'builtin-homecoming-ad',
+                title: '6th Alumni Homecoming',
+                body: 'July 11–13, 2026 · Brotherhood for World Peace. Tap for full schedule and venue updates.',
+                image: COMMUNITY_AD_IMAGE_BASE + 'homecoming-2026.jpg',
+                link: '',
+                linkLabel: 'View event details',
+                tag: 'Event',
+                accent: 'from-[#800020] to-red-900',
+                panel: 'events',
+                active: true,
+                sortOrder: 0
             }
         ];
 
@@ -1676,7 +1689,23 @@
             if (titleEl) titleEl.textContent = titles[0];
             if (subEl) subEl.textContent = titles[1];
             closeDashboardSidebar();
+            if (panelId === 'events') refreshEventPosterImages();
         };
+
+        function refreshEventPosterImages() {
+            const board = document.getElementById('eventsBoard');
+            if (!board) return;
+            board.querySelectorAll('img').forEach(img => {
+                img.loading = 'eager';
+                if (!img.complete || !img.naturalWidth) {
+                    const src = img.getAttribute('src') || img.src;
+                    if (src) {
+                        img.removeAttribute('src');
+                        img.src = src;
+                    }
+                }
+            });
+        }
 
         window.closeDashboardSidebar = function() {
             document.getElementById('dashboardSidebar')?.classList.remove('open');
@@ -4047,7 +4076,7 @@
                 const urls = event.photoUrls || [];
                 if (urls.length) {
                     photosEl.classList.remove('hidden');
-                    photosEl.innerHTML = urls.map(url => `<img src="${escapeHtml(resolveAssetUrl(url))}" alt="Event poster" class="poster-expandable rounded-lg w-full max-h-64 object-contain bg-gray-50 border border-gray-200">`).join('');
+                    photosEl.innerHTML = urls.map(url => `<img src="${escapeHtml(resolveAssetUrl(url))}" alt="Event poster" loading="eager" decoding="async" class="poster-expandable rounded-lg w-full max-h-64 object-contain bg-gray-50 border border-gray-200">`).join('');
                     photosEl.querySelectorAll('.poster-expandable').forEach(el => bindExpandableImage(el, event.title));
                     const hint = document.createElement('p');
                     hint.className = 'text-[10px] text-gray-400 text-center col-span-full';
@@ -4150,15 +4179,30 @@
                 card.className = 'bg-gray-50 p-4 rounded-xl border border-gray-200 text-xs space-y-2';
 
                 const posterUrl = event.photoUrls && event.photoUrls[0] ? resolveAssetUrl(event.photoUrls[0]) : '';
-                const posterHtml = posterUrl
-                    ? `<img src="${escapeHtml(posterUrl)}" alt="" class="w-full max-h-40 object-contain rounded-lg border border-gray-200 bg-white mb-2 cursor-zoom-in" loading="lazy">`
-                    : '';
 
                 const headerBtn = document.createElement('button');
                 headerBtn.type = 'button';
                 headerBtn.className = 'w-full text-left hover:opacity-90 focus:outline-none';
-                headerBtn.innerHTML = `
-                    ${posterHtml}
+
+                if (posterUrl) {
+                    const posterImg = document.createElement('img');
+                    posterImg.src = posterUrl;
+                    posterImg.alt = event.title || 'Event poster';
+                    posterImg.loading = 'eager';
+                    posterImg.decoding = 'async';
+                    posterImg.className = 'w-full max-h-48 min-h-[120px] object-contain rounded-lg border border-gray-200 bg-gray-100 mb-2 cursor-zoom-in';
+                    posterImg.onerror = () => {
+                        const fallback = (event.title || '').toLowerCase().includes('fun run')
+                            ? FUN_RUN_POSTER_URL
+                            : HOMECOMING_POSTER_URL;
+                        if (posterImg.src !== fallback) posterImg.src = fallback;
+                    };
+                    bindExpandableImage(posterImg, event.title);
+                    headerBtn.appendChild(posterImg);
+                }
+
+                const headerBody = document.createElement('div');
+                headerBody.innerHTML = `
                     <div class="flex items-center justify-between gap-2">
                         <div>
                             <p class="font-bold text-gray-800">${escapeHtml(event.title)}</p>
@@ -4169,8 +4213,7 @@
                     <p class="text-[11px] text-gray-600 mt-2 line-clamp-2">${escapeHtml((event.description || '').split('\n')[0])}</p>
                     <p class="text-[10px] text-[#800020] font-semibold mt-1">Tap poster or title for full announcement →</p>
                 `;
-                const cardPoster = headerBtn.querySelector('img');
-                if (cardPoster) bindExpandableImage(cardPoster, event.title);
+                headerBtn.appendChild(headerBody);
                 headerBtn.onclick = () => showEventDetail(event.id);
 
                 const actions = document.createElement('div');
@@ -4209,6 +4252,7 @@
                 board.appendChild(card);
             });
             document.getElementById('upcomingEventsCount').innerText = `${events.length} Events`;
+            if (activeDashboardPanel === 'events') refreshEventPosterImages();
         }
 
         window.joinEventQuick = async function(eventId) {
