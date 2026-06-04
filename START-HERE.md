@@ -20,6 +20,7 @@ Run in Supabase SQL Editor, in order:
 3. `supabase/tier2-features.sql`
 4. `supabase/seed-community-announcements.sql` (optional ads/events)
 5. `supabase/seed-homecoming-2026.sql` (homecoming poster)
+6. `supabase/community-photos.sql` (photo slideshow + alumni uploads)
 
 Turn off **Confirm email** under Authentication → Email for easier sign-in.
 

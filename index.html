@@ -24,6 +24,10 @@
         .dashboard-panel { display: none; }
         .dashboard-panel.active { display: block; }
         .dash-nav-item.active { background: rgba(255,255,255,0.14); border-left: 3px solid #fbbf24; }
+        #photoSlideshowImg { transition: opacity 0.45s ease; }
+        #photoSlideshowImg.slideshow-fade-out { opacity: 0; }
+        .slideshow-dot { width: 0.5rem; height: 0.5rem; border-radius: 9999px; background: rgba(255,255,255,0.45); border: none; padding: 0; cursor: pointer; }
+        .slideshow-dot.active { background: #fbbf24; transform: scale(1.15); }
         #dashboardSidebar {
             width: 16rem;
             transition: transform 0.2s ease;
@@ -364,8 +368,11 @@
 
     <!-- ================= POSTER / IMAGE LIGHTBOX ================= -->
     <div id="imageLightbox" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[60] flex items-center justify-center p-4 hidden" onclick="if (event.target === this) closeImageLightbox()" role="dialog" aria-modal="true" aria-label="Enlarged image">
+        <button type="button" id="imageLightboxPrev" onclick="event.stopPropagation(); stepImageLightbox(-1)" class="hidden absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/10 text-white text-2xl hover:bg-white/20" aria-label="Previous image">‹</button>
+        <button type="button" id="imageLightboxNext" onclick="event.stopPropagation(); stepImageLightbox(1)" class="hidden absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/10 text-white text-2xl hover:bg-white/20" aria-label="Next image">›</button>
         <button type="button" onclick="closeImageLightbox()" class="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 w-10 h-10 rounded-full bg-white/10 text-white text-2xl leading-none hover:bg-white/20" aria-label="Close">&times;</button>
         <img id="imageLightboxImg" src="" alt="" class="max-w-full max-h-[92vh] w-auto object-contain rounded-lg shadow-2xl">
+        <p id="imageLightboxCounter" class="absolute top-4 left-1/2 -translate-x-1/2 text-white/80 text-[11px] font-semibold hidden"></p>
         <p id="imageLightboxCaption" class="absolute bottom-4 left-4 right-4 text-center text-white/90 text-xs font-semibold pointer-events-none hidden"></p>
     </div>
 
@@ -483,6 +490,36 @@
                             <p class="text-[9px] text-[#800020] font-semibold mt-2">Tap to view invites →</p>
                         </button>
                     </div>
+
+                    <section id="communityPhotoSlideshowSection" class="bg-white rounded-xl border border-amber-100/50 shadow-sm overflow-hidden">
+                        <div class="flex items-center justify-between gap-2 px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-[#800020]/5 to-transparent">
+                            <div>
+                                <p class="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Community Photos</p>
+                                <p class="text-[10px] text-gray-500 mt-0.5">Slideshow of event flyers &amp; photos alumni share</p>
+                            </div>
+                            <span id="photoSlideshowCount" class="text-[9px] font-bold text-[#800020] bg-amber-50 border border-amber-200 px-2 py-1 rounded-full shrink-0">0 photos</span>
+                        </div>
+                        <div class="p-4 space-y-3">
+                            <div id="photoSlideshowEmpty" class="hidden text-center py-8 px-4 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                <p class="text-xs text-gray-500">No photos yet. Event posters and alumni uploads will appear here.</p>
+                            </div>
+                            <div id="photoSlideshowFrame" class="hidden relative rounded-xl overflow-hidden bg-gray-900 aspect-[16/10] max-h-[min(70vh,420px)]">
+                                <button type="button" id="photoSlideshowPrev" onclick="stepPhotoSlideshow(-1)" class="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/40 text-white text-xl hover:bg-black/60" aria-label="Previous">‹</button>
+                                <button type="button" id="photoSlideshowNext" onclick="stepPhotoSlideshow(1)" class="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/40 text-white text-xl hover:bg-black/60" aria-label="Next">›</button>
+                                <button type="button" id="photoSlideshowTap" class="block w-full h-full cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-amber-400/50">
+                                    <img id="photoSlideshowImg" src="" alt="" class="w-full h-full object-contain" loading="eager" decoding="async">
+                                </button>
+                                <div id="photoSlideshowDots" class="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-10 px-2 flex-wrap"></div>
+                                <p id="photoSlideshowCaption" class="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/70 to-transparent text-white text-[11px] font-semibold px-3 py-2 pointer-events-none line-clamp-2"></p>
+                            </div>
+                            <div id="photoSlideshowUpload" class="hidden space-y-2 border-t border-gray-100 pt-3">
+                                <p class="text-[10px] font-bold text-gray-500 uppercase">Share a photo</p>
+                                <input id="communityPhotoFile" type="file" accept="image/*" class="w-full text-xs">
+                                <input id="communityPhotoCaption" type="text" placeholder="Caption (optional)" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                                <button type="button" id="communityPhotoSubmitBtn" onclick="submitCommunityPhoto()" class="w-full sm:w-auto bg-[#800020] text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-red-900">Post to slideshow</button>
+                            </div>
+                        </div>
+                    </section>
 
                     <section id="overviewAdBoard" class="bg-white rounded-xl border border-amber-100/50 shadow-sm overflow-hidden">
                         <div class="flex items-center justify-between gap-2 px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-[#800020]/5 to-transparent">
@@ -837,6 +874,7 @@
          - alumni_profiles also: linkedin, facebook, phone, city, country, hide_contact
          - events also: photo_urls
          - batch_announcements, job_posts (tier 2)
+         - community_photos: id, image_url, caption, author_name, author_email, active, created_at
         */
 
         let currentMode = 'register';
@@ -885,6 +923,12 @@
         let unreadMessages = 0;
         let overviewAds = [];
         let adminOverviewAds = [];
+        let communityPhotos = [];
+        let slideshowSlides = [];
+        let slideshowIndex = 0;
+        let slideshowTimer = null;
+        let lightboxSlides = [];
+        let lightboxIndex = 0;
         let selectedProfileAvatarFile = null;
         let selectedRegAvatarFile = null;
         let testimonialFilter = 'all';
@@ -1229,21 +1273,64 @@
             return ad.accent === 'construction';
         }
 
-        window.showImageLightbox = function(src, caption) {
-            const modal = document.getElementById('imageLightbox');
+        function updateLightboxChrome() {
+            const prev = document.getElementById('imageLightboxPrev');
+            const next = document.getElementById('imageLightboxNext');
+            const counter = document.getElementById('imageLightboxCounter');
+            const multi = lightboxSlides.length > 1;
+            if (prev) prev.classList.toggle('hidden', !multi);
+            if (next) next.classList.toggle('hidden', !multi);
+            if (counter) {
+                if (multi) {
+                    counter.textContent = `${lightboxIndex + 1} / ${lightboxSlides.length}`;
+                    counter.classList.remove('hidden');
+                } else {
+                    counter.classList.add('hidden');
+                }
+            }
+        }
+
+        function renderLightboxSlide() {
+            const slide = lightboxSlides[lightboxIndex];
+            if (!slide) return;
             const img = document.getElementById('imageLightboxImg');
             const cap = document.getElementById('imageLightboxCaption');
-            if (!modal || !img || !src) return;
-            img.src = src;
-            img.alt = caption || 'Poster';
+            if (img) {
+                img.src = slide.src;
+                img.alt = slide.caption || 'Photo';
+            }
             if (cap) {
-                if (caption) {
-                    cap.textContent = caption;
+                if (slide.caption) {
+                    cap.textContent = slide.caption;
                     cap.classList.remove('hidden');
                 } else {
                     cap.classList.add('hidden');
                 }
             }
+            updateLightboxChrome();
+        }
+
+        window.stepImageLightbox = function(delta) {
+            if (!lightboxSlides.length) return;
+            lightboxIndex = (lightboxIndex + delta + lightboxSlides.length) % lightboxSlides.length;
+            renderLightboxSlide();
+        };
+
+        window.showImageLightbox = function(src, caption, slides, startIndex) {
+            const modal = document.getElementById('imageLightbox');
+            if (!modal || !src) return;
+            if (slides && slides.length) {
+                lightboxSlides = slides.map(s => ({
+                    src: resolveAssetUrl(s.src || s),
+                    caption: s.caption || ''
+                }));
+                lightboxIndex = Math.max(0, Math.min(startIndex || 0, lightboxSlides.length - 1));
+            } else {
+                lightboxSlides = [{ src: resolveAssetUrl(src), caption: caption || '' }];
+                lightboxIndex = 0;
+            }
+            stopPhotoSlideshowAutoplay();
+            renderLightboxSlide();
             modal.classList.remove('hidden');
             document.body.classList.add('overflow-hidden');
         };
@@ -1253,7 +1340,228 @@
             const img = document.getElementById('imageLightboxImg');
             if (modal) modal.classList.add('hidden');
             if (img) img.src = '';
+            lightboxSlides = [];
+            lightboxIndex = 0;
             document.body.classList.remove('overflow-hidden');
+            if (activeDashboardPanel === 'overview') startPhotoSlideshowAutoplay();
+        };
+
+        function buildSlideshowSlides() {
+            const slides = [];
+            const seen = new Set();
+            const add = (src, caption) => {
+                const url = resolveAssetUrl(src);
+                if (!url || url.startsWith('data:image/svg') || seen.has(url)) return;
+                seen.add(url);
+                slides.push({ src: url, caption: caption || '' });
+            };
+            communityPhotos.forEach(row => add(row.imageUrl, row.caption || row.authorName));
+            overviewAds.forEach(ad => {
+                if (ad.active === false || !ad.image) return;
+                add(ad.image, ad.title);
+            });
+            events.forEach(ev => {
+                (ev.photoUrls || []).forEach(url => add(url, ev.title));
+            });
+            return slides;
+        }
+
+        function stopPhotoSlideshowAutoplay() {
+            if (slideshowTimer) {
+                clearInterval(slideshowTimer);
+                slideshowTimer = null;
+            }
+        }
+
+        function startPhotoSlideshowAutoplay() {
+            stopPhotoSlideshowAutoplay();
+            if (slideshowSlides.length < 2 || activeDashboardPanel !== 'overview') return;
+            const frame = document.getElementById('photoSlideshowFrame');
+            if (!frame || frame.classList.contains('hidden')) return;
+            slideshowTimer = setInterval(() => stepPhotoSlideshow(1), 6000);
+        }
+
+        function setPhotoSlideshowIndex(nextIndex) {
+            if (!slideshowSlides.length) return;
+            slideshowIndex = ((nextIndex % slideshowSlides.length) + slideshowSlides.length) % slideshowSlides.length;
+            const slide = slideshowSlides[slideshowIndex];
+            const img = document.getElementById('photoSlideshowImg');
+            const cap = document.getElementById('photoSlideshowCaption');
+            const dots = document.getElementById('photoSlideshowDots');
+            if (!img || !slide) return;
+
+            const apply = () => {
+                img.src = slide.src;
+                img.alt = slide.caption || 'Community photo';
+                if (cap) cap.textContent = slide.caption || '';
+                if (dots) {
+                    dots.querySelectorAll('.slideshow-dot').forEach((btn, i) => {
+                        btn.classList.toggle('active', i === slideshowIndex);
+                        btn.setAttribute('aria-current', i === slideshowIndex ? 'true' : 'false');
+                    });
+                }
+                img.classList.remove('slideshow-fade-out');
+            };
+
+            if (img.src && img.src !== slide.src) {
+                img.classList.add('slideshow-fade-out');
+                setTimeout(apply, 220);
+            } else {
+                apply();
+            }
+        }
+
+        window.stepPhotoSlideshow = function(delta) {
+            if (!slideshowSlides.length) return;
+            setPhotoSlideshowIndex(slideshowIndex + delta);
+        };
+
+        function openSlideshowLightbox() {
+            if (!slideshowSlides.length) return;
+            showImageLightbox(slideshowSlides[slideshowIndex].src, slideshowSlides[slideshowIndex].caption, slideshowSlides, slideshowIndex);
+        }
+
+        function renderPhotoSlideshow() {
+            slideshowSlides = buildSlideshowSlides();
+            const empty = document.getElementById('photoSlideshowEmpty');
+            const frame = document.getElementById('photoSlideshowFrame');
+            const countEl = document.getElementById('photoSlideshowCount');
+            const upload = document.getElementById('photoSlideshowUpload');
+            const dots = document.getElementById('photoSlideshowDots');
+            const tap = document.getElementById('photoSlideshowTap');
+
+            if (countEl) countEl.textContent = `${slideshowSlides.length} photo${slideshowSlides.length === 1 ? '' : 's'}`;
+            if (upload) upload.classList.toggle('hidden', !currentUserEmail);
+
+            if (!slideshowSlides.length) {
+                if (empty) empty.classList.remove('hidden');
+                if (frame) frame.classList.add('hidden');
+                stopPhotoSlideshowAutoplay();
+                return;
+            }
+
+            if (empty) empty.classList.add('hidden');
+            if (frame) frame.classList.remove('hidden');
+            if (slideshowIndex >= slideshowSlides.length) slideshowIndex = 0;
+
+            if (dots) {
+                dots.innerHTML = '';
+                slideshowSlides.forEach((_, i) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'slideshow-dot' + (i === slideshowIndex ? ' active' : '');
+                    btn.setAttribute('aria-label', `Photo ${i + 1}`);
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        setPhotoSlideshowIndex(i);
+                    };
+                    dots.appendChild(btn);
+                });
+            }
+
+            if (tap && !tap.dataset.bound) {
+                tap.dataset.bound = '1';
+                tap.addEventListener('click', openSlideshowLightbox);
+            }
+
+            const frameEl = document.getElementById('photoSlideshowFrame');
+            if (frameEl && !frameEl.dataset.hoverBound) {
+                frameEl.dataset.hoverBound = '1';
+                frameEl.addEventListener('mouseenter', stopPhotoSlideshowAutoplay);
+                frameEl.addEventListener('mouseleave', startPhotoSlideshowAutoplay);
+            }
+
+            setPhotoSlideshowIndex(slideshowIndex);
+            startPhotoSlideshowAutoplay();
+        }
+
+        async function fetchCommunityPhotos() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('community_photos')
+                    .select('id, image_url, caption, author_name, author_email, created_at')
+                    .eq('active', true)
+                    .order('created_at', { ascending: false })
+                    .limit(40);
+                if (error) throw error;
+                communityPhotos = (data || []).map(row => ({
+                    id: row.id,
+                    imageUrl: row.image_url,
+                    caption: row.caption || '',
+                    authorName: row.author_name,
+                    authorEmail: row.author_email,
+                    createdAt: row.created_at
+                }));
+            } catch (err) {
+                console.warn('Could not load community photos:', err.message);
+                communityPhotos = [];
+            }
+            renderPhotoSlideshow();
+        }
+
+        async function uploadGalleryImage(file) {
+            if (!file || !currentUserEmail) return null;
+            try {
+                let blob = file;
+                if (file.size > 900000) {
+                    const dataUrl = await compressImageFile(file, 1600, 0.88);
+                    blob = await (await fetch(dataUrl)).blob();
+                }
+                const path = `gallery/${currentUserEmail.replace(/[^a-zA-Z0-9@._-]/g, '_')}-${Date.now()}.jpg`;
+                const { error: uploadError } = await supabaseClient.storage.from('avatars').upload(path, blob, {
+                    upsert: true,
+                    contentType: blob.type || 'image/jpeg'
+                });
+                if (uploadError) throw uploadError;
+                const { data: publicData } = supabaseClient.storage.from('avatars').getPublicUrl(path);
+                return publicData?.publicUrl || null;
+            } catch (err) {
+                console.warn('Gallery upload failed:', err.message || err);
+                return null;
+            }
+        }
+
+        window.submitCommunityPhoto = async function() {
+            if (!currentUserEmail) {
+                showToast('Sign in to post a photo', 'error');
+                setAuthOverlayOpen(true);
+                return;
+            }
+            const fileInput = document.getElementById('communityPhotoFile');
+            const captionInput = document.getElementById('communityPhotoCaption');
+            const file = fileInput?.files?.[0];
+            if (!file) {
+                showToast('Choose a photo first', 'error');
+                return;
+            }
+            const btn = document.getElementById('communityPhotoSubmitBtn');
+            if (btn) btn.disabled = true;
+            showToast('Uploading photo…', 'info');
+            const imageUrl = await uploadGalleryImage(file);
+            if (!imageUrl) {
+                showToast('Upload failed. Check Storage bucket “avatars” is public.', 'error');
+                if (btn) btn.disabled = false;
+                return;
+            }
+            try {
+                const { error } = await supabaseClient.from('community_photos').insert({
+                    image_url: imageUrl,
+                    caption: (captionInput?.value || '').trim() || null,
+                    author_name: currentUserProfile.name || 'Alumni',
+                    author_email: currentUserEmail
+                });
+                if (error) throw error;
+                if (fileInput) fileInput.value = '';
+                if (captionInput) captionInput.value = '';
+                showToast('Photo added to slideshow', 'success');
+                await fetchCommunityPhotos();
+            } catch (err) {
+                const msg = (err.message || '').includes('community_photos')
+                    ? 'Run supabase/community-photos.sql in Supabase first.'
+                    : (err.message || 'Could not save photo');
+                showToast(msg, 'error');
+            }
+            if (btn) btn.disabled = false;
         };
 
         function bindExpandableImage(img, caption) {
@@ -1362,6 +1670,7 @@
             }
             mergeBuiltinCommunityContent();
             renderOverviewAdBoard();
+            renderPhotoSlideshow();
         }
 
         async function fetchAdminOverviewAds() {
@@ -1690,6 +1999,8 @@
             if (subEl) subEl.textContent = titles[1];
             closeDashboardSidebar();
             if (panelId === 'events') refreshEventPosterImages();
+            if (panelId === 'overview') startPhotoSlideshowAutoplay();
+            else stopPhotoSlideshowAutoplay();
         };
 
         function refreshEventPosterImages() {
@@ -1794,7 +2105,19 @@
                 dd.classList.add('hidden');
             });
             document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') closeImageLightbox();
+                const lightbox = document.getElementById('imageLightbox');
+                const lightboxOpen = lightbox && !lightbox.classList.contains('hidden');
+                if (e.key === 'Escape') {
+                    closeImageLightbox();
+                    return;
+                }
+                if (lightboxOpen && lightboxSlides.length > 1) {
+                    if (e.key === 'ArrowLeft') { e.preventDefault(); stepImageLightbox(-1); }
+                    if (e.key === 'ArrowRight') { e.preventDefault(); stepImageLightbox(1); }
+                } else if (activeDashboardPanel === 'overview' && slideshowSlides.length > 1) {
+                    if (e.key === 'ArrowLeft') { e.preventDefault(); stepPhotoSlideshow(-1); }
+                    if (e.key === 'ArrowRight') { e.preventDefault(); stepPhotoSlideshow(1); }
+                }
             });
 
             await restoreSession();
@@ -1820,6 +2143,7 @@
             await fetchMessages();
             await fetchPendingInvites();
             await fetchOverviewAds();
+            await fetchCommunityPhotos();
             await fetchBatchAnnouncements();
             await fetchJobPosts();
             await fetchMetrics();
@@ -2608,6 +2932,8 @@
         function updateTier2Ui() {
             const postSec = document.getElementById('announcementPostSection');
             if (postSec) postSec.classList.toggle('hidden', !currentUserEmail);
+            const photoUpload = document.getElementById('photoSlideshowUpload');
+            if (photoUpload) photoUpload.classList.toggle('hidden', !currentUserEmail);
             const exportBtn = document.getElementById('exportRosterBtn');
             if (exportBtn) exportBtn.classList.toggle('hidden', !isAdminUser());
             const annFilter = document.getElementById('announcementBatchFilter');
@@ -3066,6 +3392,7 @@
             }
             mergeBuiltinCommunityContent();
             renderEvents();
+            renderPhotoSlideshow();
         }
 
         async function fetchEventResponses() {
