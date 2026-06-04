@@ -1093,7 +1093,10 @@
             };
         }
 
+        const LIVE_SITE_ORIGIN = 'https://utc.marawionline.com';
         const COMMUNITY_AD_IMAGE_BASE = 'assets/ads/';
+        const HOMECOMING_POSTER_URL = LIVE_SITE_ORIGIN + '/assets/ads/homecoming-2026.png';
+        const FUN_RUN_POSTER_URL = LIVE_SITE_ORIGIN + '/assets/ads/fun-run-2026.jpg';
         const BUILTIN_OVERVIEW_ADS = [
             {
                 id: 'builtin-notable-alumni',
@@ -1130,7 +1133,7 @@
             time: '5:30 AM',
             location: 'MSU-Main',
             description: 'MSU-UTC (PHS, UHS) Alumni Association — Run for World Peace.\n\nDistances: 3 KM and 5 KM\nRegistration: ₱500 (finisher shirt, medal, food & drinks)\n\nContact: msuutc.alumni@gmail.com\nFacebook: MSU-UTC (PHS, UHS) Alumni Association',
-            photoUrls: [COMMUNITY_AD_IMAGE_BASE + 'fun-run-2026.jpg']
+            photoUrls: [FUN_RUN_POSTER_URL]
         };
 
         const BUILTIN_HOMECOMING_EVENT = {
@@ -1140,8 +1143,24 @@
             time: '',
             location: 'MSU-UTC (PHS, UHS) Alumni Association',
             description: 'Brotherhood for World Peace\n\nJuly 11, 12, and 13, 2026\n\nThe MSU-UTC (PHS, UHS) Alumni Association welcomes all batches for the 6th Alumni Homecoming. Full schedule and venue details will be posted here as they are confirmed.\n\nContact: msuutc.alumni@gmail.com',
-            photoUrls: [COMMUNITY_AD_IMAGE_BASE + 'homecoming-2026.png']
+            photoUrls: [HOMECOMING_POSTER_URL]
         };
+
+        function attachDefaultEventPosters() {
+            events.forEach(ev => {
+                const t = (ev.title || '').toLowerCase();
+                const hasPhotos = ev.photoUrls && ev.photoUrls.length > 0;
+                if (hasPhotos) {
+                    ev.photoUrls = ev.photoUrls.map(resolveAssetUrl);
+                    return;
+                }
+                if (t.includes('homecoming') && !t.includes('fun run')) {
+                    ev.photoUrls = [HOMECOMING_POSTER_URL];
+                } else if (t.includes('fun run')) {
+                    ev.photoUrls = [FUN_RUN_POSTER_URL];
+                }
+            });
+        }
 
         function hasHomecomingMainEvent() {
             return events.some(ev => {
@@ -1178,6 +1197,7 @@
             if (!hasHomecomingMainEvent() && !events.some(e => String(e.id) === String(BUILTIN_HOMECOMING_EVENT.id))) {
                 events.push({ ...BUILTIN_HOMECOMING_EVENT });
             }
+            attachDefaultEventPosters();
             events.sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
         }
 
@@ -2418,6 +2438,9 @@
             if (!path) return '';
             const p = String(path).trim();
             if (/^https?:\/\//i.test(p) || p.startsWith('data:')) return p;
+            if (p.includes('homecoming-2026')) return HOMECOMING_POSTER_URL;
+            if (p.includes('fun-run-2026')) return FUN_RUN_POSTER_URL;
+            if (p.startsWith('assets/ads/')) return LIVE_SITE_ORIGIN + '/' + p.replace(/^\//, '');
             try {
                 return new URL(p, window.location.href).href;
             } catch {
@@ -4125,10 +4148,16 @@
                 const card = document.createElement('div');
                 card.className = 'bg-gray-50 p-4 rounded-xl border border-gray-200 text-xs space-y-2';
 
+                const posterUrl = event.photoUrls && event.photoUrls[0] ? resolveAssetUrl(event.photoUrls[0]) : '';
+                const posterHtml = posterUrl
+                    ? `<img src="${escapeHtml(posterUrl)}" alt="" class="w-full max-h-40 object-contain rounded-lg border border-gray-200 bg-white mb-2 cursor-zoom-in" loading="lazy">`
+                    : '';
+
                 const headerBtn = document.createElement('button');
                 headerBtn.type = 'button';
                 headerBtn.className = 'w-full text-left hover:opacity-90 focus:outline-none';
                 headerBtn.innerHTML = `
+                    ${posterHtml}
                     <div class="flex items-center justify-between gap-2">
                         <div>
                             <p class="font-bold text-gray-800">${escapeHtml(event.title)}</p>
@@ -4137,8 +4166,10 @@
                         <span class="text-[10px] text-[#800020] font-semibold shrink-0">${escapeHtml(event.location || '')}</span>
                     </div>
                     <p class="text-[11px] text-gray-600 mt-2 line-clamp-2">${escapeHtml((event.description || '').split('\n')[0])}</p>
-                    <p class="text-[10px] text-[#800020] font-semibold mt-1">Read full announcement →</p>
+                    <p class="text-[10px] text-[#800020] font-semibold mt-1">Tap poster or title for full announcement →</p>
                 `;
+                const cardPoster = headerBtn.querySelector('img');
+                if (cardPoster) bindExpandableImage(cardPoster, event.title);
                 headerBtn.onclick = () => showEventDetail(event.id);
 
                 const actions = document.createElement('div');
