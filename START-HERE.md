@@ -22,6 +22,7 @@ Run in Supabase SQL Editor, in order:
 5. `supabase/seed-homecoming-2026.sql` (homecoming poster)
 6. `supabase/community-photos.sql` (photo slideshow + alumni uploads)
 7. `supabase/tier3-features.sql` (security, reports, verification, PWA tables)
+8. `supabase/open-registration.sql` (only if tier 3 left alumni as pending — approves everyone)
 
 Turn off **Confirm email** under Authentication → Email for easier sign-in.
 

@@ -861,7 +861,7 @@
                                     <p class="text-[10px] text-gray-500 mb-2">Alumni-reported messages and testimonials.</p>
                                     <div id="adminContentReports" class="space-y-3 text-xs text-gray-700 max-h-52 overflow-y-auto"></div>
                                 </div>
-                                <div>
+                                <div id="adminVerificationBlock" class="hidden">
                                     <h4 class="text-[11px] font-semibold text-gray-700 mb-2">Pending alumni verifications</h4>
                                     <div id="adminPendingVerifications" class="space-y-3 text-xs text-gray-700 max-h-48 overflow-y-auto"></div>
                                 </div>
@@ -1039,6 +1039,8 @@
         let activeEventId = null;
         let viewingOtherProfileId = null;
         const adminEmails = ['admin@msu.edu', 'founder@msu.edu', 'realtytrail@gmail.com'].map(email => email.trim().toLowerCase());
+        /** Set true later when you want admin approval before directory access */
+        const ALUMNI_VERIFICATION_ENABLED = false;
 
         function normalizeMemberRole(value) {
             const v = (value || '').trim().toLowerCase();
@@ -1098,6 +1100,7 @@
         }
 
         function isProfileApproved(profile) {
+            if (!ALUMNI_VERIFICATION_ENABLED) return true;
             return (profile?.verificationStatus || 'approved') === 'approved';
         }
 
@@ -1106,6 +1109,7 @@
         }
 
         function initialVerificationStatus(email) {
+            if (!ALUMNI_VERIFICATION_ENABLED) return 'approved';
             const e = (email || '').trim().toLowerCase();
             if (adminEmails.includes(e) || isMsuEmail(e)) return 'approved';
             return 'pending';
@@ -1114,6 +1118,10 @@
         function updateVerificationBanner() {
             const banner = document.getElementById('verificationPendingBanner');
             if (!banner) return;
+            if (!ALUMNI_VERIFICATION_ENABLED) {
+                banner.classList.add('hidden');
+                return;
+            }
             const pending = currentUserEmail
                 && !isAdminUser()
                 && (currentUserProfile.verificationStatus || 'approved') === 'pending';
@@ -4270,8 +4278,11 @@
                 }
             }
 
+            const verifyBlock = document.getElementById('adminVerificationBlock');
+            if (verifyBlock) verifyBlock.classList.toggle('hidden', !ALUMNI_VERIFICATION_ENABLED);
+
             const verifySection = document.getElementById('adminPendingVerifications');
-            if (verifySection) {
+            if (verifySection && ALUMNI_VERIFICATION_ENABLED) {
                 verifySection.innerHTML = '';
                 try {
                     const { data: pendingRows, error: vErr } = await supabaseClient

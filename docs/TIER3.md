@@ -14,11 +14,13 @@
 | 19 | PWA (install on phone) | `manifest.webmanifest` + `sw.js` |
 | 20 | Split codebase | Deferred — see below |
 
-## Verification
+## Verification (currently off)
 
-- New signups: **pending** until admin approves (or auto-**approved** for `@msu.edu` emails).
-- Pending users see a banner on Overview; they are hidden from Batch Directory until approved.
-- **Admin → Pending alumni verifications** — Approve / Reject.
+In `index.html`, `ALUMNI_VERIFICATION_ENABLED` is **`false`** — everyone can register and appear in the directory.
+
+To turn verification on later: set that flag to `true` and run tier3 RLS as written.
+
+If anyone was left as **pending**, run once: **`supabase/open-registration.sql`**
 
 ## Reports
 
