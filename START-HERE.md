@@ -23,6 +23,7 @@ Run in Supabase SQL Editor, in order:
 6. `supabase/community-photos.sql` (photo slideshow + alumni uploads)
 7. `supabase/tier3-features.sql` (security, reports, verification, PWA tables)
 8. `supabase/open-registration.sql` (only if tier 3 left alumni as pending — approves everyone)
+9. `supabase/private-inbox.sql` (private inbox + public community board)
 
 Turn off **Confirm email** under Authentication → Email for easier sign-in.
 
@@ -35,3 +36,4 @@ Turn off **Confirm email** under Authentication → Email for easier sign-in.
 | No events or posters | Run the SQL files above |
 | Report button or verification admin empty | Run `tier3-features.sql` |
 | Install app on phone | Browser menu → Add to Home screen (after tier 3 deploy) |
+| Private message not working | Run `private-inbox.sql`; message from Directory → profile → Message |
