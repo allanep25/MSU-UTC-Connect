@@ -3674,7 +3674,7 @@
                 alertBtn.textContent = VAPID_PUBLIC_KEY ? '📱 Enable push (app closed)' : '📱 Enable alerts (sound)';
                 alertBtn.onclick = () => requestPhoneNotifications();
                 footer.appendChild(alertBtn);
-            } else if ('Notification' in window') {
+            } else if ('Notification' in window) {
                 const ok = document.createElement('p');
                 ok.className = 'text-[10px] text-gray-500 px-2';
                 ok.textContent = VAPID_PUBLIC_KEY
@@ -7179,6 +7179,39 @@
                 shellResetBtn();
             }
 
+            function shellLoginSuccess(user) {
+                var name = (user && user.user_metadata && user.user_metadata.full_name) || (user && user.email) || 'Alumni Member';
+                var overlay = document.getElementById('authOverlay');
+                var dashboard = document.getElementById('dashboardApp');
+                if (overlay) {
+                    overlay.classList.add('hidden');
+                    overlay.classList.add('pointer-events-none');
+                    overlay.style.pointerEvents = 'none';
+                }
+                if (dashboard) dashboard.classList.remove('hidden');
+                var sideName = document.getElementById('sidebarUserName');
+                if (sideName) sideName.textContent = name;
+                var profileName = document.getElementById('profileName');
+                if (profileName) profileName.textContent = name;
+                var btn = document.getElementById('authBtn');
+                if (btn) { btn.disabled = false; btn.innerText = 'Sign In'; }
+            }
+
+            async function shellRestoreSession() {
+                var client = shellClientGet();
+                if (!client) return;
+                try {
+                    var sessionResult = await client.auth.getSession();
+                    if (sessionResult.data && sessionResult.data.session && sessionResult.data.session.user) {
+                        if (typeof window.handleExistingSession === 'function') {
+                            await window.handleExistingSession(sessionResult.data.session.user);
+                        } else {
+                            shellLoginSuccess(sessionResult.data.session.user);
+                        }
+                    }
+                } catch (_) { /* ignore */ }
+            }
+
             async function shellAuthSubmit(event) {
                 if (typeof window.handleAuthSubmit === 'function' && window.__utcAppBoot === 'complete') {
                     return window.handleAuthSubmit(event);
@@ -7211,7 +7244,7 @@
                     if (typeof window.handleExistingSession === 'function') {
                         await window.handleExistingSession(result.data.user);
                     } else {
-                        location.reload();
+                        shellLoginSuccess(result.data.user);
                     }
                 } catch (err) {
                     alert('Sign in failed: ' + (err.message || 'network error'));
@@ -7263,8 +7296,12 @@
                 shellResetBtn();
             }
 
-            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', shellWireAuth);
-            else shellWireAuth();
+            function shellBoot() {
+                shellWireAuth();
+                shellRestoreSession();
+            }
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', shellBoot);
+            else shellBoot();
         })();
     </script>
 </body>
