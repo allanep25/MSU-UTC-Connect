@@ -24,8 +24,10 @@
         .site-logo { height: 3rem; width: 3rem; object-fit: contain; background: transparent; }
         .site-logo-auth { height: 3.25rem; width: 3.25rem; }
         @media (min-width: 768px) { .site-logo-header { height: 3.5rem; width: 3.5rem; } }
-        #authCard { max-height: min(92vh, 640px); }
-        #authFormScroll { scrollbar-width: thin; }
+        #authCard { max-height: min(92vh, 640px); display: flex; flex-direction: column; min-height: 0; }
+        #authForm { min-height: 0; }
+        #authFormScroll { scrollbar-width: thin; min-height: 0; -webkit-overflow-scrolling: touch; }
+        #authFormFooter { flex-shrink: 0; position: relative; z-index: 2; }
         .hidden { display: none !important; }
         #authForm[data-auth-mode="login"] #nameField,
         #authForm[data-auth-mode="login"] #regFields { display: none !important; }
@@ -266,8 +268,8 @@
             </div>
 
             <div class="flex border-b border-gray-200 text-sm font-semibold text-center shrink-0 px-4 pt-3">
-                <button id="tabRegister" type="button" class="flex-1 pb-2 text-gray-400 hover:text-gray-600" onclick="switchAuthTab('register')">Create Account</button>
-                <button id="tabLogin" type="button" class="flex-1 pb-2 border-b-2 border-[#800020] text-[#800020]" onclick="switchAuthTab('login')">Sign In</button>
+                <button id="tabRegister" type="button" class="flex-1 pb-2 text-gray-400 hover:text-gray-600">Create Account</button>
+                <button id="tabLogin" type="button" class="flex-1 pb-2 border-b-2 border-[#800020] text-[#800020]">Sign In</button>
             </div>
 
             <form id="authForm" class="flex flex-col flex-1 min-h-0" novalidate data-auth-mode="login">
@@ -285,7 +287,7 @@
                         <input id="authPassword" type="password" required minlength="6" placeholder="6+ characters" class="w-full p-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
                         <p id="authPasswordHint" class="text-[10px] text-gray-400 mt-0.5 hidden">Minimum 6 characters.</p>
                         <p id="forgotPasswordWrap" class="text-right mt-1">
-                            <button type="button" onclick="sendPasswordReset()" class="text-[10px] font-semibold text-[#800020] hover:text-red-900">Forgot password?</button>
+                            <button type="button" id="authForgotBtn" class="text-[10px] font-semibold text-[#800020] hover:text-red-900">Forgot password?</button>
                         </p>
                     </div>
 
@@ -329,12 +331,58 @@
                     </div>
                 </div>
 
-                <div class="shrink-0 px-4 py-3 border-t border-gray-100 bg-white">
-                    <button type="submit" id="authBtn" class="w-full bg-[#800020] text-white p-2.5 rounded-lg text-sm font-bold shadow-md hover:bg-red-900 transition-colors">Sign In</button>
+                <div id="authFormFooter" class="shrink-0 px-4 py-3 border-t border-gray-100 bg-white">
+                    <button type="button" id="authBtn" class="w-full bg-[#800020] text-white p-2.5 rounded-lg text-sm font-bold shadow-md hover:bg-red-900 transition-colors">Sign In</button>
                 </div>
             </form>
         </div>
     </div>
+    <script>
+        (function () {
+            function onReady(fn) {
+                if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+                else fn();
+            }
+            onReady(function () {
+                function runAuthAction(fnName, fallbackMsg) {
+                    var fn = window[fnName];
+                    if (typeof fn === 'function') return fn.apply(window, Array.prototype.slice.call(arguments, 2));
+                    if (fallbackMsg) alert(fallbackMsg);
+                }
+                document.getElementById('tabRegister')?.addEventListener('click', function () {
+                    runAuthAction('switchAuthTab', null, 'register');
+                });
+                document.getElementById('tabLogin')?.addEventListener('click', function () {
+                    runAuthAction('switchAuthTab', null, 'login');
+                });
+                document.getElementById('authForgotBtn')?.addEventListener('click', function () {
+                    runAuthAction('sendPasswordReset', 'App is still loading. Please wait and try again.');
+                });
+                document.getElementById('authBtn')?.addEventListener('click', function () {
+                    runAuthAction('handleAuthSubmit', 'App is still loading. Please wait and try again.', null);
+                });
+                document.getElementById('authForm')?.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    runAuthAction('handleAuthSubmit', 'App is still loading. Please wait and try again.', e);
+                });
+                ['authEmail', 'authPassword'].forEach(function (id) {
+                    document.getElementById(id)?.addEventListener('keydown', function (e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            runAuthAction('handleAuthSubmit', 'App is still loading. Please wait and try again.', e);
+                        }
+                    });
+                });
+                var btn = document.getElementById('authBtn');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-60', 'cursor-not-allowed');
+                }
+                if (typeof window.populateBatchSelects === 'function') window.populateBatchSelects();
+                if (typeof window.switchAuthTab === 'function') window.switchAuthTab('login');
+            });
+        })();
+    </script>
 
     <!-- ================= EDIT PROFILE MODAL ================= -->
     <div id="profileModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start sm:items-center justify-center p-4 overflow-y-auto hidden" onclick="if (event.target === this) toggleProfileModal(false)">
@@ -1503,6 +1551,7 @@
             '2016 ATROMITOS', '2017 ANOCHE', '2018 EL PEMNIATORES', '2019 THE LEGIONAIRES', '2020 PROMETHIANS',
             '2021 LUMINARIES', '2022 ELYSIANS', '2023 ZOSIME', '2024 AURELIUS', '2025 SALIMBAYAN', '2026 TADMAN'
         ];
+        window.UTC_BATCH_OPTIONS = BATCH_OPTIONS;
 
         function mapOverviewAdRow(row) {
             return {
@@ -2339,7 +2388,12 @@
                 });
             });
         }
-        populateBatchSelects();
+        window.populateBatchSelects = populateBatchSelects;
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', populateBatchSelects, { once: true });
+        } else {
+            populateBatchSelects();
+        }
 
         function syncGradYearFromBatch(batchSelectId, yearInputId) {
             const batchEl = document.getElementById(batchSelectId);
@@ -2475,11 +2529,13 @@
         window.addEventListener('DOMContentLoaded', initApp);
 
         async function initApp() {
+            try {
             const displayAvatar = document.getElementById('displayAvatar');
             if (displayAvatar && !displayAvatar.src) displayAvatar.src = DEFAULT_AVATAR;
 
             populateBatchSelects();
             switchAuthTab('login');
+            resetAuthFormUi();
             syncGradYearFromBatch('regBatchName', 'regBatchYear');
             const regBatchEl = document.getElementById('regBatchName');
             const regYearEl = document.getElementById('regBatchYear');
@@ -2491,9 +2547,6 @@
             syncGradYearFromBatch('inputBatchName', 'inputBatchYear');
             bindOfficerDesignationToggles();
 
-            if (authForm) {
-                authForm.addEventListener('submit', (e) => window.handleAuthSubmit(e));
-            }
             document.getElementById('testimonialSubmitBtn')?.addEventListener('click', submitTestimonial);
             document.getElementById('messageSendBtn')?.addEventListener('click', submitMessage);
             document.getElementById('batchMessageInput')?.addEventListener('keydown', (e) => {
@@ -2567,6 +2620,12 @@
                     clearAuthState();
                 }
             });
+            } catch (err) {
+                console.error('App init failed:', err);
+                resetAuthFormUi();
+                switchAuthTab('login');
+                setAuthOverlayOpen(true);
+            }
         }
 
         async function loadAppData() {
@@ -2683,8 +2742,8 @@
             currentUser = null;
             currentUserEmail = null;
             currentUserId = null;
-            profileNameEl.innerText = 'Alumni Member';
-            userBadge.classList.add('hidden');
+            if (profileNameEl) profileNameEl.innerText = 'Alumni Member';
+            userBadge?.classList.add('hidden');
             document.getElementById('signedInMeta')?.classList.add('hidden');
             document.getElementById('onboardingModal')?.classList.add('hidden');
             updateDashboardSidebarUser('Alumni Member', '—');
@@ -2759,7 +2818,7 @@
             showToast('Showing your profile', 'success');
         };
 
-        window.switchAuthTab = function(mode) {
+        function switchAuthTab(mode) {
             currentMode = mode === 'register' ? 'register' : 'login';
             const tabReg = document.getElementById('tabRegister');
             const tabLog = document.getElementById('tabLogin');
@@ -2792,11 +2851,16 @@
             }
             resetAuthFormUi();
         }
+        window.switchAuthTab = switchAuthTab;
 
-        window.sendPasswordReset = async function() {
+        async function sendPasswordReset() {
             const email = document.getElementById('authEmail')?.value.trim();
             if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                 alert('Enter your account email above, then tap Forgot password.');
+                return;
+            }
+            if (!supabaseClient?.auth) {
+                showToast('Connection unavailable — check network and reload', 'error');
                 return;
             }
             try {
@@ -2809,7 +2873,8 @@
                 console.warn('Password reset failed:', err.message);
                 alert('Could not send reset email: ' + err.message);
             }
-        };
+        }
+        window.sendPasswordReset = sendPasswordReset;
 
         window.changeAccountPassword = async function() {
             if (!currentUserEmail) {
@@ -2866,7 +2931,7 @@
             }
         };
 
-        window.handleAuthSubmit = async function(event) {
+        async function handleAuthSubmit(event) {
             if (event) event.preventDefault();
             const authBtn = document.getElementById('authBtn');
             const nameInput = document.getElementById('authName').value.trim();
@@ -3040,6 +3105,7 @@
                 }
             }
         }
+        window.handleAuthSubmit = handleAuthSubmit;
 
         async function loginSuccess(name, hideOverlay = true) {
             profileNameEl.innerText = name;
@@ -5097,6 +5163,7 @@
         };
 
         function setupRealtimeSubscriptions() {
+            if (!supabaseClient?.channel) return;
             try {
                 supabaseClient.channel('messages-room')
                     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
