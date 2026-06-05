@@ -267,7 +267,7 @@
                 <button id="tabLogin" type="button" class="flex-1 pb-2 border-b-2 border-[#800020] text-[#800020]" onclick="switchAuthTab('login')">Sign In</button>
             </div>
 
-            <form id="authForm" class="flex flex-col flex-1 min-h-0">
+            <form id="authForm" class="flex flex-col flex-1 min-h-0" novalidate>
                 <div id="authFormScroll" class="flex-1 overflow-y-auto px-4 py-3 space-y-2.5">
                     <div id="nameField">
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-0.5">Full Name</label>
@@ -2465,6 +2465,8 @@
             const displayAvatar = document.getElementById('displayAvatar');
             if (displayAvatar && !displayAvatar.src) displayAvatar.src = DEFAULT_AVATAR;
 
+            switchAuthTab('login');
+
             populateBatchSelects();
             syncGradYearFromBatch('regBatchName', 'regBatchYear');
             const regBatchEl = document.getElementById('regBatchName');
@@ -2476,9 +2478,10 @@
             }
             syncGradYearFromBatch('inputBatchName', 'inputBatchYear');
             bindOfficerDesignationToggles();
-            document.getElementById('regBatchName')?.setAttribute('required', 'required');
 
-            authForm.addEventListener('submit', handleAuthSubmit);
+            if (authForm) {
+                authForm.addEventListener('submit', (e) => window.handleAuthSubmit(e));
+            }
             document.getElementById('testimonialSubmitBtn').addEventListener('click', submitTestimonial);
             document.getElementById('messageSendBtn').addEventListener('click', submitMessage);
             document.getElementById('batchMessageInput')?.addEventListener('keydown', (e) => {
@@ -2845,13 +2848,22 @@
         };
 
         window.handleAuthSubmit = async function(event) {
-            event.preventDefault();
+            if (event) event.preventDefault();
+            const authBtn = document.getElementById('authBtn');
             const nameInput = document.getElementById('authName').value.trim();
             const emailInput = document.getElementById('authEmail').value.trim();
             const passwordInput = document.getElementById('authPassword').value;
 
+            if (!emailInput || !passwordInput) {
+                showToast('Enter email and password', 'error');
+                return;
+            }
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) {
-                alert('Please enter a valid email address.');
+                showToast('Please enter a valid email address', 'error');
+                return;
+            }
+            if (!supabaseClient?.auth) {
+                showToast('App still loading — wait a moment and try again', 'error');
                 return;
             }
 
@@ -2975,7 +2987,6 @@
                 }
             }
 
-            const authBtn = document.getElementById('authBtn');
             const loginBtnText = authBtn?.innerText || 'Sign In';
             if (authBtn) {
                 authBtn.disabled = true;
@@ -3000,6 +3011,9 @@
                 }
 
                 await handleExistingSession(data.user);
+            } catch (err) {
+                console.error('Sign in failed:', err);
+                showToast('Sign in failed: ' + (err.message || 'network error'), 'error');
             } finally {
                 if (authBtn) {
                     authBtn.disabled = false;
