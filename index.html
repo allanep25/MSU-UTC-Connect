@@ -26,6 +26,9 @@
         @media (min-width: 768px) { .site-logo-header { height: 3.5rem; width: 3.5rem; } }
         #authCard { max-height: min(92vh, 640px); }
         #authFormScroll { scrollbar-width: thin; }
+        .hidden { display: none !important; }
+        #authForm[data-auth-mode="login"] #nameField,
+        #authForm[data-auth-mode="login"] #regFields { display: none !important; }
         #profileModalCard {
             max-height: min(92vh, calc(100dvh - 2rem));
             display: flex;
@@ -267,9 +270,9 @@
                 <button id="tabLogin" type="button" class="flex-1 pb-2 border-b-2 border-[#800020] text-[#800020]" onclick="switchAuthTab('login')">Sign In</button>
             </div>
 
-            <form id="authForm" class="flex flex-col flex-1 min-h-0" novalidate>
+            <form id="authForm" class="flex flex-col flex-1 min-h-0" novalidate data-auth-mode="login">
                 <div id="authFormScroll" class="flex-1 overflow-y-auto px-4 py-3 space-y-2.5">
-                    <div id="nameField">
+                    <div id="nameField" class="hidden">
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-0.5">Full Name</label>
                         <input id="authName" type="text" placeholder="Alex Santos" class="w-full p-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
                     </div>
@@ -281,12 +284,12 @@
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-0.5">Password</label>
                         <input id="authPassword" type="password" required minlength="6" placeholder="6+ characters" class="w-full p-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020]">
                         <p id="authPasswordHint" class="text-[10px] text-gray-400 mt-0.5 hidden">Minimum 6 characters.</p>
-                        <p id="forgotPasswordWrap" class="hidden text-right mt-1">
+                        <p id="forgotPasswordWrap" class="text-right mt-1">
                             <button type="button" onclick="sendPasswordReset()" class="text-[10px] font-semibold text-[#800020] hover:text-red-900">Forgot password?</button>
                         </p>
                     </div>
 
-                    <div id="regFields" class="space-y-2">
+                    <div id="regFields" class="space-y-2 hidden">
                         <div>
                             <label class="block text-[10px] font-bold text-gray-500 uppercase mb-0.5">Batch <span class="text-[#800020]">*</span></label>
                             <select id="regBatchName" class="w-full p-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#800020]/20 focus:border-[#800020] invalid:border-red-400">
@@ -1168,13 +1171,22 @@
         /** Paste your VAPID public key after running: npx web-push generate-vapid-keys — see docs/PUSH-EMAIL-SETUP.md */
         const VAPID_PUBLIC_KEY = '';
 
-        const SUPABASE_LIB = window.supabase;
-        const supabaseClient = SUPABASE_LIB.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-            auth: {
-                persistSession: true,
-                autoRefreshToken: true
+        let supabaseClient = null;
+        try {
+            const SUPABASE_LIB = window.supabase;
+            if (SUPABASE_LIB?.createClient) {
+                supabaseClient = SUPABASE_LIB.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+                    auth: {
+                        persistSession: true,
+                        autoRefreshToken: true
+                    }
+                });
+            } else {
+                console.warn('Supabase library did not load; sign-in will be unavailable until you reload.');
             }
-        });
+        } catch (err) {
+            console.warn('Supabase init failed:', err);
+        }
 
         /*
          Supabase table schema assumptions:
@@ -2327,6 +2339,7 @@
                 });
             });
         }
+        populateBatchSelects();
 
         function syncGradYearFromBatch(batchSelectId, yearInputId) {
             const batchEl = document.getElementById(batchSelectId);
@@ -2465,9 +2478,8 @@
             const displayAvatar = document.getElementById('displayAvatar');
             if (displayAvatar && !displayAvatar.src) displayAvatar.src = DEFAULT_AVATAR;
 
-            switchAuthTab('login');
-
             populateBatchSelects();
+            switchAuthTab('login');
             syncGradYearFromBatch('regBatchName', 'regBatchYear');
             const regBatchEl = document.getElementById('regBatchName');
             const regYearEl = document.getElementById('regBatchYear');
@@ -2482,8 +2494,8 @@
             if (authForm) {
                 authForm.addEventListener('submit', (e) => window.handleAuthSubmit(e));
             }
-            document.getElementById('testimonialSubmitBtn').addEventListener('click', submitTestimonial);
-            document.getElementById('messageSendBtn').addEventListener('click', submitMessage);
+            document.getElementById('testimonialSubmitBtn')?.addEventListener('click', submitTestimonial);
+            document.getElementById('messageSendBtn')?.addEventListener('click', submitMessage);
             document.getElementById('batchMessageInput')?.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -2501,10 +2513,10 @@
                 preview.src = URL.createObjectURL(file);
                 preview.classList.remove('hidden');
             });
-            document.getElementById('batchSearch').addEventListener('input', e => filterBatchDirectory(e.target.value));
-            document.getElementById('batchFilter').addEventListener('change', onBatchFilterChange);
-            document.getElementById('batchYearFilter').addEventListener('change', () => filterBatchDirectory(document.getElementById('batchSearch').value));
-            document.getElementById('skillFilter').addEventListener('input', () => filterBatchDirectory(document.getElementById('batchSearch').value));
+            document.getElementById('batchSearch')?.addEventListener('input', e => filterBatchDirectory(e.target.value));
+            document.getElementById('batchFilter')?.addEventListener('change', onBatchFilterChange);
+            document.getElementById('batchYearFilter')?.addEventListener('change', () => filterBatchDirectory(document.getElementById('batchSearch')?.value || ''));
+            document.getElementById('skillFilter')?.addEventListener('input', () => filterBatchDirectory(document.getElementById('batchSearch')?.value || ''));
 
             document.getElementById('testimonialFilters')?.addEventListener('click', (event) => {
                 const button = event.target.closest('[data-testimonial-filter]');
@@ -2547,7 +2559,7 @@
             setupRealtimeSubscriptions();
             registerServiceWorker();
 
-            supabaseClient.auth.onAuthStateChange((event, session) => {
+            supabaseClient?.auth.onAuthStateChange((event, session) => {
                 if (event === 'INITIAL_SESSION') return;
                 if (session?.user) {
                     handleExistingSession(session.user);
@@ -2591,6 +2603,10 @@
         }
 
         async function restoreSession() {
+            if (!supabaseClient) {
+                clearAuthState();
+                return;
+            }
             const { data, error } = await supabaseClient.auth.getSession();
             if (error) {
                 console.error('Session restore failed:', error.message);
@@ -2749,23 +2765,26 @@
             const tabLog = document.getElementById('tabLogin');
             const nameField = document.getElementById('nameField');
             const regFields = document.getElementById('regFields');
-            const authBtn = document.getElementById('authBtn');
+            const authFormEl = document.getElementById('authForm');
 
             const regBatch = document.getElementById('regBatchName');
             const pwdHint = document.getElementById('authPasswordHint');
             const forgotWrap = document.getElementById('forgotPasswordWrap');
             if (currentMode === 'login') {
-                tabLog.className = 'flex-1 pb-2 border-b-2 border-[#800020] text-[#800020]';
-                tabReg.className = 'flex-1 pb-2 text-gray-400 hover:text-gray-600';
-                nameField.classList.add('hidden');
+                if (tabLog) tabLog.className = 'flex-1 pb-2 border-b-2 border-[#800020] text-[#800020]';
+                if (tabReg) tabReg.className = 'flex-1 pb-2 text-gray-400 hover:text-gray-600';
+                if (authFormEl) authFormEl.dataset.authMode = 'login';
+                if (nameField) nameField.classList.add('hidden');
                 if (regFields) regFields.classList.add('hidden');
                 if (regBatch) regBatch.removeAttribute('required');
                 if (pwdHint) pwdHint.classList.add('hidden');
                 if (forgotWrap) forgotWrap.classList.remove('hidden');
             } else {
-                tabReg.className = 'flex-1 pb-2 border-b-2 border-[#800020] text-[#800020]';
-                tabLog.className = 'flex-1 pb-2 text-gray-400 hover:text-gray-600';
-                nameField.classList.remove('hidden');
+                populateBatchSelects();
+                if (tabReg) tabReg.className = 'flex-1 pb-2 border-b-2 border-[#800020] text-[#800020]';
+                if (tabLog) tabLog.className = 'flex-1 pb-2 text-gray-400 hover:text-gray-600';
+                if (authFormEl) authFormEl.dataset.authMode = 'register';
+                if (nameField) nameField.classList.remove('hidden');
                 if (regFields) regFields.classList.remove('hidden');
                 if (regBatch) regBatch.setAttribute('required', 'required');
                 if (pwdHint) pwdHint.classList.remove('hidden');
