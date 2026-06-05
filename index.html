@@ -337,52 +337,6 @@
             </form>
         </div>
     </div>
-    <script>
-        (function () {
-            function onReady(fn) {
-                if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
-                else fn();
-            }
-            onReady(function () {
-                function runAuthAction(fnName, fallbackMsg) {
-                    var fn = window[fnName];
-                    if (typeof fn === 'function') return fn.apply(window, Array.prototype.slice.call(arguments, 2));
-                    if (fallbackMsg) alert(fallbackMsg);
-                }
-                document.getElementById('tabRegister')?.addEventListener('click', function () {
-                    runAuthAction('switchAuthTab', null, 'register');
-                });
-                document.getElementById('tabLogin')?.addEventListener('click', function () {
-                    runAuthAction('switchAuthTab', null, 'login');
-                });
-                document.getElementById('authForgotBtn')?.addEventListener('click', function () {
-                    runAuthAction('sendPasswordReset', 'App is still loading. Please wait and try again.');
-                });
-                document.getElementById('authBtn')?.addEventListener('click', function () {
-                    runAuthAction('handleAuthSubmit', 'App is still loading. Please wait and try again.', null);
-                });
-                document.getElementById('authForm')?.addEventListener('submit', function (e) {
-                    e.preventDefault();
-                    runAuthAction('handleAuthSubmit', 'App is still loading. Please wait and try again.', e);
-                });
-                ['authEmail', 'authPassword'].forEach(function (id) {
-                    document.getElementById(id)?.addEventListener('keydown', function (e) {
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            runAuthAction('handleAuthSubmit', 'App is still loading. Please wait and try again.', e);
-                        }
-                    });
-                });
-                var btn = document.getElementById('authBtn');
-                if (btn) {
-                    btn.disabled = false;
-                    btn.classList.remove('opacity-60', 'cursor-not-allowed');
-                }
-                if (typeof window.populateBatchSelects === 'function') window.populateBatchSelects();
-                if (typeof window.switchAuthTab === 'function') window.switchAuthTab('login');
-            });
-        })();
-    </script>
 
     <!-- ================= EDIT PROFILE MODAL ================= -->
     <div id="profileModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start sm:items-center justify-center p-4 overflow-y-auto hidden" onclick="if (event.target === this) toggleProfileModal(false)">
@@ -1214,6 +1168,7 @@
     <!-- ================= JAVASCRIPT & CLOUD INFRASTRUCTURE ================= -->
     <div id="toastContainer" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
     <script>
+        window.__utcAppBoot = 'start';
         const SUPABASE_URL = "https://ouwuhzttjnvdivsfbefe.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_IFeDdN_0oFEy5SR-qUwY3w_6PDUeFyi";
         /** Paste your VAPID public key after running: npx web-push generate-vapid-keys — see docs/PUSH-EMAIL-SETUP.md */
@@ -7133,6 +7088,184 @@
             clearAuthState();
             authForm.reset();
         }
+        window.__utcAppBoot = 'complete';
+    </script>
+    <script>
+        (function () {
+            var AUTH_URL = 'https://ouwuhzttjnvdivsfbefe.supabase.co';
+            var AUTH_KEY = 'sb_publishable_IFeDdN_0oFEy5SR-qUwY3w_6PDUeFyi';
+            var shellMode = 'login';
+            var shellClient = null;
+            var SHELL_BATCHES = window.UTC_BATCH_OPTIONS || [
+                '1976 BORDERLINE', '1977 CONVERGENCE', '1978 PICO DE LORO', '1979 KALIMUDAN', '1980 VIBRANT',
+                '1981 PIONEER', '1982 DREAMERS', '1983 FELDSPAR', '1984 SINDAW', '1985 MARVELOUS',
+                '1986 PIONEER ACHIEVERS', '1987 ZENITH', '1988 POWERCAST', '1989 XANTHRONS', '1990 EXEMPLARY',
+                '1991 KAKAYADUN', '1992 ESCAPADE', '1993 MUSTANG', '1994 CLIFFHANGER', '1995 DYNAMICS',
+                '1996 CASPER', '1997 TAMAGOTCHI', '1998 CENTENNIAL', '1999 MUTANT', '2000 MILLINIUM',
+                '2001 ARGYRUS', '2002 .UNITY', '2003 NEPHILIMS AMICIABLE', '2004 ACHIEVER', '2005 INVADER',
+                '2006 CHALLENGER', '2007 MAGDALO', '2008 GRYFFINDOR', '2009 RAVENCLAW', '2010 SYNCHRONIZE',
+                '2011 COALESCE', '2012 KRIEGER', '2013 EMINENT', '2014 AVANT GARDE', '2015 INVICTUS',
+                '2016 ATROMITOS', '2017 ANOCHE', '2018 EL PEMNIATORES', '2019 THE LEGIONAIRES', '2020 PROMETHIANS',
+                '2021 LUMINARIES', '2022 ELYSIANS', '2023 ZOSIME', '2024 AURELIUS', '2025 SALIMBAYAN', '2026 TADMAN'
+            ];
+
+            function shellClientGet() {
+                if (shellClient) return shellClient;
+                var lib = window.supabase;
+                if (!lib || !lib.createClient) return null;
+                shellClient = lib.createClient(AUTH_URL, AUTH_KEY, {
+                    auth: { persistSession: true, autoRefreshToken: true }
+                });
+                return shellClient;
+            }
+
+            function shellPopulateBatches() {
+                var sel = document.getElementById('regBatchName');
+                if (!sel) return;
+                sel.innerHTML = '';
+                var empty = document.createElement('option');
+                empty.value = '';
+                empty.textContent = 'Select batch (required)';
+                sel.appendChild(empty);
+                SHELL_BATCHES.forEach(function (label) {
+                    var opt = document.createElement('option');
+                    opt.value = label;
+                    opt.textContent = label;
+                    sel.appendChild(opt);
+                });
+            }
+
+            function shellResetBtn() {
+                var btn = document.getElementById('authBtn');
+                if (!btn) return;
+                btn.disabled = false;
+                btn.classList.remove('opacity-60', 'cursor-not-allowed');
+                btn.innerText = shellMode === 'login' ? 'Sign In' : 'Get Connected';
+            }
+
+            function shellSwitchTab(mode) {
+                if (typeof window.switchAuthTab === 'function' && window.__utcAppBoot === 'complete') {
+                    return window.switchAuthTab(mode);
+                }
+                shellMode = mode === 'register' ? 'register' : 'login';
+                var tabReg = document.getElementById('tabRegister');
+                var tabLog = document.getElementById('tabLogin');
+                var nameField = document.getElementById('nameField');
+                var regFields = document.getElementById('regFields');
+                var authFormEl = document.getElementById('authForm');
+                var regBatch = document.getElementById('regBatchName');
+                var pwdHint = document.getElementById('authPasswordHint');
+                var forgotWrap = document.getElementById('forgotPasswordWrap');
+                if (shellMode === 'login') {
+                    if (tabLog) tabLog.className = 'flex-1 pb-2 border-b-2 border-[#800020] text-[#800020]';
+                    if (tabReg) tabReg.className = 'flex-1 pb-2 text-gray-400 hover:text-gray-600';
+                    if (authFormEl) authFormEl.dataset.authMode = 'login';
+                    if (nameField) nameField.classList.add('hidden');
+                    if (regFields) regFields.classList.add('hidden');
+                    if (regBatch) regBatch.removeAttribute('required');
+                    if (pwdHint) pwdHint.classList.add('hidden');
+                    if (forgotWrap) forgotWrap.classList.remove('hidden');
+                } else {
+                    shellPopulateBatches();
+                    if (tabReg) tabReg.className = 'flex-1 pb-2 border-b-2 border-[#800020] text-[#800020]';
+                    if (tabLog) tabLog.className = 'flex-1 pb-2 text-gray-400 hover:text-gray-600';
+                    if (authFormEl) authFormEl.dataset.authMode = 'register';
+                    if (nameField) nameField.classList.remove('hidden');
+                    if (regFields) regFields.classList.remove('hidden');
+                    if (regBatch) regBatch.setAttribute('required', 'required');
+                    if (pwdHint) pwdHint.classList.remove('hidden');
+                    if (forgotWrap) forgotWrap.classList.add('hidden');
+                }
+                shellResetBtn();
+            }
+
+            async function shellAuthSubmit(event) {
+                if (typeof window.handleAuthSubmit === 'function' && window.__utcAppBoot === 'complete') {
+                    return window.handleAuthSubmit(event);
+                }
+                if (event) event.preventDefault();
+                var email = (document.getElementById('authEmail')?.value || '').trim();
+                var password = document.getElementById('authPassword')?.value || '';
+                var btn = document.getElementById('authBtn');
+                if (!email || !password) {
+                    alert('Enter email and password.');
+                    return;
+                }
+                var client = shellClientGet();
+                if (!client) {
+                    alert('Could not connect to the server. Check your internet and reload the page.');
+                    return;
+                }
+                if (shellMode === 'register') {
+                    alert('Create Account needs the full app to load. Reload the page and try again, or use Sign In if you already have an account.');
+                    return;
+                }
+                var prevText = btn ? btn.innerText : 'Sign In';
+                if (btn) { btn.disabled = true; btn.innerText = 'Signing in…'; }
+                try {
+                    var result = await client.auth.signInWithPassword({ email: email, password: password });
+                    if (result.error) {
+                        alert('Login error: ' + result.error.message);
+                        return;
+                    }
+                    if (typeof window.handleExistingSession === 'function') {
+                        await window.handleExistingSession(result.data.user);
+                    } else {
+                        location.reload();
+                    }
+                } catch (err) {
+                    alert('Sign in failed: ' + (err.message || 'network error'));
+                } finally {
+                    if (btn) { btn.disabled = false; btn.innerText = prevText; }
+                }
+            }
+
+            async function shellForgotPassword() {
+                if (typeof window.sendPasswordReset === 'function' && window.__utcAppBoot === 'complete') {
+                    return window.sendPasswordReset();
+                }
+                var email = (document.getElementById('authEmail')?.value || '').trim();
+                if (!email) {
+                    alert('Enter your email above, then tap Forgot password.');
+                    return;
+                }
+                var client = shellClientGet();
+                if (!client) {
+                    alert('Could not connect. Reload and try again.');
+                    return;
+                }
+                try {
+                    var result = await client.auth.resetPasswordForEmail(email, {
+                        redirectTo: location.origin + location.pathname
+                    });
+                    if (result.error) throw result.error;
+                    alert('Password reset email sent — check your inbox.');
+                } catch (err) {
+                    alert('Could not send reset email: ' + (err.message || err));
+                }
+            }
+
+            function shellWireAuth() {
+                document.getElementById('tabRegister')?.addEventListener('click', function () { shellSwitchTab('register'); });
+                document.getElementById('tabLogin')?.addEventListener('click', function () { shellSwitchTab('login'); });
+                document.getElementById('authForgotBtn')?.addEventListener('click', function () { shellForgotPassword(); });
+                document.getElementById('authBtn')?.addEventListener('click', function (e) { shellAuthSubmit(e); });
+                document.getElementById('authForm')?.addEventListener('submit', function (e) { shellAuthSubmit(e); });
+                ['authEmail', 'authPassword'].forEach(function (id) {
+                    document.getElementById(id)?.addEventListener('keydown', function (e) {
+                        if (e.key === 'Enter') { e.preventDefault(); shellAuthSubmit(e); }
+                    });
+                });
+                if (typeof window.populateBatchSelects === 'function') window.populateBatchSelects();
+                else shellPopulateBatches();
+                if (typeof window.switchAuthTab === 'function' && window.__utcAppBoot === 'complete') window.switchAuthTab('login');
+                else shellSwitchTab('login');
+                shellResetBtn();
+            }
+
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', shellWireAuth);
+            else shellWireAuth();
+        })();
     </script>
 </body>
 </html>
