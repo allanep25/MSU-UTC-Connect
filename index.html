@@ -408,6 +408,8 @@
                     <div class="space-y-2 mt-2 pt-2 border-t border-gray-200">
                         <input id="inputLinkedin" type="url" placeholder="LinkedIn URL" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
                         <input id="inputFacebook" type="url" placeholder="Facebook URL" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
+                        <input id="inputMessenger" type="text" placeholder="Messenger — username or m.me/yourname" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#0084FF]/30 focus:border-[#0084FF] focus:outline-none">
+                        <p class="text-[9px] text-gray-400">Opens Facebook Messenger when others tap your Messenger button.</p>
                         <input id="inputPhone" type="tel" placeholder="Phone (optional)" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
                     </div>
                 </details>
@@ -474,6 +476,7 @@
             </div>
             <div class="flex flex-wrap gap-2 pt-1">
                 <button type="button" id="memberProfileMessageBtn" onclick="openMessageToActiveProfile()" class="flex-1 min-w-[100px] bg-[#800020] text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-red-900">Message</button>
+                <a id="memberProfileMessengerBtn" href="#" target="_blank" rel="noopener noreferrer" class="hidden flex-1 min-w-[100px] inline-flex items-center justify-center gap-1 bg-[#0084FF] text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-[#0070e0]">Messenger</a>
                 <button type="button" id="memberProfileConnectBtn" onclick="connectFromProfileModal()" class="hidden flex-1 min-w-[100px] px-4 py-2 rounded-lg text-xs font-bold border border-[#800020] text-[#800020] hover:bg-amber-50">Connect</button>
                 <button type="button" onclick="showMemberProfileModal(null)" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-600 text-xs font-semibold hover:bg-gray-200">Close</button>
             </div>
@@ -1202,7 +1205,7 @@
          - testimonials: id, author_name, author_email, message_content, category, likes, approved, featured, created_at
          - overview_ads: id, title, body, image, link, link_label, tag, accent, panel, active, sort_order, created_at, updated_at
          - site_feedback: id, author_name, author_email, message, created_at
-         - alumni_profiles also: linkedin, facebook, phone, city, country, hide_contact
+         - alumni_profiles also: linkedin, facebook, messenger, phone, city, country, hide_contact
          - events also: photo_urls
          - batch_announcements, job_posts (tier 2)
          - community_photos: id, image_url, caption, author_name, author_email, active, created_at
@@ -1234,6 +1237,7 @@
             designation: '',
             linkedin: '',
             facebook: '',
+            messenger: '',
             phone: '',
             city: '',
             country: '',
@@ -1341,6 +1345,7 @@
                 badges: item.badges ? String(item.badges).split(',').map(b => b.trim()).filter(Boolean) : [],
                 linkedin: (item.linkedin || '').trim(),
                 facebook: (item.facebook || '').trim(),
+                messenger: (item.messenger || '').trim(),
                 phone: (item.phone || '').trim(),
                 city: (item.city || '').trim(),
                 country: (item.country || '').trim(),
@@ -1390,12 +1395,35 @@
             return profile.email || '';
         }
 
+        function normalizeMessengerUrl(value) {
+            const raw = (value || '').trim();
+            if (!raw) return '';
+            if (/^https?:\/\//i.test(raw)) {
+                if (/m\.me\//i.test(raw) || /messenger\.com/i.test(raw)) return raw;
+                const fbUser = raw.match(/facebook\.com\/([^/?#]+)/i);
+                if (fbUser && fbUser[1] && !/^(profile\.php|people|pages|groups|share)$/i.test(fbUser[1])) {
+                    return `https://m.me/${encodeURIComponent(fbUser[1])}`;
+                }
+                return raw;
+            }
+            if (/^m\.me\//i.test(raw)) return 'https://' + raw.replace(/^\/+/, '');
+            const user = raw.replace(/^@/, '').replace(/^m\.me\//i, '').split(/[/?#\s]/)[0].trim();
+            return user ? `https://m.me/${encodeURIComponent(user)}` : '';
+        }
+
+        function messengerButtonHtml(value) {
+            const href = normalizeMessengerUrl(value);
+            if (!href) return '';
+            return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#0084FF] text-white text-[10px] font-bold hover:bg-[#0070e0] shadow-sm" title="Chat on Messenger">Messenger</a>`;
+        }
+
         function renderSocialLinks(profile, containerId) {
             const el = document.getElementById(containerId);
             if (!el) return;
             const links = [];
             if (profile.linkedin) links.push(`<a href="${escapeHtml(profile.linkedin)}" target="_blank" rel="noopener noreferrer" class="text-[#800020] font-semibold hover:underline">LinkedIn</a>`);
             if (profile.facebook) links.push(`<a href="${escapeHtml(profile.facebook)}" target="_blank" rel="noopener noreferrer" class="text-[#800020] font-semibold hover:underline">Facebook</a>`);
+            if (profile.messenger) links.push(messengerButtonHtml(profile.messenger));
             if (profile.phone) links.push(`<a href="tel:${escapeHtml(profile.phone.replace(/\s/g, ''))}" class="text-[#800020] font-semibold hover:underline">${escapeHtml(profile.phone)}</a>`);
             if (!links.length) {
                 el.classList.add('hidden');
@@ -1489,7 +1517,7 @@
 
             setProfileActionButtons(viewingOther);
             const socialProfile = viewingOther && !canViewContactInfo(profile, true)
-                ? { ...profile, linkedin: '', facebook: '', phone: '' }
+                ? { ...profile, linkedin: '', facebook: '', messenger: '', phone: '' }
                 : profile;
             renderSocialLinks(socialProfile, 'displaySocialLinks');
         }
@@ -2736,6 +2764,7 @@
                         designation: mapped.designation,
                         linkedin: mapped.linkedin,
                         facebook: mapped.facebook,
+                        messenger: mapped.messenger,
                         phone: mapped.phone,
                         city: mapped.city,
                         country: mapped.country,
@@ -4199,7 +4228,7 @@
         }
 
         async function fetchBatchmates() {
-            const fullSelect = 'id, email, name, avatar, title, company, summary, role, designation, grad_year, batch_name, skills, badges, city, country, hide_contact, linkedin, facebook, phone, verification_status';
+            const fullSelect = 'id, email, name, avatar, title, company, summary, role, designation, grad_year, batch_name, skills, badges, city, country, hide_contact, linkedin, facebook, messenger, phone, verification_status';
             const baseSelect = 'id, email, name, avatar, title, company, summary, role, designation, grad_year, batch_name, skills, badges';
             try {
                 let { data, error } = await supabaseClient.from('alumni_profiles').select(fullSelect);
@@ -5033,7 +5062,23 @@
                 yearEl.classList.add('hidden');
             }
 
-            renderSocialLinks(profile, 'memberProfileSocial');
+            const viewingOtherMember = !!(profile.email && profile.email !== currentUserEmail);
+            const socialForLinks = viewingOtherMember && !canViewContactInfo(profile, true)
+                ? { ...profile, linkedin: '', facebook: '', messenger: '', phone: '' }
+                : profile;
+            renderSocialLinks(socialForLinks, 'memberProfileSocial');
+
+            const messengerBtn = document.getElementById('memberProfileMessengerBtn');
+            const messengerUrl = normalizeMessengerUrl(socialForLinks.messenger);
+            if (messengerBtn) {
+                if (messengerUrl) {
+                    messengerBtn.href = messengerUrl;
+                    messengerBtn.classList.remove('hidden');
+                } else {
+                    messengerBtn.classList.add('hidden');
+                    messengerBtn.removeAttribute('href');
+                }
+            }
 
             const skillsEl = document.getElementById('memberProfileSkills');
             skillsEl.innerText = profile.skills ? `Skills: ${profile.skills}` : '';
@@ -6896,6 +6941,7 @@
                 document.getElementById('inputBadges').value = currentUserProfile.badges.join(', ');
                 document.getElementById('inputLinkedin').value = currentUserProfile.linkedin || '';
                 document.getElementById('inputFacebook').value = currentUserProfile.facebook || '';
+                document.getElementById('inputMessenger').value = currentUserProfile.messenger || '';
                 document.getElementById('inputPhone').value = currentUserProfile.phone || '';
                 document.getElementById('inputCity').value = currentUserProfile.city || '';
                 document.getElementById('inputCountry').value = currentUserProfile.country || '';
@@ -6917,6 +6963,7 @@
             const newBadges = document.getElementById('inputBadges').value.split(',').map(b => b.trim()).filter(Boolean);
             const newLinkedin = document.getElementById('inputLinkedin')?.value.trim() || '';
             const newFacebook = document.getElementById('inputFacebook')?.value.trim() || '';
+            const newMessenger = document.getElementById('inputMessenger')?.value.trim() || '';
             const newPhone = document.getElementById('inputPhone')?.value.trim() || '';
             const newCity = document.getElementById('inputCity')?.value.trim() || '';
             const newCountry = document.getElementById('inputCountry')?.value.trim() || '';
@@ -6938,6 +6985,7 @@
             if (newBadges.length) currentUserProfile.badges = newBadges;
             currentUserProfile.linkedin = newLinkedin;
             currentUserProfile.facebook = newFacebook;
+            currentUserProfile.messenger = newMessenger;
             currentUserProfile.phone = newPhone;
             currentUserProfile.city = newCity;
             currentUserProfile.country = newCountry;
@@ -6983,6 +7031,7 @@
                         status: currentUserProfile.status,
                         linkedin: currentUserProfile.linkedin || null,
                         facebook: currentUserProfile.facebook || null,
+                        messenger: currentUserProfile.messenger || null,
                         phone: currentUserProfile.phone || null,
                         city: currentUserProfile.city || null,
                         country: currentUserProfile.country || null,
@@ -6990,10 +7039,11 @@
                         updated_at: new Date().toISOString()
                     };
                     let { error } = await supabaseClient.from('alumni_profiles').upsert([profileRow], { onConflict: ['email'] });
-                    if (error && /linkedin|facebook|phone|city|country|hide_contact|column/i.test(error.message || '')) {
+                    if (error && /linkedin|facebook|messenger|phone|city|country|hide_contact|column/i.test(error.message || '')) {
                         const fallback = { ...profileRow };
                         delete fallback.linkedin;
                         delete fallback.facebook;
+                        delete fallback.messenger;
                         delete fallback.phone;
                         delete fallback.city;
                         delete fallback.country;

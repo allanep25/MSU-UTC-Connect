@@ -1,4 +1,4 @@
-const CACHE = 'utc-connect-v8';
+const CACHE = 'utc-connect-v9';
 const PRECACHE = ['./', './index.html', './manifest.webmanifest', './assets/logo.png'];
 
 self.addEventListener('install', (event) => {
