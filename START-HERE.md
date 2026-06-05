@@ -26,6 +26,9 @@ Run in Supabase SQL Editor, in order:
 9. `supabase/private-inbox.sql` (private inbox + public community board)
 10. `supabase/message-likes.sql` (Like button on inbox & community messages)
 11. `supabase/features-round2.sql` (batch channel, UTC memory, admin tools in app)
+12. `supabase/push-email-homecoming.sql` (push subscriptions, event check-in)
+
+For **push when app is closed** and **email**, also follow **`docs/PUSH-EMAIL-SETUP.md`** (VAPID keys + Edge Function).
 
 Turn off **Confirm email** under Authentication → Email for easier sign-in.
 
@@ -43,3 +46,5 @@ Turn off **Confirm email** under Authentication → Email for easier sign-in.
 | Batch group chat empty / can’t post | Run `features-round2.sql`; set batch in Personalize Profile |
 | UTC Memory or admin edit member missing | Run `features-round2.sql` |
 | Fix old batch typo (e.g. EMMINENT) | Run `fix-2013-eminent.sql` or Admin → Edit member profile |
+| Push / email not working | Run `push-email-homecoming.sql` + `docs/PUSH-EMAIL-SETUP.md` |
+| Event check-in QR | Officer opens event → QR in modal; alumni scan while signed in |

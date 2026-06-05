@@ -494,6 +494,19 @@
                 <p class="text-[10px] font-bold text-gray-500 uppercase">Who's going</p>
                 <ul id="eventModalAttendees" class="text-[11px] text-gray-700 max-h-32 overflow-y-auto space-y-1 list-disc list-inside"></ul>
             </div>
+            <div id="eventModalOfficerOps" class="hidden space-y-2 p-3 bg-amber-50/80 rounded-xl border border-amber-200/60">
+                <p class="text-[10px] font-bold text-[#800020] uppercase">Officer tools</p>
+                <p id="eventModalCheckinCount" class="text-[10px] text-gray-600"></p>
+                <div id="eventModalQrWrap" class="hidden text-center">
+                    <img id="eventModalQr" alt="Check-in QR" class="mx-auto w-36 h-36 border border-gray-200 rounded-lg bg-white p-1">
+                    <p class="text-[9px] text-gray-500 mt-1">Scan at venue — alumni must be signed in</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" onclick="exportEventRsvpCsv()" class="px-2 py-1 rounded-lg bg-white border border-gray-200 text-[10px] font-semibold hover:bg-gray-50">Export RSVP CSV</button>
+                    <button type="button" onclick="emailEventRsvpReminders()" class="px-2 py-1 rounded-lg bg-white border border-gray-200 text-[10px] font-semibold hover:bg-gray-50">Email RSVPs</button>
+                </div>
+            </div>
+            <p id="eventModalCheckinBanner" class="hidden text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg px-2 py-1.5"></p>
             <div class="flex flex-wrap gap-2 pt-1">
                 <button type="button" id="eventModalJoinBtn" onclick="joinEventFromModal()" class="flex-1 min-w-[120px] bg-[#800020] text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-red-900 transition-colors">Join Event</button>
                 <button type="button" id="eventModalIcsBtn" onclick="downloadActiveEventIcs()" class="px-3 py-2 rounded-lg bg-amber-100 text-amber-900 text-xs font-semibold hover:bg-amber-200">Add to calendar</button>
@@ -511,6 +524,44 @@
         <img id="imageLightboxImg" src="" alt="" class="max-w-full max-h-[92vh] w-auto object-contain rounded-lg shadow-2xl">
         <p id="imageLightboxCounter" class="absolute top-4 left-1/2 -translate-x-1/2 text-white/80 text-[11px] font-semibold hidden"></p>
         <p id="imageLightboxCaption" class="absolute bottom-4 left-4 right-4 text-center text-white/90 text-xs font-semibold pointer-events-none hidden"></p>
+    </div>
+
+    <!-- ================= ONBOARDING WIZARD ================= -->
+    <div id="onboardingModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-xl max-w-md w-full p-5 shadow-xl border border-amber-100 space-y-4 max-h-[92vh] overflow-y-auto">
+            <div class="flex items-center justify-between gap-2 border-b border-gray-100 pb-3">
+                <div>
+                    <p class="text-[10px] uppercase tracking-wider text-[#800020] font-bold">Welcome</p>
+                    <h3 class="text-sm font-bold text-gray-800">Set up your alumni profile</h3>
+                </div>
+                <p id="onboardingStepLabel" class="text-[10px] font-bold text-gray-400">Step 1 of 4</p>
+            </div>
+            <div id="onboardingStep1" class="onboarding-step space-y-3">
+                <p class="text-xs text-gray-600">Choose your batch so you can join your private batch group chat.</p>
+                <select id="onboardingBatch" class="w-full p-2.5 border border-gray-200 rounded-lg text-xs bg-white focus:ring-2 focus:ring-[#800020]/20"></select>
+                <input id="onboardingYear" type="text" readonly placeholder="Grad year" class="w-full p-2 border border-gray-100 rounded-lg text-xs bg-gray-50">
+            </div>
+            <div id="onboardingStep2" class="onboarding-step hidden space-y-3">
+                <p class="text-xs text-gray-600">Add a profile photo (optional but helps batchmates recognize you).</p>
+                <input id="onboardingPhotoFile" type="file" accept="image/*" class="w-full text-xs">
+                <img id="onboardingPhotoPreview" src="" alt="" class="hidden w-20 h-20 rounded-full object-cover border-2 border-[#800020]">
+            </div>
+            <div id="onboardingStep3" class="onboarding-step hidden space-y-3">
+                <p class="text-xs text-gray-600">A short line about you for the directory.</p>
+                <input id="onboardingStatus" type="text" placeholder="e.g. Working in Marawi, open to mentoring" class="w-full p-2.5 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20">
+            </div>
+            <div id="onboardingStep4" class="onboarding-step hidden space-y-3 text-center py-2">
+                <p class="text-xs text-gray-600">You're ready. Say hello in your batch group chat — only your batch can see it.</p>
+                <p class="text-[11px] font-bold text-[#800020]" id="onboardingBatchSummary"></p>
+            </div>
+            <div class="flex flex-wrap gap-2 justify-between pt-2 border-t border-gray-100">
+                <button type="button" id="onboardingSkipBtn" onclick="skipOnboarding()" class="px-3 py-1.5 rounded-lg text-xs text-gray-500 hover:bg-gray-100">Skip for now</button>
+                <div class="flex gap-2">
+                    <button type="button" id="onboardingBackBtn" onclick="onboardingStep(-1)" class="hidden px-3 py-1.5 rounded-lg bg-gray-100 text-xs font-semibold text-gray-700 hover:bg-gray-200">Back</button>
+                    <button type="button" id="onboardingNextBtn" onclick="onboardingStep(1)" class="px-4 py-1.5 rounded-lg bg-[#800020] text-white text-xs font-bold hover:bg-red-900">Next</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- ================= INVITE BATCHMATE MODAL ================= -->
@@ -1114,6 +1165,8 @@
     <script>
         const SUPABASE_URL = "https://ouwuhzttjnvdivsfbefe.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_IFeDdN_0oFEy5SR-qUwY3w_6PDUeFyi";
+        /** Paste your VAPID public key after running: npx web-push generate-vapid-keys — see docs/PUSH-EMAIL-SETUP.md */
+        const VAPID_PUBLIC_KEY = '';
 
         const SUPABASE_LIB = window.supabase;
         const supabaseClient = SUPABASE_LIB.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -1194,6 +1247,9 @@
         let jobPosts = [];
         const NOTIFICATION_STORAGE_KEY = 'utc_notification_seen_v1';
         const NOTIFICATION_SOUND_KEY = 'utc_notification_sound_v1';
+        const ONBOARDING_DONE_KEY = 'utc_onboarding_done_v1';
+        let onboardingWizardStep = 0;
+        let eventCheckinCounts = {};
         let notificationAudioCtx = null;
         let notificationAudioUnlocked = false;
         let pendingInvites = [];
@@ -2415,6 +2471,17 @@
                     submitBatchMessage();
                 }
             });
+            document.getElementById('onboardingBatch')?.addEventListener('change', (e) => {
+                const yearEl = document.getElementById('onboardingYear');
+                if (yearEl) yearEl.value = batchLabelToYear(e.target.value) || '';
+            });
+            document.getElementById('onboardingPhotoFile')?.addEventListener('change', (e) => {
+                const file = e.target.files?.[0];
+                const preview = document.getElementById('onboardingPhotoPreview');
+                if (!file || !preview) return;
+                preview.src = URL.createObjectURL(file);
+                preview.classList.remove('hidden');
+            });
             document.getElementById('batchSearch').addEventListener('input', e => filterBatchDirectory(e.target.value));
             document.getElementById('batchFilter').addEventListener('change', onBatchFilterChange);
             document.getElementById('batchYearFilter').addEventListener('change', () => filterBatchDirectory(document.getElementById('batchSearch').value));
@@ -2456,6 +2523,8 @@
 
             await restoreSession();
             await loadAppData();
+            const urlPanel = new URLSearchParams(window.location.search).get('panel');
+            if (urlPanel && DASHBOARD_PANEL_TITLES[urlPanel]) navigateDashboard(urlPanel);
             setupRealtimeSubscriptions();
             registerServiceWorker();
 
@@ -2480,6 +2549,7 @@
             await fetchOverviewAds();
             await fetchCommunityPhotos();
             await fetchUtcMemories();
+            await fetchEventCheckinCounts();
             await fetchBatchAnnouncements();
             await fetchJobPosts();
             await fetchMetrics();
@@ -2497,6 +2567,7 @@
             updateTestimonialTabStyles();
             checkEventReminders();
             renderUtcMemorySpotlight();
+            await processCheckinFromUrl();
         }
 
         async function restoreSession() {
@@ -2935,7 +3006,280 @@
             updateTier2Ui();
             updateNotificationBadge();
             updateAccountRoleBadge();
+            maybeShowOnboardingWizard();
         }
+
+        function isDefaultAvatarUrl(url) {
+            return !url || String(url).startsWith('data:image/svg+xml');
+        }
+
+        function needsOnboarding() {
+            if (!currentUserEmail) return false;
+            if (localStorage.getItem(ONBOARDING_DONE_KEY) === '1') return false;
+            const batch = (currentUserProfile.batchName || '').trim();
+            const status = (currentUserProfile.status || '').trim();
+            return !batch || isDefaultAvatarUrl(currentUserProfile.avatar) || !status;
+        }
+
+        function populateOnboardingBatchSelect() {
+            const sel = document.getElementById('onboardingBatch');
+            if (!sel || sel.options.length > 1) return;
+            sel.innerHTML = '<option value="">Select batch…</option>';
+            BATCH_OPTIONS.forEach(batch => {
+                const opt = document.createElement('option');
+                opt.value = batch;
+                opt.textContent = batch;
+                sel.appendChild(opt);
+            });
+            if (currentUserProfile.batchName) {
+                const match = BATCH_OPTIONS.find(b => batchesMatch(currentUserProfile.batchName, b));
+                if (match) sel.value = match;
+            }
+            const yearEl = document.getElementById('onboardingYear');
+            if (yearEl) yearEl.value = batchLabelToYear(sel.value) || currentUserProfile.gradYear || '';
+        }
+
+        function setOnboardingWizardStep(step) {
+            onboardingWizardStep = Math.max(0, Math.min(3, step));
+            document.querySelectorAll('.onboarding-step').forEach((el, i) => {
+                el.classList.toggle('hidden', i !== onboardingWizardStep);
+            });
+            const label = document.getElementById('onboardingStepLabel');
+            if (label) label.textContent = `Step ${onboardingWizardStep + 1} of 4`;
+            const back = document.getElementById('onboardingBackBtn');
+            const next = document.getElementById('onboardingNextBtn');
+            if (back) back.classList.toggle('hidden', onboardingWizardStep === 0);
+            if (next) next.textContent = onboardingWizardStep === 3 ? 'Finish' : 'Next';
+            if (onboardingWizardStep === 3) {
+                const summary = document.getElementById('onboardingBatchSummary');
+                const batch = document.getElementById('onboardingBatch')?.value || currentUserProfile.batchName;
+                if (summary) summary.textContent = batch ? `Batch: ${batch}` : '';
+            }
+        }
+
+        window.onboardingStep = async function(delta) {
+            if (delta > 0 && onboardingWizardStep === 0) {
+                const batch = document.getElementById('onboardingBatch')?.value?.trim();
+                if (!batch) {
+                    showToast('Select your batch', 'error');
+                    return;
+                }
+            }
+            if (delta > 0 && onboardingWizardStep === 3) {
+                await finishOnboarding();
+                return;
+            }
+            setOnboardingWizardStep(onboardingWizardStep + delta);
+        };
+
+        window.skipOnboarding = function() {
+            localStorage.setItem(ONBOARDING_DONE_KEY, '1');
+            document.getElementById('onboardingModal')?.classList.add('hidden');
+        };
+
+        async function finishOnboarding() {
+            const batch = document.getElementById('onboardingBatch')?.value?.trim();
+            const status = document.getElementById('onboardingStatus')?.value?.trim();
+            const photoFile = document.getElementById('onboardingPhotoFile')?.files?.[0];
+            if (batch) {
+                currentUserProfile.batchName = batch;
+                currentUserProfile.gradYear = batchLabelToYear(batch) || currentUserProfile.gradYear;
+            }
+            if (status) currentUserProfile.status = status;
+            if (photoFile) {
+                selectedProfileAvatarFile = photoFile;
+                await uploadPendingAvatarIfAny();
+            }
+            if (currentUserEmail) {
+                try {
+                    await supabaseClient.from('alumni_profiles').update({
+                        batch_name: currentUserProfile.batchName,
+                        grad_year: currentUserProfile.gradYear,
+                        status: currentUserProfile.status,
+                        avatar: currentUserProfile.avatar,
+                        updated_at: new Date().toISOString()
+                    }).eq('email', currentUserEmail);
+                } catch (err) {
+                    console.warn('Onboarding save:', err.message);
+                }
+            }
+            localStorage.setItem(ONBOARDING_DONE_KEY, '1');
+            document.getElementById('onboardingModal')?.classList.add('hidden');
+            await fetchBatchmates();
+            renderCurrentUserProfile();
+            showToast('Profile ready — welcome!', 'success');
+            navigateDashboard('messages');
+            setMessagesTab('batch');
+        }
+
+        function maybeShowOnboardingWizard() {
+            if (!needsOnboarding()) return;
+            populateOnboardingBatchSelect();
+            setOnboardingWizardStep(0);
+            document.getElementById('onboardingModal')?.classList.remove('hidden');
+        }
+
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const raw = atob(base64);
+            const arr = new Uint8Array(raw.length);
+            for (let i = 0; i < raw.length; ++i) arr[i] = raw.charCodeAt(i);
+            return arr;
+        }
+
+        async function subscribeWebPush() {
+            if (!VAPID_PUBLIC_KEY || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+                return false;
+            }
+            if (!currentUserEmail) return false;
+            try {
+                const reg = await navigator.serviceWorker.ready;
+                let sub = await reg.pushManager.getSubscription();
+                if (!sub) {
+                    sub = await reg.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                    });
+                }
+                const json = sub.toJSON();
+                const { error } = await supabaseClient.from('push_subscriptions').upsert({
+                    user_email: currentUserEmail,
+                    endpoint: json.endpoint,
+                    p256dh: json.keys?.p256dh,
+                    auth_key: json.keys?.auth,
+                    user_agent: navigator.userAgent?.slice(0, 200) || null
+                }, { onConflict: 'endpoint' });
+                if (error) throw error;
+                return true;
+            } catch (err) {
+                console.warn('Web push subscribe:', err.message);
+                return false;
+            }
+        }
+
+        async function notifyAlumniEdge(payload) {
+            try {
+                const { data, error } = await supabaseClient.functions.invoke('notify-alumni', { body: payload });
+                if (error) console.warn('notify-alumni:', error.message);
+                return data;
+            } catch (err) {
+                console.warn('notify-alumni unavailable:', err.message);
+                return null;
+            }
+        }
+
+        function getEventCheckinUrl(eventId) {
+            const base = 'https://utc.marawionline.com/';
+            return `${base}?checkin=${encodeURIComponent(eventId)}`;
+        }
+
+        async function fetchEventCheckinCounts() {
+            eventCheckinCounts = {};
+            try {
+                const { data, error } = await supabaseClient.from('event_checkins').select('event_id');
+                if (error) throw error;
+                (data || []).forEach(row => {
+                    const id = row.event_id;
+                    eventCheckinCounts[id] = (eventCheckinCounts[id] || 0) + 1;
+                });
+            } catch (err) {
+                console.warn('Check-in counts:', err.message);
+            }
+        }
+
+        window.processCheckinFromUrl = async function() {
+            const params = new URLSearchParams(window.location.search);
+            const eventId = params.get('checkin');
+            if (!eventId || !currentUserEmail) return;
+            if (isBuiltinEventId(eventId)) {
+                showToast('Check-in opens when this event is saved in Admin', 'info');
+                return;
+            }
+            try {
+                const { error } = await supabaseClient.from('event_checkins').upsert({
+                    event_id: eventId,
+                    user_email: currentUserEmail,
+                    user_name: currentUserProfile.name || currentUser,
+                    checked_at: new Date().toISOString()
+                }, { onConflict: 'event_id,user_email' });
+                if (error) throw error;
+                showToast('Checked in successfully!', 'success');
+                await fetchEventCheckinCounts();
+                const banner = document.getElementById('eventModalCheckinBanner');
+                if (banner) {
+                    banner.textContent = '✓ You are checked in for this event';
+                    banner.classList.remove('hidden');
+                }
+                history.replaceState({}, '', window.location.pathname + window.location.hash);
+            } catch (err) {
+                const msg = (err.message || '').includes('event_checkins')
+                    ? 'Run supabase/push-email-homecoming.sql first'
+                    : 'Could not check in';
+                showToast(msg, 'error');
+            }
+        };
+
+        window.exportEventRsvpCsv = async function() {
+            if (!canManageEvents() || !activeEventId || isBuiltinEventId(activeEventId)) {
+                showToast('Open a saved event first', 'error');
+                return;
+            }
+            try {
+                const { data: rsvps, error } = await supabaseClient
+                    .from('event_rsvps')
+                    .select('user_email, response, updated_at')
+                    .eq('event_id', activeEventId)
+                    .eq('response', 'yes');
+                if (error) throw error;
+                const event = events.find(e => String(e.id) === String(activeEventId));
+                const headers = ['Name', 'Email', 'Batch', 'Response', 'RSVP date'];
+                const escapeCsv = (v) => {
+                    const s = String(v ?? '');
+                    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+                };
+                const lines = [headers.join(',')];
+                (rsvps || []).forEach(r => {
+                    const prof = batchmates.find(p => (p.email || '').toLowerCase() === (r.user_email || '').toLowerCase());
+                    lines.push([
+                        prof?.name || r.user_email,
+                        r.user_email,
+                        prof?.batchName || '',
+                        r.response,
+                        r.updated_at
+                    ].map(escapeCsv).join(','));
+                });
+                const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `event-rsvp-${(event?.title || activeEventId).replace(/[^\w]+/g, '-')}.csv`;
+                a.click();
+                URL.revokeObjectURL(a.href);
+                showToast(`Exported ${(rsvps || []).length} RSVPs`, 'success');
+            } catch (err) {
+                showToast('Could not export RSVPs', 'error');
+            }
+        };
+
+        window.emailEventRsvpReminders = async function() {
+            if (!canManageEvents() || !activeEventId || isBuiltinEventId(activeEventId)) {
+                showToast('Open a saved event first', 'error');
+                return;
+            }
+            const event = events.find(e => String(e.id) === String(activeEventId));
+            if (!confirm(`Send email reminder to everyone who joined "${event?.title || 'this event'}"? Requires Resend setup.`)) return;
+            showToast('Sending emails…', 'info');
+            const result = await notifyAlumniEdge({
+                action: 'event_reminder',
+                event_id: activeEventId,
+                title: event?.title || 'UTC Event',
+                body: `${event?.date || ''} ${event?.time || ''} — ${event?.location || ''}`.trim(),
+                subject: `Reminder: ${event?.title || 'UTC Event'}`,
+                html: `<p>Hello,</p><p>This is a reminder for <strong>${escapeHtml(event?.title || 'your event')}</strong>.</p><p>${escapeHtml(event?.description || '').slice(0, 500)}</p><p><a href="https://utc.marawionline.com">Open MSU-UTC Connect</a></p>`
+            });
+            const n = result?.emailSent ?? 0;
+            showToast(n ? `Sent ${n} email(s)` : 'No emails sent — configure Resend in Supabase (see docs/PUSH-EMAIL-SETUP.md)', n ? 'success' : 'info');
+        };
 
         async function fetchMetrics() {
             try {
@@ -3197,7 +3541,13 @@
                 perm = await Notification.requestPermission();
             }
             if (perm === 'granted') {
-                showToast('Phone alerts enabled — you may hear a sound when the app is in the background', 'success');
+                const pushed = await subscribeWebPush();
+                showToast(
+                    pushed
+                        ? 'Push alerts enabled — works when app is closed (with VAPID setup)'
+                        : 'Alerts on — add VAPID_PUBLIC_KEY in index.html for push when closed (see docs/PUSH-EMAIL-SETUP.md)',
+                    'success'
+                );
                 playNotificationSound();
             } else if (perm === 'denied') {
                 showToast('Alerts blocked — enable notifications for this site in phone settings', 'error');
@@ -3237,13 +3587,15 @@
                 const alertBtn = document.createElement('button');
                 alertBtn.type = 'button';
                 alertBtn.className = 'w-full text-left px-2 py-1.5 rounded-lg bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 text-[11px]';
-                alertBtn.textContent = '📱 Enable phone alerts (background)';
+                alertBtn.textContent = VAPID_PUBLIC_KEY ? '📱 Enable push (app closed)' : '📱 Enable alerts (sound)';
                 alertBtn.onclick = () => requestPhoneNotifications();
                 footer.appendChild(alertBtn);
             } else if ('Notification' in window') {
                 const ok = document.createElement('p');
                 ok.className = 'text-[10px] text-gray-500 px-2';
-                ok.textContent = 'Phone alerts on. Tap anywhere on the site once so sound can play.';
+                ok.textContent = VAPID_PUBLIC_KEY
+                    ? 'Alerts on. Push works when app is closed if you enabled push.'
+                    : 'Alerts on. Add VAPID key for push when app is closed.';
                 footer.appendChild(ok);
             }
             dd.appendChild(footer);
@@ -4457,6 +4809,14 @@
                 input.value = '';
                 await fetchMessages();
                 if (activeMessagesTab === 'batch') scrollBatchChatToEnd();
+                notifyAlumniEdge({
+                    action: 'batch_chat',
+                    batch_name: batchName,
+                    exclude_email: currentUserEmail,
+                    title: `${batchName} chat`,
+                    body: `${currentUserProfile.name || currentUser}: ${text.slice(0, 100)}`,
+                    url: 'https://utc.marawionline.com/?panel=messages'
+                });
             } catch (err) {
                 const msg = (err.message || '').includes('batch_name')
                     ? 'Run supabase/features-round2.sql in Supabase first.'
@@ -4488,6 +4848,15 @@
                 if (error) throw error;
                 await fetchMessages();
                 showToast(`Private message sent to ${recipient.name || 'member'}`, 'success');
+                notifyAlumniEdge({
+                    action: 'dm',
+                    recipient_email: recipient.email,
+                    title: 'New private message',
+                    body: `${currentUserProfile.name || currentUser}: ${text.slice(0, 120)}`,
+                    url: 'https://utc.marawionline.com/?panel=messages',
+                    subject: `Message from ${currentUserProfile.name || 'UTC alumni'}`,
+                    html: `<p>You have a new private message on MSU-UTC Connect from <strong>${escapeHtml(currentUserProfile.name || currentUser)}</strong>:</p><p>${escapeHtml(text).slice(0, 500)}</p><p><a href="https://utc.marawionline.com">Open inbox</a></p>`
+                });
                 return true;
             } catch (err) {
                 console.warn('Could not send message:', err.message);
@@ -6058,6 +6427,39 @@
                 remBtn.classList.toggle('hidden', builtin);
                 const stored = getStoredEventReminders()[String(eventId)];
                 remBtn.textContent = stored && !stored.fired ? 'Reminder set ✓' : 'Remind me';
+            }
+            const officerOps = document.getElementById('eventModalOfficerOps');
+            const qrWrap = document.getElementById('eventModalQrWrap');
+            const qrImg = document.getElementById('eventModalQr');
+            const checkinCountEl = document.getElementById('eventModalCheckinCount');
+            const checkinBanner = document.getElementById('eventModalCheckinBanner');
+            if (officerOps) officerOps.classList.toggle('hidden', builtin || !canManageEvents());
+            if (!builtin && canManageEvents()) {
+                const n = eventCheckinCounts[eventId] || 0;
+                if (checkinCountEl) checkinCountEl.textContent = `${n} checked in at venue`;
+                if (qrWrap && qrImg) {
+                    qrWrap.classList.remove('hidden');
+                    const checkinUrl = getEventCheckinUrl(eventId);
+                    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(checkinUrl)}`;
+                }
+            } else if (qrWrap) {
+                qrWrap.classList.add('hidden');
+            }
+            if (checkinBanner) {
+                checkinBanner.classList.add('hidden');
+                if (!builtin && currentUserEmail) {
+                    supabaseClient.from('event_checkins')
+                        .select('user_email')
+                        .eq('event_id', eventId)
+                        .eq('user_email', currentUserEmail)
+                        .maybeSingle()
+                        .then(({ data }) => {
+                            if (data) {
+                                checkinBanner.textContent = '✓ You are checked in for this event';
+                                checkinBanner.classList.remove('hidden');
+                            }
+                        });
+                }
             }
             renderEventAttendeesInModal(eventId);
             modal.classList.remove('hidden');
