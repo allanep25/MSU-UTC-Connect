@@ -408,8 +408,9 @@
                     <div class="space-y-2 mt-2 pt-2 border-t border-gray-200">
                         <input id="inputLinkedin" type="url" placeholder="LinkedIn URL" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
                         <input id="inputFacebook" type="url" placeholder="Facebook URL" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
-                        <input id="inputMessenger" type="text" placeholder="Messenger — username or m.me/yourname" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#0084FF]/30 focus:border-[#0084FF] focus:outline-none">
-                        <p class="text-[9px] text-gray-400">Opens Facebook Messenger when others tap your Messenger button.</p>
+                        <input id="inputMessenger" type="text" placeholder="Messenger — username or m.me/yourname" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#0084FF]/30 focus:border-[#0084FF] focus:outline-none" oninput="syncMessengerPreviewInModal()">
+                        <a id="inputMessengerPreviewBtn" href="#" target="_blank" rel="noopener noreferrer" class="hidden w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#0084FF] text-white text-xs font-bold hover:bg-[#0070e0] shadow-sm">Open Messenger</a>
+                        <p class="text-[9px] text-gray-400">Save profile, then others see this button on your profile and in Batch Directory.</p>
                         <input id="inputPhone" type="tel" placeholder="Phone (optional)" class="w-full p-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-[#800020]/20 focus:outline-none">
                     </div>
                 </details>
@@ -796,6 +797,10 @@
                         <p id="displaySkills" class="text-[10px] text-gray-500">Skills: —</p>
                         <p id="displayLocation" class="text-[10px] text-gray-500 hidden"></p>
                         <div id="displaySocialLinks" class="flex flex-wrap gap-2 text-[10px] hidden"></div>
+                        <div id="profileMessengerWrap" class="hidden space-y-1">
+                            <p class="text-[10px] font-bold text-gray-500 uppercase">Messenger</p>
+                            <a id="profileMessengerBtn" href="#" target="_blank" rel="noopener noreferrer" class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-[#0084FF] text-white text-xs font-bold hover:bg-[#0070e0] shadow-sm">Open Messenger</a>
+                        </div>
                         <button id="personalizeProfileBtn" type="button" onclick="toggleProfileModal(true)" class="w-full text-[11px] font-bold bg-[#800020] text-white px-3 py-2 rounded-lg hover:bg-red-900 transition-colors">Personalize Profile</button>
                         <button id="backToMyProfileBtn" type="button" onclick="restoreMyProfile()" class="hidden w-full text-[11px] font-bold bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors">← Back to My Profile</button>
                     </section>
@@ -1411,11 +1416,41 @@
             return user ? `https://m.me/${encodeURIComponent(user)}` : '';
         }
 
-        function messengerButtonHtml(value) {
+        function messengerButtonHtml(value, large) {
             const href = normalizeMessengerUrl(value);
             if (!href) return '';
-            return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#0084FF] text-white text-[10px] font-bold hover:bg-[#0070e0] shadow-sm" title="Chat on Messenger">Messenger</a>`;
+            const cls = large
+                ? 'w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-[#0084FF] text-white text-xs font-bold hover:bg-[#0070e0] shadow-sm'
+                : 'inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#0084FF] text-white text-[10px] font-bold hover:bg-[#0070e0] shadow-sm';
+            return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" class="${cls}" title="Chat on Messenger">Messenger</a>`;
         }
+
+        function updateProfileMessengerButton(profile) {
+            const wrap = document.getElementById('profileMessengerWrap');
+            const btn = document.getElementById('profileMessengerBtn');
+            const url = normalizeMessengerUrl(profile?.messenger);
+            if (!wrap || !btn) return;
+            if (url) {
+                btn.href = url;
+                wrap.classList.remove('hidden');
+            } else {
+                wrap.classList.add('hidden');
+                btn.removeAttribute('href');
+            }
+        }
+
+        window.syncMessengerPreviewInModal = function() {
+            const preview = document.getElementById('inputMessengerPreviewBtn');
+            const url = normalizeMessengerUrl(document.getElementById('inputMessenger')?.value);
+            if (!preview) return;
+            if (url) {
+                preview.href = url;
+                preview.classList.remove('hidden');
+            } else {
+                preview.classList.add('hidden');
+                preview.removeAttribute('href');
+            }
+        };
 
         function renderSocialLinks(profile, containerId) {
             const el = document.getElementById(containerId);
@@ -1431,7 +1466,7 @@
                 return;
             }
             el.classList.remove('hidden');
-            el.innerHTML = links.join('<span class="text-gray-300"> · </span>');
+            el.innerHTML = links.join('<span class="text-gray-300 hidden sm:inline"> · </span>');
         }
 
         function setProfileActionButtons(viewingOther) {
@@ -1520,6 +1555,7 @@
                 ? { ...profile, linkedin: '', facebook: '', messenger: '', phone: '' }
                 : profile;
             renderSocialLinks(socialProfile, 'displaySocialLinks');
+            if (!viewingOther) updateProfileMessengerButton(profile);
         }
 
         const BATCH_OPTIONS = [
@@ -5962,8 +5998,11 @@
                         <button type="button" onclick="toggleConnection(${batchmate.id})" class="px-3 py-1 rounded-full text-[10px] font-semibold ${connectedBatchmates.has(batchmate.id) ? 'bg-green-100 text-green-800' : 'bg-[#800020] text-white hover:bg-red-900'}">${connectedBatchmates.has(batchmate.id) ? 'Connected' : 'Connect'}</button>
                     </div>
                     <p class="text-[11px] text-gray-600">${batchmate.summary}</p>
-                    <div class="flex items-center justify-between gap-2">
-                        <button type="button" onclick="viewBatchmate(${batchmate.id})" class="text-[10px] font-semibold text-[#800020] hover:text-red-900">View Profile</button>
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button type="button" onclick="viewBatchmate(${batchmate.id})" class="text-[10px] font-semibold text-[#800020] hover:text-red-900">View Profile</button>
+                            ${batchmate.messenger && canViewContactInfo(batchmate, batchmate.email !== currentUserEmail) ? messengerButtonHtml(batchmate.messenger) : ''}
+                        </div>
                         <span class="text-[10px] text-gray-500">${batchmate.gradYear}</span>
                     </div>
                 `;
@@ -6942,6 +6981,7 @@
                 document.getElementById('inputLinkedin').value = currentUserProfile.linkedin || '';
                 document.getElementById('inputFacebook').value = currentUserProfile.facebook || '';
                 document.getElementById('inputMessenger').value = currentUserProfile.messenger || '';
+                syncMessengerPreviewInModal();
                 document.getElementById('inputPhone').value = currentUserProfile.phone || '';
                 document.getElementById('inputCity').value = currentUserProfile.city || '';
                 document.getElementById('inputCountry').value = currentUserProfile.country || '';
@@ -7008,6 +7048,7 @@
                 badgesEl.appendChild(chip);
             });
             renderProfileSidebar({ ...currentUserProfile, email: currentUserEmail || '' }, { viewingOther: false });
+            updateProfileMessengerButton(currentUserProfile);
 
             if (currentUserEmail) {
                 try {
