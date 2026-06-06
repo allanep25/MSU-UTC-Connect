@@ -2358,6 +2358,10 @@
                 : `No members in ${selectedBatch} yet — invite your batchmates`;
         }
 
+        let batchDirectoryNeedsRender = true;
+        let batchSearchDebounceTimer = null;
+        let appDataLoaded = false;
+
         function onBatchFilterChange() {
             const batchEl = document.getElementById('batchFilter');
             const yearEl = document.getElementById('batchYearFilter');
@@ -2368,19 +2372,24 @@
             } else if (yearEl && !selectedBatch) {
                 yearEl.value = '';
             }
-            filterBatchDirectory(document.getElementById('batchSearch')?.value || '');
-            const list = document.getElementById('batchDirectoryList');
-            if (list && selectedBatch) {
-                list.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }
+            batchDirectoryNeedsRender = true;
+            renderBatchDirectory();
         }
 
-        function applyDefaultBatchFilter() {
-            if (!currentUserProfile.batchName) return;
+        function resetBatchDirectoryToAllBatches() {
             const batchEl = document.getElementById('batchFilter');
-            if (!batchEl || batchEl.value) return;
-            setBatchSelectValue('batchFilter', currentUserProfile.batchName);
-            onBatchFilterChange();
+            const yearEl = document.getElementById('batchYearFilter');
+            if (batchEl) batchEl.value = '';
+            if (yearEl) yearEl.value = '';
+            batchDirectoryNeedsRender = true;
+        }
+
+        function onBatchSearchInput(value) {
+            clearTimeout(batchSearchDebounceTimer);
+            batchSearchDebounceTimer = setTimeout(() => {
+                batchDirectoryNeedsRender = true;
+                renderBatchDirectory();
+            }, 220);
         }
 
         function populateBatchSelects() {
@@ -2466,6 +2475,10 @@
             if (panelId === 'overview') startPhotoSlideshowAutoplay();
             else stopPhotoSlideshowAutoplay();
             if (panelId === 'messages') setMessagesTab(activeMessagesTab);
+            if (panelId === 'directory') {
+                resetBatchDirectoryToAllBatches();
+                renderBatchDirectory();
+            }
         };
 
         function refreshEventPosterImages() {
@@ -2585,10 +2598,13 @@
                 preview.src = URL.createObjectURL(file);
                 preview.classList.remove('hidden');
             });
-            document.getElementById('batchSearch')?.addEventListener('input', e => filterBatchDirectory(e.target.value));
+            document.getElementById('batchSearch')?.addEventListener('input', e => onBatchSearchInput(e.target.value));
             document.getElementById('batchFilter')?.addEventListener('change', onBatchFilterChange);
-            document.getElementById('batchYearFilter')?.addEventListener('change', () => filterBatchDirectory(document.getElementById('batchSearch')?.value || ''));
-            document.getElementById('skillFilter')?.addEventListener('input', () => filterBatchDirectory(document.getElementById('batchSearch')?.value || ''));
+            document.getElementById('batchYearFilter')?.addEventListener('change', () => {
+                batchDirectoryNeedsRender = true;
+                renderBatchDirectory();
+            });
+            document.getElementById('skillFilter')?.addEventListener('input', e => onBatchSearchInput(e.target.value));
 
             document.getElementById('testimonialFilters')?.addEventListener('click', (event) => {
                 const button = event.target.closest('[data-testimonial-filter]');
@@ -2648,23 +2664,31 @@
         }
 
         async function loadAppData() {
+            if (appDataLoaded) return;
             await fetchBatchmates();
-            await fetchConnections();
-            await fetchEvents();
-            await fetchEventRsvpCounts();
-            await fetchEventResponses();
-            await fetchTestimonials();
-            await fetchMessages();
-            await fetchPendingInvites();
-            await fetchOverviewAds();
-            await fetchCommunityPhotos();
-            await fetchUtcMemories();
-            await fetchEventCheckinCounts();
-            await fetchBatchAnnouncements();
-            await fetchJobPosts();
-            await fetchMetrics();
+            await Promise.all([
+                fetchConnections(),
+                fetchEvents(),
+                fetchEventRsvpCounts(),
+                fetchEventResponses(),
+                fetchTestimonials(),
+                fetchMessages(),
+                fetchPendingInvites(),
+                fetchOverviewAds(),
+                fetchCommunityPhotos(),
+                fetchUtcMemories(),
+                fetchEventCheckinCounts(),
+                fetchBatchAnnouncements(),
+                fetchJobPosts(),
+                fetchMetrics()
+            ]);
+            appDataLoaded = true;
             renderStats();
-            renderBatchDirectory();
+            if (activeDashboardPanel === 'directory') {
+                renderBatchDirectory();
+            } else {
+                batchDirectoryNeedsRender = true;
+            }
             renderNetwork();
             renderOfficersBoard();
             renderEvents();
@@ -2693,7 +2717,7 @@
             }
 
             if (data?.session?.user) {
-                await handleExistingSession(data.session.user);
+                await handleExistingSession(data.session.user, { skipAppData: true });
             } else {
                 clearAuthState();
             }
@@ -2748,16 +2772,18 @@
             }
         }
 
-        async function handleExistingSession(user) {
+        async function handleExistingSession(user, options = {}) {
             currentUser = user.user_metadata?.full_name || user.email || 'Alumni Member';
             currentUserEmail = (user.email || '').trim();
             currentUserId = user.id;
             await ensureAlumniProfileForUser(user);
             updateAccountRoleBadge();
-            await loginSuccess(currentUser);
+            await loginSuccess(currentUser, true, options);
         }
 
         function clearAuthState() {
+            appDataLoaded = false;
+            batchDirectoryNeedsRender = true;
             currentUser = null;
             currentUserEmail = null;
             currentUserId = null;
@@ -2815,7 +2841,6 @@
                         renderCurrentUserProfile();
                     }
                     updateAccountRoleBadge();
-                    applyDefaultBatchFilter();
                 }
             } catch (err) {
                 console.warn('Could not fetch current user profile:', err.message);
@@ -3127,7 +3152,7 @@
         }
         window.handleAuthSubmit = handleAuthSubmit;
 
-        async function loginSuccess(name, hideOverlay = true) {
+        async function loginSuccess(name, hideOverlay = true, options = {}) {
             profileNameEl.innerText = name;
             currentUserProfile.name = name;
             const initials = name.split(' ').map(part => part[0]).join('').toUpperCase();
@@ -3141,18 +3166,9 @@
 
             await fetchCurrentUserProfile();
             await uploadPendingAvatarIfAny();
-            await fetchConnections();
-            await fetchEventRsvpCounts();
-            await fetchEventResponses();
-            await fetchPendingInvites();
-            await fetchMetrics();
-            renderStats();
-            await fetchOverviewAds();
-            await fetchBatchAnnouncements();
-            await fetchJobPosts();
-            renderAdminPanel();
-            renderAlumniLocations();
-            updateTier2Ui();
+            if (!options.skipAppData) {
+                await loadAppData();
+            }
             updateNotificationBadge();
             updateAccountRoleBadge();
             maybeShowOnboardingWizard();
@@ -3953,8 +3969,8 @@
             if (skillFilter && q.includes(' ')) {
                 skillFilter.value = '';
             }
+            batchDirectoryNeedsRender = true;
             navigateDashboard('directory');
-            renderBatchDirectory();
         };
 
         async function fetchBatchAnnouncements() {
@@ -4292,20 +4308,16 @@
                 batchmates = [];
                 batchOfficers = [];
             }
-            renderBatchDirectory();
+            batchDirectoryNeedsRender = true;
             populateYearFilterOptions();
             renderOfficersBoard();
             renderAlumniLocations();
-            applyDefaultBatchFilter();
             updateTier2Ui();
         }
 
         async function fetchConnections() {
             connectedBatchmates = new Set();
-            if (!currentUserEmail) {
-                renderNetwork();
-                return;
-            }
+            if (!currentUserEmail) return;
             try {
                 const { data, error } = await supabaseClient.from('connections').select('batchmate_id').eq('owner_email', currentUserEmail);
                 if (!error && data) {
@@ -4314,8 +4326,7 @@
             } catch (err) {
                 console.warn('Could not fetch connections:', err.message);
             }
-            renderNetwork();
-            renderBatchDirectory();
+            batchDirectoryNeedsRender = true;
         }
 
         async function toggleConnection(id) {
@@ -4343,6 +4354,7 @@
                 }
             }
 
+            batchDirectoryNeedsRender = true;
             renderBatchDirectory();
             renderNetwork();
             if (viewingOtherProfileId && String(viewingOtherProfileId) === String(id)) {
@@ -5955,6 +5967,13 @@
 
         function renderBatchDirectory() {
             const list = document.getElementById('batchDirectoryList');
+            if (!list) return;
+            if (activeDashboardPanel !== 'directory') {
+                batchDirectoryNeedsRender = true;
+                return;
+            }
+            if (!batchDirectoryNeedsRender && list.childElementCount > 0) return;
+            batchDirectoryNeedsRender = false;
             list.innerHTML = '';
             const query = document.getElementById('batchSearch')?.value.trim().toLowerCase() || '';
             const selectedBatch = document.getElementById('batchFilter')?.value || '';
@@ -5981,36 +6000,45 @@
                 list.innerHTML = `<p class="text-[11px] text-gray-400 italic">${emptyMsg}</p>`;
                 return;
             }
+            const fragment = document.createDocumentFragment();
             filtered.forEach(batchmate => {
                 const card = document.createElement('div');
                 card.className = 'bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs space-y-2';
                 card.setAttribute('data-batch', batchmate.batchName || '');
+                const safeName = escapeHtml(batchmate.name || 'Alumni Member');
+                const safeCompany = escapeHtml(batchmate.company || '');
+                const safeBatch = escapeHtml(batchmate.batchName || '—');
+                const safeSummary = escapeHtml(batchmate.summary || '');
+                const safeYear = escapeHtml(String(batchmate.gradYear || ''));
+                const safeAvatar = escapeHtml(batchmate.avatar || DEFAULT_AVATAR);
                 card.innerHTML = `
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
-                            <img class="w-10 h-10 rounded-full object-cover" src="${batchmate.avatar}" alt="${batchmate.name}">
+                            <img class="w-10 h-10 rounded-full object-cover bg-gray-200" src="${safeAvatar}" alt="${safeName}" loading="lazy" decoding="async">
                             <div>
-                                <p class="font-bold text-gray-700">${batchmate.name}</p>
-                                <p class="text-[10px] text-gray-500">${batchmate.company}</p>
-                                <p class="text-[10px] text-gray-500">${batchmate.batchName || '—'}</p>
+                                <p class="font-bold text-gray-700">${safeName}</p>
+                                <p class="text-[10px] text-gray-500">${safeCompany}</p>
+                                <p class="text-[10px] text-gray-500">${safeBatch}</p>
                             </div>
                         </div>
                         <button type="button" onclick="toggleConnection(${batchmate.id})" class="px-3 py-1 rounded-full text-[10px] font-semibold ${connectedBatchmates.has(batchmate.id) ? 'bg-green-100 text-green-800' : 'bg-[#800020] text-white hover:bg-red-900'}">${connectedBatchmates.has(batchmate.id) ? 'Connected' : 'Connect'}</button>
                     </div>
-                    <p class="text-[11px] text-gray-600">${batchmate.summary}</p>
+                    ${safeSummary ? `<p class="text-[11px] text-gray-600">${safeSummary}</p>` : ''}
                     <div class="flex flex-wrap items-center justify-between gap-2">
                         <div class="flex flex-wrap items-center gap-2">
                             <button type="button" onclick="viewBatchmate(${batchmate.id})" class="text-[10px] font-semibold text-[#800020] hover:text-red-900">View Profile</button>
                             ${batchmate.messenger && canViewContactInfo(batchmate, batchmate.email !== currentUserEmail) ? messengerButtonHtml(batchmate.messenger) : ''}
                         </div>
-                        <span class="text-[10px] text-gray-500">${batchmate.gradYear}</span>
+                        <span class="text-[10px] text-gray-500">${safeYear}</span>
                     </div>
                 `;
-                list.appendChild(card);
+                fragment.appendChild(card);
             });
+            list.appendChild(fragment);
         }
 
-        function filterBatchDirectory(query) {
+        function filterBatchDirectory() {
+            batchDirectoryNeedsRender = true;
             renderBatchDirectory();
         }
 
