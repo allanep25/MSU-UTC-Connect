@@ -2361,6 +2361,171 @@
         let batchDirectoryNeedsRender = true;
         let batchSearchDebounceTimer = null;
         let appDataLoaded = false;
+        const panelDataLoaded = new Set();
+        const panelLoading = {};
+
+        function setPanelLoadingUi(panelId, loading) {
+            const panel = document.getElementById('dashboard-panel-' + panelId);
+            if (!panel) return;
+            let el = panel.querySelector('[data-panel-loading]');
+            if (loading) {
+                if (!el) {
+                    el = document.createElement('p');
+                    el.dataset.panelLoading = '1';
+                    el.className = 'panel-lazy-loading text-center py-6 text-sm text-gray-400 italic';
+                    el.textContent = 'Loading…';
+                    panel.prepend(el);
+                }
+                el.classList.remove('hidden');
+            } else if (el) {
+                el.classList.add('hidden');
+            }
+        }
+
+        function invalidatePanelData(panelId) {
+            if (panelId) panelDataLoaded.delete(panelId);
+            else panelDataLoaded.clear();
+        }
+
+        async function loadPanelData(panelId) {
+            switch (panelId) {
+                case 'overview':
+                    await Promise.all([fetchOverviewAds(), fetchCommunityPhotos(), fetchUtcMemories()]);
+                    break;
+                case 'profile':
+                    await fetchCurrentUserProfile();
+                    break;
+                case 'directory':
+                    await fetchConnections();
+                    break;
+                case 'network':
+                    await fetchConnections();
+                    break;
+                case 'officers':
+                    break;
+                case 'events':
+                    await Promise.all([
+                        fetchEvents(),
+                        fetchEventRsvpCounts(),
+                        fetchEventResponses(),
+                        fetchEventCheckinCounts()
+                    ]);
+                    break;
+                case 'announcements':
+                    await fetchBatchAnnouncements();
+                    break;
+                case 'opportunities':
+                    await fetchJobPosts();
+                    break;
+                case 'locations':
+                    break;
+                case 'testimonials':
+                    await fetchTestimonials();
+                    break;
+                case 'messages':
+                    await fetchMessages();
+                    break;
+                case 'invites':
+                    await fetchPendingInvites();
+                    break;
+                case 'admin':
+                    await Promise.all([
+                        fetchTestimonials(),
+                        fetchPendingInvites(),
+                        fetchUtcMemories(),
+                        fetchEventRsvpCounts()
+                    ]);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        function renderPanelUi(panelId) {
+            switch (panelId) {
+                case 'overview':
+                    renderStats();
+                    renderUtcMemorySpotlight();
+                    checkEventReminders();
+                    startPhotoSlideshowAutoplay();
+                    break;
+                case 'profile':
+                    renderCurrentUserProfile();
+                    break;
+                case 'directory':
+                    resetBatchDirectoryToAllBatches();
+                    batchDirectoryNeedsRender = true;
+                    renderBatchDirectory();
+                    break;
+                case 'network':
+                    renderNetwork();
+                    break;
+                case 'officers':
+                    renderOfficersBoard();
+                    break;
+                case 'events':
+                    renderEvents();
+                    refreshEventPosterImages();
+                    break;
+                case 'announcements':
+                    renderBatchAnnouncements();
+                    break;
+                case 'opportunities':
+                    renderJobPosts();
+                    break;
+                case 'locations':
+                    renderAlumniLocations();
+                    break;
+                case 'testimonials':
+                    renderTestimonials();
+                    updateTestimonialTabStyles();
+                    break;
+                case 'messages':
+                    setMessagesTab(activeMessagesTab);
+                    break;
+                case 'invites':
+                    renderPendingInvites();
+                    break;
+            }
+            updateNotificationBadge();
+        }
+
+        async function ensurePanelLoaded(panelId) {
+            if (!panelId || !appDataLoaded) return;
+            if (panelDataLoaded.has(panelId)) {
+                if (panelId === 'admin') await renderAdminPanel();
+                else renderPanelUi(panelId);
+                return;
+            }
+            if (panelLoading[panelId]) return;
+            panelLoading[panelId] = true;
+            setPanelLoadingUi(panelId, true);
+            try {
+                await loadPanelData(panelId);
+                panelDataLoaded.add(panelId);
+                if (panelId === 'admin') await renderAdminPanel();
+                else renderPanelUi(panelId);
+                updateTier2Ui();
+            } catch (err) {
+                console.warn('Panel load failed:', panelId, err.message || err);
+            } finally {
+                panelLoading[panelId] = false;
+                setPanelLoadingUi(panelId, false);
+            }
+        }
+
+        function scheduleNotificationPrefetch() {
+            const run = async () => {
+                if (!currentUserEmail || panelDataLoaded.has('messages')) return;
+                try {
+                    await fetchMessages();
+                    panelDataLoaded.add('messages');
+                    updateNotificationBadge();
+                } catch (_) { /* ignore */ }
+            };
+            if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 5000 });
+            else setTimeout(run, 3000);
+        }
 
         function onBatchFilterChange() {
             const batchEl = document.getElementById('batchFilter');
@@ -2471,14 +2636,8 @@
             if (titleEl) titleEl.textContent = titles[0];
             if (subEl) subEl.textContent = titles[1];
             closeDashboardSidebar();
-            if (panelId === 'events') refreshEventPosterImages();
-            if (panelId === 'overview') startPhotoSlideshowAutoplay();
-            else stopPhotoSlideshowAutoplay();
-            if (panelId === 'messages') setMessagesTab(activeMessagesTab);
-            if (panelId === 'directory') {
-                resetBatchDirectoryToAllBatches();
-                renderBatchDirectory();
-            }
+            if (panelId !== 'overview') stopPhotoSlideshowAutoplay();
+            if (appDataLoaded) void ensurePanelLoaded(panelId);
         };
 
         function refreshEventPosterImages() {
@@ -2666,42 +2825,12 @@
         async function loadAppData() {
             if (appDataLoaded) return;
             await fetchBatchmates();
-            await Promise.all([
-                fetchConnections(),
-                fetchEvents(),
-                fetchEventRsvpCounts(),
-                fetchEventResponses(),
-                fetchTestimonials(),
-                fetchMessages(),
-                fetchPendingInvites(),
-                fetchOverviewAds(),
-                fetchCommunityPhotos(),
-                fetchUtcMemories(),
-                fetchEventCheckinCounts(),
-                fetchBatchAnnouncements(),
-                fetchJobPosts(),
-                fetchMetrics()
-            ]);
+            await fetchMetrics();
             appDataLoaded = true;
-            renderStats();
-            if (activeDashboardPanel === 'directory') {
-                renderBatchDirectory();
-            } else {
-                batchDirectoryNeedsRender = true;
-            }
-            renderNetwork();
-            renderOfficersBoard();
-            renderEvents();
-            renderMessages();
-            renderPendingInvites();
-            renderAlumniLocations();
-            renderAdminPanel();
             updateTier2Ui();
-            updateNotificationBadge();
-            updateTestimonialTabStyles();
-            checkEventReminders();
-            renderUtcMemorySpotlight();
-            await processCheckinFromUrl();
+            await ensurePanelLoaded(activeDashboardPanel);
+            void processCheckinFromUrl();
+            scheduleNotificationPrefetch();
         }
 
         async function restoreSession() {
@@ -2783,6 +2912,8 @@
 
         function clearAuthState() {
             appDataLoaded = false;
+            invalidatePanelData();
+            Object.keys(panelLoading).forEach(k => delete panelLoading[k]);
             batchDirectoryNeedsRender = true;
             currentUser = null;
             currentUserEmail = null;
@@ -2797,12 +2928,6 @@
             switchAuthTab('login');
             setAuthOverlayOpen(true);
             renderStats();
-            renderBatchDirectory();
-            renderNetwork();
-            renderEvents();
-            renderMessages();
-            renderPendingInvites();
-            renderAdminPanel();
         }
 
         async function fetchCurrentUserProfile() {
@@ -3165,6 +3290,7 @@
             }
 
             await fetchCurrentUserProfile();
+            panelDataLoaded.add('profile');
             await uploadPendingAvatarIfAny();
             if (!options.skipAppData) {
                 await loadAppData();
@@ -3526,6 +3652,10 @@
                 }
                 if (goBtn) goBtn.innerText = 'Go to Batch Directory';
             } else if (type === 'testimonials') {
+                if (!panelDataLoaded.has('testimonials') && !allTestimonials.length) {
+                    await fetchTestimonials();
+                    panelDataLoaded.add('testimonials');
+                }
                 titleEl.innerText = 'Testimonials';
                 const visible = allTestimonials.filter(item => item.approved || isAdminUser());
                 metaEl.innerText = `${visible.length} post${visible.length === 1 ? '' : 's'} shown`;
@@ -3555,6 +3685,10 @@
                 }
                 if (goBtn) goBtn.innerText = 'Go to Testimonials';
             } else if (type === 'invites') {
+                if (currentUserEmail && !panelDataLoaded.has('invites') && !pendingInvites.length) {
+                    await fetchPendingInvites();
+                    panelDataLoaded.add('invites');
+                }
                 titleEl.innerText = 'Pending Invites';
                 let rows = pendingInvites;
                 if (isAdminUser()) {
@@ -4310,8 +4444,10 @@
             }
             batchDirectoryNeedsRender = true;
             populateYearFilterOptions();
-            renderOfficersBoard();
-            renderAlumniLocations();
+            ['directory', 'officers', 'locations'].forEach(id => invalidatePanelData(id));
+            if (activeDashboardPanel === 'officers') renderOfficersBoard();
+            if (activeDashboardPanel === 'locations') renderAlumniLocations();
+            if (activeDashboardPanel === 'directory') renderBatchDirectory();
             updateTier2Ui();
         }
 
